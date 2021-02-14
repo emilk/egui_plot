@@ -1,0 +1,2 @@
+examples/save_plot/screenshot.png filter=lfs diff=lfs merge=lfs -text
+examples/custom_plot_manipulation/screenshot.png filter=lfs diff=lfs merge=lfs -text
