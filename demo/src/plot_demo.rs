@@ -515,7 +515,7 @@ impl CustomAxesDemo {
 
         let time_formatter = |mark: GridMark, _range: &RangeInclusive<f64>| {
             let minutes = mark.value;
-            if minutes < 0.0 || 5.0 * MINS_PER_DAY <= minutes {
+            if !(0.0..5.0 * MINS_PER_DAY).contains(&minutes) {
                 // No labels outside value bounds
                 String::new()
             } else if is_approx_integer(minutes / MINS_PER_DAY) {

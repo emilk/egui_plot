@@ -737,6 +737,7 @@ impl<'a> Plot<'a> {
     }
 
     #[allow(clippy::too_many_lines)] // TODO(emilk): shorten this function
+    #[allow(clippy::type_complexity)] // build_fn
     fn show_dyn<R>(
         self,
         ui: &mut Ui,

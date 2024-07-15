@@ -845,7 +845,7 @@ dependencies = [
 
 [[package]]
 name = "demo"
-version = "0.1.0"
+version = "0.28.1"
 dependencies = [
  "eframe",
  "egui",

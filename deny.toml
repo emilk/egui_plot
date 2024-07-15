@@ -43,7 +43,7 @@ deny = [
 ]
 
 skip = []
-skip-tree = []
+skip-tree = [{ name = "eframe", reason = "Dev-dependency" }]
 
 
 [licenses]
