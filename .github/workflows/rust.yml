@@ -139,7 +139,7 @@ jobs:
   # ---------------------------------------------------------------------------
 
   trunk:
-    name: trunk
+    name: trunk build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

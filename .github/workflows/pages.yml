@@ -16,6 +16,7 @@ permissions:
 
 jobs:
   build-github-pages:
+    name: Build and Deploy demo to Github Pages
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4 # repo checkout
