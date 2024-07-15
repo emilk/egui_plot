@@ -3,12 +3,17 @@
 
 use std::ops::RangeInclusive;
 
-use epaint::{emath::Rot2, Mesh};
+use egui::{
+    emath::Rot2,
+    epaint::{CircleShape, TextShape},
+    pos2, vec2, Align2, Color32, Id, ImageOptions, Mesh, NumExt as _, Pos2, Rect, Rgba, Rounding,
+    Shape, Stroke, TextStyle, TextureId, Ui, Vec2, WidgetText,
+};
 
-use crate::*;
+use emath::Float as _;
+use rect_elem::{highlighted_color, RectElement};
 
 use super::{Cursor, LabelFormatter, PlotBounds, PlotTransform};
-use rect_elem::*;
 
 pub use bar::Bar;
 pub use box_elem::{BoxElem, BoxSpread};
@@ -725,7 +730,11 @@ impl PlotItem for Polygon {
 
         let shape = Shape::convex_polygon(values_tf.clone(), fill_color, Stroke::NONE);
         shapes.push(shape);
-        values_tf.push(*values_tf.first().unwrap());
+
+        if let Some(first) = values_tf.first() {
+            values_tf.push(*first); // close the polygon
+        }
+
         style.style_line(values_tf, *stroke, *highlight, shapes);
     }
 
@@ -860,7 +869,7 @@ impl PlotItem for Text {
         let pos = transform.position_from_point(&self.position);
         let rect = self.anchor.anchor_size(pos, galley.size());
 
-        shapes.push(epaint::TextShape::new(rect.min, galley, color).into());
+        shapes.push(TextShape::new(rect.min, galley, color).into());
 
         if self.highlight {
             shapes.push(Shape::rect_stroke(
@@ -1020,6 +1029,7 @@ impl Points {
 }
 
 impl PlotItem for Points {
+    #[allow(clippy::too_many_lines)] // TODO(emilk): shorten this function
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let sqrt_3 = 3_f32.sqrt();
         let frac_sqrt_3_2 = 3_f32.sqrt() / 2.0;
@@ -1067,7 +1077,7 @@ impl PlotItem for Points {
 
                 match shape {
                     MarkerShape::Circle => {
-                        shapes.push(Shape::Circle(epaint::CircleShape {
+                        shapes.push(Shape::Circle(CircleShape {
                             center,
                             radius,
                             fill,
@@ -1262,7 +1272,6 @@ impl Arrows {
 
 impl PlotItem for Arrows {
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
-        use crate::emath::*;
         let Self {
             origins,
             tips,

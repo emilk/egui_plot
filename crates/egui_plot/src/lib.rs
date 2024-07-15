@@ -18,9 +18,12 @@ mod transform;
 use std::{cmp::Ordering, ops::RangeInclusive, sync::Arc};
 
 use ahash::HashMap;
-use egui::*;
+use egui::{
+    epaint, remap_clamp, vec2, Align2, Color32, CursorIcon, Id, Layout, NumExt, PointerButton,
+    Pos2, Rangef, Rect, Response, Rounding, Sense, Shape, Stroke, TextStyle, Ui, Vec2, Vec2b,
+    WidgetText,
+};
 use emath::Float as _;
-use epaint::Hsva;
 
 pub use crate::{
     axis::{Axis, AxisHints, HPlacement, Placement, VPlacement},
@@ -575,6 +578,7 @@ impl<'a> Plot<'a> {
 
     /// Add this plot to an axis link group so that this plot will share the bounds with other plots in the
     /// same group. A plot cannot belong to more than one axis group.
+    #[allow(clippy::fn_params_excessive_bools)] // TODO(emilk): use a `Vec2` as argument instead
     #[inline]
     pub fn link_axis(mut self, group_id: impl Into<Id>, link_x: bool, link_y: bool) -> Self {
         self.linked_axes = Some((
@@ -589,6 +593,7 @@ impl<'a> Plot<'a> {
 
     /// Add this plot to a cursor link group so that this plot will share the cursor position with other plots
     /// in the same group. A plot cannot belong to more than one cursor group.
+    #[allow(clippy::fn_params_excessive_bools)] // TODO(emilk): use a `Vec2` as argument instead
     #[inline]
     pub fn link_cursor(mut self, group_id: impl Into<Id>, link_x: bool, link_y: bool) -> Self {
         self.linked_cursors = Some((
@@ -731,6 +736,7 @@ impl<'a> Plot<'a> {
         self.show_dyn(ui, Box::new(build_fn))
     }
 
+    #[allow(clippy::too_many_lines)] // TODO(emilk): shorten this function
     fn show_dyn<R>(
         self,
         ui: &mut Ui,
@@ -1729,7 +1735,7 @@ impl<'a> PreparedPlot<'a> {
 /// assert_eq!(next_power(0.2,  10.0), 1);
 /// ```
 fn next_power(value: f64, base: f64) -> f64 {
-    debug_assert_ne!(value, 0.0); // can be negative (typical for Y axis)
+    debug_assert_ne!(value, 0.0, "Bad input"); // can be negative (typical for Y axis)
     base.powi(value.abs().log(base).ceil() as i32)
 }
 
