@@ -1,9 +1,14 @@
-use crate::*;
+use egui::{epaint::Hsva, Color32, Pos2, Response, Vec2, Vec2b};
+
+use crate::{BoundsModification, PlotBounds, PlotItem, PlotPoint, PlotTransform};
+
+#[allow(unused_imports)] // for links in docstrings
+use crate::Plot;
 
 /// Provides methods to interact with a plot while building it. It is the single argument of the closure
 /// provided to [`Plot::show`]. See [`Plot`] for an example of how to use it.
 pub struct PlotUi {
-    pub(crate) ctx: Context,
+    pub(crate) ctx: egui::Context,
     pub(crate) items: Vec<Box<dyn PlotItem>>,
     pub(crate) next_auto_color_idx: usize,
     pub(crate) last_plot_transform: PlotTransform,
@@ -21,7 +26,7 @@ impl PlotUi {
         Hsva::new(h, 0.85, 0.5, 1.0).into() // TODO(emilk): OkLab or some other perspective color space
     }
 
-    pub fn ctx(&self) -> &Context {
+    pub fn ctx(&self) -> &egui::Context {
         &self.ctx
     }
 
@@ -122,7 +127,7 @@ impl PlotUi {
     }
 
     /// Add a data line.
-    pub fn line(&mut self, mut line: Line) {
+    pub fn line(&mut self, mut line: crate::Line) {
         if line.series.is_empty() {
             return;
         };
@@ -135,7 +140,7 @@ impl PlotUi {
     }
 
     /// Add a polygon. The polygon has to be convex.
-    pub fn polygon(&mut self, mut polygon: Polygon) {
+    pub fn polygon(&mut self, mut polygon: crate::Polygon) {
         if polygon.series.is_empty() {
             return;
         };
@@ -148,7 +153,7 @@ impl PlotUi {
     }
 
     /// Add a text.
-    pub fn text(&mut self, text: Text) {
+    pub fn text(&mut self, text: crate::Text) {
         if text.text.is_empty() {
             return;
         };
@@ -157,7 +162,7 @@ impl PlotUi {
     }
 
     /// Add data points.
-    pub fn points(&mut self, mut points: Points) {
+    pub fn points(&mut self, mut points: crate::Points) {
         if points.series.is_empty() {
             return;
         };
@@ -170,7 +175,7 @@ impl PlotUi {
     }
 
     /// Add arrows.
-    pub fn arrows(&mut self, mut arrows: Arrows) {
+    pub fn arrows(&mut self, mut arrows: crate::Arrows) {
         if arrows.origins.is_empty() || arrows.tips.is_empty() {
             return;
         };
@@ -183,14 +188,14 @@ impl PlotUi {
     }
 
     /// Add an image.
-    pub fn image(&mut self, image: PlotImage) {
+    pub fn image(&mut self, image: crate::PlotImage) {
         self.items.push(Box::new(image));
     }
 
     /// Add a horizontal line.
     /// Can be useful e.g. to show min/max bounds or similar.
     /// Always fills the full width of the plot.
-    pub fn hline(&mut self, mut hline: HLine) {
+    pub fn hline(&mut self, mut hline: crate::HLine) {
         if hline.stroke.color == Color32::TRANSPARENT {
             hline.stroke.color = self.auto_color();
         }
@@ -200,7 +205,7 @@ impl PlotUi {
     /// Add a vertical line.
     /// Can be useful e.g. to show min/max bounds or similar.
     /// Always fills the full height of the plot.
-    pub fn vline(&mut self, mut vline: VLine) {
+    pub fn vline(&mut self, mut vline: crate::VLine) {
         if vline.stroke.color == Color32::TRANSPARENT {
             vline.stroke.color = self.auto_color();
         }
@@ -208,7 +213,7 @@ impl PlotUi {
     }
 
     /// Add a box plot diagram.
-    pub fn box_plot(&mut self, mut box_plot: BoxPlot) {
+    pub fn box_plot(&mut self, mut box_plot: crate::BoxPlot) {
         if box_plot.boxes.is_empty() {
             return;
         }
@@ -221,7 +226,7 @@ impl PlotUi {
     }
 
     /// Add a bar chart.
-    pub fn bar_chart(&mut self, mut chart: BarChart) {
+    pub fn bar_chart(&mut self, mut chart: crate::BarChart) {
         if chart.bars.is_empty() {
             return;
         }

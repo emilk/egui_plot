@@ -1,7 +1,10 @@
 use std::ops::RangeInclusive;
 
+use egui::{pos2, remap, Pos2, Rect, Vec2};
+
+use crate::Axis;
+
 use super::PlotPoint;
-use crate::*;
 
 /// 2D bounding box of f64 precision.
 ///
@@ -279,6 +282,7 @@ pub struct PlotTransform {
 }
 
 impl PlotTransform {
+    #[allow(clippy::fn_params_excessive_bools)] // TODO(emilk): use a `Vec2` as argument instead
     pub fn new(frame: Rect, bounds: PlotBounds, x_centered: bool, y_centered: bool) -> Self {
         debug_assert!(
             0.0 <= frame.width() && 0.0 <= frame.height(),

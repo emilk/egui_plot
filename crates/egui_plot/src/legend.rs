@@ -1,6 +1,9 @@
 use std::{collections::BTreeMap, string::String};
 
-use crate::*;
+use egui::{
+    epaint::CircleShape, pos2, vec2, Align, Color32, Direction, Frame, Layout, PointerButton, Rect,
+    Response, Sense, Shadow, Shape, TextStyle, Ui, Widget, WidgetInfo, WidgetType,
+};
 
 use super::items::PlotItem;
 
@@ -139,7 +142,7 @@ impl LegendEntry {
 
         let painter = ui.painter();
 
-        painter.add(epaint::CircleShape {
+        painter.add(CircleShape {
             center: icon_rect.center(),
             radius: icon_size * 0.5,
             fill: visuals.bg_fill,
@@ -152,7 +155,7 @@ impl LegendEntry {
             } else {
                 *color
             };
-            painter.add(epaint::Shape::circle_filled(
+            painter.add(Shape::circle_filled(
                 icon_rect.center(),
                 icon_size * 0.4,
                 fill,
@@ -262,7 +265,7 @@ impl Widget for &mut LegendWidget {
                 let background_frame = Frame {
                     inner_margin: vec2(8.0, 4.0).into(),
                     rounding: ui.style().visuals.window_rounding,
-                    shadow: epaint::Shadow::NONE,
+                    shadow: Shadow::NONE,
                     fill: ui.style().visuals.extreme_bg_color,
                     stroke: ui.style().visuals.window_stroke(),
                     ..Default::default()
@@ -287,7 +290,7 @@ impl Widget for &mut LegendWidget {
                                 response
                             })
                             .reduce(|r1, r2| r1.union(r2))
-                            .unwrap();
+                            .expect("No entries in the legend");
 
                         if let Some(focus_on_item) = focus_on_item {
                             handle_focus_on_legend_item(&focus_on_item, entries);

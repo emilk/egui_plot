@@ -244,6 +244,7 @@ impl<'a> AxisWidget<'a> {
     }
 
     /// Returns the actual thickness of the axis.
+    #[allow(clippy::too_many_lines)] // TODO(emilk): shorten this function
     pub fn ui(self, ui: &mut Ui, axis: Axis) -> (Response, f32) {
         let response = ui.allocate_rect(self.rect, Sense::hover());
 
