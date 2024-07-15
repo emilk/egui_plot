@@ -12,6 +12,10 @@ Immediate mode plotting for [`egui`](https://github.com/emilk/egui).
 
 ![egui_plot_white](https://github.com/user-attachments/assets/b29acf5e-ccbf-4cb7-b03b-7e258fa5db16)
 
+### Testing
+* Locally: `cargo run -p demo`
+* Web: `(cd demo && trunk serve)`
+
 
 ### History
 This crate was originally hosted at https://github.com/emilk/egui but was extracted into its own repository on 2025-07-15.

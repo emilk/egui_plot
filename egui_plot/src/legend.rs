@@ -9,6 +9,7 @@ use super::items::PlotItem;
 
 /// Where to place the plot legend.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 pub enum Corner {
     LeftTop,
     RightTop,
@@ -31,6 +32,7 @@ impl Corner {
 
 /// The configuration for a plot legend.
 #[derive(Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 pub struct Legend {
     pub text_style: TextStyle,
     pub background_alpha: f32,

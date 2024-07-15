@@ -2,7 +2,7 @@
 .DS_Store
 
 # trunk output folder
-dist
+demo/dist
 
 # Rust compile target directories:
 target
