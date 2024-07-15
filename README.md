@@ -8,4 +8,6 @@
 
 Immediate mode plotting for [`egui`](https://github.com/emilk/egui).
 
-[**Looking for a maintainer!**](https://github.com/emilk/egui/issues/4705)
+
+### History
+This crate was originally hosted at https://github.com/emilk/egui but was extracted into its own repository on 2025-07-15.
