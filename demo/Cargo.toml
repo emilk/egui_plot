@@ -1,10 +1,12 @@
 [package]
-name = "demo"
-version = "0.1.0"
 authors = ["Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"]
-edition = "2021"
-include = ["LICENSE-APACHE", "LICENSE-MIT", "**/*.rs", "Cargo.toml"]
-rust-version = "1.76"
+edition.workspace = true
+include = ["../LICENSE-APACHE", "../LICENSE-MIT", "**/*.rs", "Cargo.toml"]
+license.workspace = true
+name = "demo"
+publish = false
+rust-version.workspace = true
+version.workspace = true
 
 [lints]
 workspace = true

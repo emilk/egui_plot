@@ -1,21 +1,21 @@
 [package]
-name = "egui_plot"
-version.workspace = true
 authors = [
     "Emil Ernerfeldt <emil.ernerfeldt@gmail.com>",    # https://github.com/emilk
     "Jan Haller <bromeon@gmail.com>",                 # https://github.com/Bromeon
     "Sven Niederberger <s-niederberger@outlook.com>", # https://github.com/EmbersArc
 ]
+categories = ["visualization", "gui"]
 description = "Immediate mode plotting for the egui GUI library"
 edition.workspace = true
-rust-version.workspace = true
-homepage = "https://github.com/emilk/egui"
-license.workspace = true
-readme = "README.md"
-repository = "https://github.com/emilk/egui"
-categories = ["visualization", "gui"]
-keywords = ["egui", "plot", "plotting"]
+homepage = "https://github.com/emilk/egui_plot"
 include = ["../LICENSE-APACHE", "../LICENSE-MIT", "**/*.rs", "Cargo.toml"]
+keywords = ["egui", "plot", "plotting"]
+license.workspace = true
+name = "egui_plot"
+readme = "README.md"
+repository = "https://github.com/emilk/egui_plot"
+rust-version.workspace = true
+version.workspace = true
 
 [lints]
 workspace = true
