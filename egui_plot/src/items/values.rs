@@ -49,6 +49,7 @@ impl PlotPoint {
 
 /// Solid, dotted, dashed, etc.
 #[derive(Debug, PartialEq, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 pub enum LineStyle {
     Solid,
     Dotted { spacing: f32 },
