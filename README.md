@@ -20,4 +20,4 @@ Immediate mode plotting for [`egui`](https://github.com/emilk/egui).
 
 
 ### History
-This crate was originally hosted at https://github.com/emilk/egui but was extracted into its own repository on 2025-07-15.
+This crate was originally hosted at https://github.com/emilk/egui but was extracted into its own repository on 2024-07-15.
