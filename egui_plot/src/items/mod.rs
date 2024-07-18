@@ -2060,7 +2060,7 @@ pub(super) fn rulers_at_value(
     };
 
     let text = {
-        let scale = plot.transform.dvalue_dpos();
+        let scale = plot.transform.smallest_distance_per_point();
         let x_decimals = ((-scale[0].abs().log10()).ceil().at_least(0.0) as usize).clamp(1, 6);
         let y_decimals = ((-scale[1].abs().log10()).ceil().at_least(0.0) as usize).clamp(1, 6);
         if let Some(custom_label) = label_formatter {
