@@ -1,8 +1,8 @@
-use std::ops::RangeInclusive;
+use std::ops::{Add, RangeInclusive};
 
 use egui::{pos2, remap, Pos2, Rect, Vec2, Vec2b};
 
-use crate::Axis;
+use crate::{next_power, Axis};
 
 use super::PlotPoint;
 
@@ -143,6 +143,16 @@ impl PlotBounds {
     }
 
     #[inline]
+    fn expand_x_log(&mut self, log_pad: f64) {
+        if log_pad.is_finite() {
+            let log_min = self.min[0].log10() - log_pad;
+            let log_max = self.max[0].log10() + log_pad;
+            self.min[0] = 10.0_f64.powf(log_min);
+            self.max[0] = 10.0_f64.powf(log_max);
+        }
+    }
+
+    #[inline]
     pub fn expand_y(&mut self, pad: f64) {
         if pad.is_finite() {
             self.min[1] -= pad;
@@ -151,6 +161,15 @@ impl PlotBounds {
         }
     }
 
+    #[inline]
+    fn expand_y_log(&mut self, log_pad: f64) {
+        if log_pad.is_finite() {
+            let log_min = self.min[1].log10() - log_pad;
+            let log_max = self.max[1].log10() + log_pad;
+            self.min[1] = 10.0_f64.powf(log_min);
+            self.max[1] = 10.0_f64.powf(log_max);
+        }
+    }
     #[inline]
     pub fn merge_x(&mut self, other: &Self) {
         self.min[0] = self.min[0].min(other.min[0]);
@@ -234,9 +253,21 @@ impl PlotBounds {
     }
 
     #[inline]
+    pub fn add_relative_margin_x_log(&mut self, margin_fraction: Vec2) {
+        let log_width = self.range_x().end().log10() - self.range_x().start().log10();
+        self.expand_x_log(margin_fraction.x as f64 * log_width);
+    }
+
+    #[inline]
     pub fn add_relative_margin_y(&mut self, margin_fraction: Vec2) {
         let height = self.height().max(0.0);
         self.expand_y(margin_fraction.y as f64 * height);
+    }
+
+    #[inline]
+    pub fn add_relative_margin_y_log(&mut self, margin_fraction: Vec2) {
+        let log_height = self.range_y().end().log10() - self.range_y().start().log10();
+        self.expand_y_log(margin_fraction.y as f64 * log_height);
     }
 
     #[inline]
@@ -276,10 +307,13 @@ pub struct PlotTransform {
 
     /// Whether to always center the x-range or y-range of the bounds.
     centered: Vec2b,
+
+    /// Whether to transform the coordinates logarithmically
+    log_coords: Vec2b,
 }
 
 impl PlotTransform {
-    pub fn new(frame: Rect, bounds: PlotBounds, center_axis: Vec2b) -> Self {
+    pub fn new(frame: Rect, bounds: PlotBounds, center_axis: Vec2b, log_coords: Vec2b) -> Self {
         debug_assert!(
             0.0 <= frame.width() && 0.0 <= frame.height(),
             "Bad plot frame: {frame:?}"
@@ -294,39 +328,72 @@ impl PlotTransform {
         // When a given bound axis is "thin" (e.g. width or height is 0) but finite, we center the
         // bounds around that value. If the other axis is "fat", we reuse its extent for the thin
         // axis, and default to +/- 1.0 otherwise.
+        //
+        // For log axis, we need to check that we are above 0 for both axis, and instead of defaulting to +/- 1.0, we will default to 1e-5 to 1e5.
+        // Thin log axis also makes less sense, so we will also default there
         if !bounds.is_finite_x() {
-            new_bounds.set_x(&PlotBounds::new_symmetrical(1.0));
+            if log_coords[0] {
+                new_bounds.set_x(&PlotBounds::from_min_max([1e-5, 1e-5], [1e5, 1e5]));
+            } else {
+                new_bounds.set_x(&PlotBounds::new_symmetrical(1.0));
+            }
         } else if bounds.width() <= 0.0 {
-            new_bounds.set_x_center_width(
-                bounds.center().x,
-                if bounds.is_valid_y() {
-                    bounds.height()
-                } else {
-                    1.0
-                },
-            );
+            if log_coords[0] {
+                new_bounds.set_x(&PlotBounds::from_min_max([1e-5, 1e-5], [1e5, 1e5]));
+            } else {
+                new_bounds.set_x_center_width(
+                    bounds.center().x,
+                    if bounds.is_valid_y() {
+                        bounds.height()
+                    } else {
+                        1.0
+                    },
+                );
+            }
         };
 
         if !bounds.is_finite_y() {
-            new_bounds.set_y(&PlotBounds::new_symmetrical(1.0));
+            if log_coords[0] {
+                new_bounds.set_y(&PlotBounds::from_min_max([1e-5, 1e-5], [1e5, 1e5]));
+            } else {
+                new_bounds.set_y(&PlotBounds::new_symmetrical(1.0));
+            }
         } else if bounds.height() <= 0.0 {
-            new_bounds.set_y_center_height(
-                bounds.center().y,
-                if bounds.is_valid_x() {
-                    bounds.width()
-                } else {
-                    1.0
-                },
-            );
+            if log_coords[0] {
+                new_bounds.set_y(&PlotBounds::from_min_max([1e-5, 1e-5], [1e5, 1e5]));
+            } else {
+                new_bounds.set_y_center_height(
+                    bounds.center().y,
+                    if bounds.is_valid_x() {
+                        bounds.width()
+                    } else {
+                        1.0
+                    },
+                );
+            }
         };
 
-        // Scale axes so that the origin is in the center.
-        if center_axis.x {
+        // Scale axes so that the origin is in the center if we aren't log scaled
+        if center_axis.x && !log_coords[0] {
             new_bounds.make_x_symmetrical();
         };
-        if center_axis.y {
+        if center_axis.y && !log_coords[1] {
             new_bounds.make_y_symmetrical();
         };
+
+        // Make absolutely double sure we are not <= zero on any of the axis
+        if log_coords[0] {
+            if new_bounds.min[0] <= 0.0 {
+                new_bounds.min[0] = 1e-10;
+            }
+            new_bounds.max[0] = new_bounds.min[0].max(new_bounds.max[0]);
+        }
+        if log_coords[1] {
+            if new_bounds.min[1] <= 0.0 {
+                new_bounds.min[1] = 1e-10;
+            }
+            new_bounds.max[1] = new_bounds.min[1].max(new_bounds.max[1]);
+        }
 
         debug_assert!(
             new_bounds.is_valid(),
@@ -337,6 +404,7 @@ impl PlotTransform {
             frame,
             bounds: new_bounds,
             centered: center_axis,
+            log_coords,
         }
     }
 
@@ -357,24 +425,67 @@ impl PlotTransform {
         self.bounds = bounds;
     }
 
-    pub fn translate_bounds(&mut self, mut delta_pos: (f64, f64)) {
-        if self.centered.x {
-            delta_pos.0 = 0.;
+    pub fn translate_bounds(&mut self, translate_origin: (f64, f64), mut delta_pos: (f64, f64)) {
+        let movement_start = self.value_from_position(Pos2::new(
+            translate_origin.0 as f32,
+            translate_origin.1 as f32,
+        ));
+        let movement_current = self.value_from_position(Pos2::new(
+            (translate_origin.0 + delta_pos.0) as f32,
+            (translate_origin.1 + delta_pos.1) as f32,
+        ));
+
+        if self.log_coords.x {
+            let log_delta = movement_current.x.log10() - movement_start.x.log10();
+            self.bounds.min[0] = 10.0_f64.powf(self.bounds().min[0].log10() + log_delta);
+            self.bounds.max[0] = 10.0_f64.powf(self.bounds().max[0].log10() + log_delta);
+        } else {
+            if self.centered.x {
+                delta_pos.0 = 0.;
+            }
+            delta_pos.0 *= self.dvalue_dpos()[0];
+            self.bounds.translate_x(delta_pos.0);
         }
-        if self.centered.y {
-            delta_pos.1 = 0.;
+        if self.log_coords.y {
+            let log_delta = movement_current.y.log10() - movement_start.y.log10();
+            self.bounds.min[1] = 10.0_f64.powf(self.bounds().min[1].log10() + log_delta);
+            self.bounds.max[1] = 10.0_f64.powf(self.bounds().max[1].log10() + log_delta);
+        } else {
+            if self.centered.y {
+                delta_pos.1 = 0.;
+            }
+
+            delta_pos.1 *= self.dvalue_dpos()[1];
+            self.bounds.translate_y(delta_pos.1);
         }
-        delta_pos.0 *= self.dvalue_dpos()[0];
-        delta_pos.1 *= self.dvalue_dpos()[1];
-        self.bounds.translate((delta_pos.0, delta_pos.1));
     }
 
     /// Zoom by a relative factor with the given screen position as center.
     pub fn zoom(&mut self, zoom_factor: Vec2, center: Pos2) {
-        let center = self.value_from_position(center);
+        let mut center = self.value_from_position(center);
 
         let mut new_bounds = self.bounds;
+        if self.log_coords.x {
+            new_bounds.min[0] = new_bounds.min[0].log10();
+            new_bounds.max[0] = new_bounds.max[0].log10();
+            center.x = center.x.log10();
+        }
+        if self.log_coords.y {
+            new_bounds.min[1] = new_bounds.min[1].log10();
+            new_bounds.max[1] = new_bounds.max[1].log10();
+            center.y = center.y.log10();
+        }
+
         new_bounds.zoom(zoom_factor, center);
+
+        if self.log_coords.x {
+            new_bounds.min[0] = 10.0_f64.powf(new_bounds.min[0]);
+            new_bounds.max[0] = 10.0_f64.powf(new_bounds.max[0]);
+        }
+        if self.log_coords.y {
+            new_bounds.min[1] = 10.0_f64.powf(new_bounds.min[1]);
+            new_bounds.max[1] = 10.0_f64.powf(new_bounds.max[1]);
+        }
 
         if new_bounds.is_valid() {
             self.bounds = new_bounds;
@@ -382,19 +493,37 @@ impl PlotTransform {
     }
 
     pub fn position_from_point_x(&self, value: f64) -> f32 {
-        remap(
-            value,
-            self.bounds.min[0]..=self.bounds.max[0],
-            (self.frame.left() as f64)..=(self.frame.right() as f64),
-        ) as f32
+        let val = if self.log_coords.x {
+            remap(
+                value.log10(),
+                self.bounds.min[0].log10()..=self.bounds.max[0].log10(),
+                (self.frame.left() as f64)..=(self.frame.right() as f64),
+            )
+        } else {
+            remap(
+                value,
+                self.bounds.min[0]..=self.bounds.max[0],
+                (self.frame.left() as f64)..=(self.frame.right() as f64),
+            )
+        };
+        val as f32
     }
 
     pub fn position_from_point_y(&self, value: f64) -> f32 {
-        remap(
-            value,
-            self.bounds.min[1]..=self.bounds.max[1],
-            (self.frame.bottom() as f64)..=(self.frame.top() as f64), // negated y axis!
-        ) as f32
+        let val = if self.log_coords.y {
+            remap(
+                value.log10(),
+                self.bounds.min[1].log10()..=self.bounds.max[1].log10(),
+                (self.frame.bottom() as f64)..=(self.frame.top() as f64),
+            )
+        } else {
+            remap(
+                value,
+                self.bounds.min[1]..=self.bounds.max[1],
+                (self.frame.bottom() as f64)..=(self.frame.top() as f64),
+            )
+        };
+        val as f32
     }
 
     /// Screen/ui position from point on plot.
@@ -407,16 +536,38 @@ impl PlotTransform {
 
     /// Plot point from screen/ui position.
     pub fn value_from_position(&self, pos: Pos2) -> PlotPoint {
-        let x = remap(
-            pos.x as f64,
-            (self.frame.left() as f64)..=(self.frame.right() as f64),
-            self.bounds.range_x(),
-        );
-        let y = remap(
-            pos.y as f64,
-            (self.frame.bottom() as f64)..=(self.frame.top() as f64), // negated y axis!
-            self.bounds.range_y(),
-        );
+        let x = if self.log_coords.x {
+            let log_range =
+                self.bounds.range_x().start().log10()..=self.bounds.range_x().end().log10();
+            let remapped = remap(
+                pos.x as f64,
+                (self.frame.left() as f64)..=(self.frame.right() as f64),
+                log_range,
+            );
+            10.0_f64.powf(remapped)
+        } else {
+            remap(
+                pos.x as f64,
+                (self.frame.left() as f64)..=(self.frame.right() as f64),
+                self.bounds.range_x(),
+            )
+        };
+        let y = if self.log_coords.y {
+            let log_range =
+                self.bounds.range_y().start().log10()..=self.bounds.range_y().end().log10();
+            let remapped = remap(
+                pos.y as f64,
+                (self.frame.bottom() as f64)..=(self.frame.top() as f64),
+                log_range,
+            );
+            10.0_f64.powf(remapped)
+        } else {
+            remap(
+                pos.y as f64,
+                (self.frame.bottom() as f64)..=(self.frame.top() as f64), // negated y axis!
+                self.bounds.range_y(),
+            )
+        };
         PlotPoint::new(x, y)
     }
 
@@ -434,24 +585,78 @@ impl PlotTransform {
         rect
     }
 
-    /// delta position / delta value = how many ui points per step in the X axis in "plot space"
-    pub fn dpos_dvalue_x(&self) -> f64 {
+    /// delta position / delta value = how many ui points per step in the X axis in "plot space" for linear transformations
+    fn dpos_dvalue_x(&self) -> f64 {
         self.frame.width() as f64 / self.bounds.width()
     }
 
-    /// delta position / delta value = how many ui points per step in the Y axis in "plot space"
-    pub fn dpos_dvalue_y(&self) -> f64 {
+    /// delta position / delta value = how many ui points per step in the Y axis in "plot space" for linear transformations
+    fn dpos_dvalue_y(&self) -> f64 {
         -self.frame.height() as f64 / self.bounds.height() // negated y axis!
     }
 
-    /// delta position / delta value = how many ui points per step in "plot space"
-    pub fn dpos_dvalue(&self) -> [f64; 2] {
-        [self.dpos_dvalue_x(), self.dpos_dvalue_y()]
-    }
-
-    /// delta value / delta position = how much ground do we cover in "plot space" per ui point?
+    /// delta value / delta position = how much ground do we cover in "plot space" per ui point for linear transformations?
     pub fn dvalue_dpos(&self) -> [f64; 2] {
         [1.0 / self.dpos_dvalue_x(), 1.0 / self.dpos_dvalue_y()]
+    }
+
+    /// Depending on log or linear plots, pixel spacing is not linear
+    /// This function, for a given distance, returns the maximum number of pixels needed if to display it
+    /// For linear transformations that is just `transform.dpos_dvalue()*step_size`, but for logarithmic it's a bit more bloated to calculate
+    pub fn points_for_decade(&self, pos: [f64; 2], offset: [f64; 2]) -> [f32; 2] {
+        let x = if self.log_coords.x && pos[0] != 0.0 {
+            let dec_start = next_power(pos[0], 10.0) / 10.0;
+            let dec_end = dec_start + offset[0];
+            self.position_from_point_x(dec_end) - self.position_from_point_x(dec_start)
+        } else {
+            (offset[0] * self.dpos_dvalue_x()) as f32
+        };
+
+        let y = if self.log_coords.y && pos[1] != 0.0 {
+            let dec_start = next_power(pos[1] + offset[1] / 10.0, 10.0) / 10.0;
+            let dec_end = dec_start + offset[1];
+            self.position_from_point_y(dec_end) - self.position_from_point_y(dec_start)
+        } else {
+            (offset[1] * self.dpos_dvalue_y()) as f32
+        };
+
+        [x, y]
+    }
+
+    /// Same as points for decade, but does not jump down a decade
+    pub fn points_at_pos_range(&self, pos: [f64; 2], offset: [f64; 2]) -> [f32; 2] {
+        let x = if self.log_coords.x && pos[0] != 0.0 {
+            let dec_start = pos[0];
+            let dec_end = dec_start + offset[0];
+            self.position_from_point_x(dec_end) - self.position_from_point_x(dec_start)
+        } else {
+            (offset[0] * self.dpos_dvalue_x()) as f32
+        };
+
+        let y = if self.log_coords.y && pos[1] != 0.0 {
+            let dec_start = pos[1];
+            let dec_end = dec_start + offset[1];
+            self.position_from_point_y(dec_end) - self.position_from_point_y(dec_start)
+        } else {
+            (offset[1] * self.dpos_dvalue_y()) as f32
+        };
+
+        [x, y]
+    }
+
+    /// what is the smallest distance covered by a single pixel in plot space
+    pub fn smallest_distance_per_point(&self) -> [f64; 2] {
+        let a = self.value_from_position(self.frame.left_bottom());
+        let b = self.value_from_position(self.frame.left_bottom().add(Vec2::new(1.0, -1.0)));
+        [(b.x - a.x).abs(), (b.y - a.y).abs()]
+    }
+
+    /// helper for grid and axis ticks: from the lower bound, how much does the given offset, in plot splace, cover in pixels?
+    pub fn value_for_pixel_offset_from_bounds(&self, offset: [f32; 2]) -> [f64; 2] {
+        let lower = self.value_from_position(self.frame.left_bottom());
+        let upper =
+            self.value_from_position(self.frame.left_bottom() + Vec2::new(offset[0], -offset[1]));
+        [upper.x - lower.x, upper.y - lower.y]
     }
 
     /// scale.x/scale.y ratio.
