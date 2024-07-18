@@ -41,7 +41,7 @@ pub trait PlotItem {
     fn shapes(&self, ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>);
 
     /// For plot-items which are generated based on x values (plotting functions).
-    fn initialize(&mut self, x_range: RangeInclusive<f64>);
+    fn initialize(&mut self, x_range: RangeInclusive<f64>, log_base: Option<f64>);
 
     fn name(&self) -> &str;
 
@@ -228,7 +228,7 @@ impl PlotItem for HLine {
         style.style_line(points, *stroke, *highlight, shapes);
     }
 
-    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {}
+    fn initialize(&mut self, _x_range: RangeInclusive<f64>, _log_base: Option<f64>) {}
 
     fn name(&self) -> &str {
         &self.name
@@ -371,7 +371,7 @@ impl PlotItem for VLine {
         style.style_line(points, *stroke, *highlight, shapes);
     }
 
-    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {}
+    fn initialize(&mut self, _x_range: RangeInclusive<f64>, _log_base: Option<f64>) {}
 
     fn name(&self) -> &str {
         &self.name
@@ -581,8 +581,8 @@ impl PlotItem for Line {
         style.style_line(values_tf, *stroke, *highlight, shapes);
     }
 
-    fn initialize(&mut self, x_range: RangeInclusive<f64>) {
-        self.series.generate_points(x_range);
+    fn initialize(&mut self, x_range: RangeInclusive<f64>, log_base: Option<f64>) {
+        self.series.generate_points(x_range, log_base);
     }
 
     fn name(&self) -> &str {
@@ -737,8 +737,8 @@ impl PlotItem for Polygon {
         style.style_line(values_tf, *stroke, *highlight, shapes);
     }
 
-    fn initialize(&mut self, x_range: RangeInclusive<f64>) {
-        self.series.generate_points(x_range);
+    fn initialize(&mut self, x_range: RangeInclusive<f64>, log_base: Option<f64>) {
+        self.series.generate_points(x_range, log_base);
     }
 
     fn name(&self) -> &str {
@@ -880,7 +880,7 @@ impl PlotItem for Text {
         }
     }
 
-    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {}
+    fn initialize(&mut self, _x_range: RangeInclusive<f64>, _log_base: Option<f64>) {}
 
     fn name(&self) -> &str {
         self.name.as_str()
@@ -1158,8 +1158,8 @@ impl PlotItem for Points {
             });
     }
 
-    fn initialize(&mut self, x_range: RangeInclusive<f64>) {
-        self.series.generate_points(x_range);
+    fn initialize(&mut self, x_range: RangeInclusive<f64>, log_base: Option<f64>) {
+        self.series.generate_points(x_range, log_base);
     }
 
     fn name(&self) -> &str {
@@ -1313,10 +1313,11 @@ impl PlotItem for Arrows {
             });
     }
 
-    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {
+    fn initialize(&mut self, _x_range: RangeInclusive<f64>, log_base: Option<f64>) {
         self.origins
-            .generate_points(f64::NEG_INFINITY..=f64::INFINITY);
-        self.tips.generate_points(f64::NEG_INFINITY..=f64::INFINITY);
+            .generate_points(f64::NEG_INFINITY..=f64::INFINITY, log_base);
+        self.tips
+            .generate_points(f64::NEG_INFINITY..=f64::INFINITY, log_base);
     }
 
     fn name(&self) -> &str {
@@ -1505,7 +1506,7 @@ impl PlotItem for PlotImage {
         }
     }
 
-    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {}
+    fn initialize(&mut self, _x_range: RangeInclusive<f64>, _log_base: Option<f64>) {}
 
     fn name(&self) -> &str {
         self.name.as_str()
@@ -1700,7 +1701,7 @@ impl PlotItem for BarChart {
         }
     }
 
-    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {
+    fn initialize(&mut self, _x_range: RangeInclusive<f64>, _log_base: Option<f64>) {
         // nothing to do
     }
 
@@ -1874,7 +1875,7 @@ impl PlotItem for BoxPlot {
         }
     }
 
-    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {
+    fn initialize(&mut self, _x_range: RangeInclusive<f64>, _log_base: Option<f64>) {
         // nothing to do
     }
 
@@ -2060,7 +2061,7 @@ pub(super) fn rulers_at_value(
     };
 
     let text = {
-        let scale = plot.transform.dvalue_dpos();
+        let scale = plot.transform.smallest_distance_per_point();
         let x_decimals = ((-scale[0].abs().log10()).ceil().at_least(0.0) as usize).clamp(1, 6);
         let y_decimals = ((-scale[1].abs().log10()).ceil().at_least(0.0) as usize).clamp(1, 6);
         if let Some(custom_label) = label_formatter {
