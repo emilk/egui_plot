@@ -2080,11 +2080,22 @@ pub(super) fn rulers_at_value(
     };
 
     let font_id = TextStyle::Body.resolve(plot.ui.style());
+    let rect = plot.transform.frame();
+    let bottom_align = pointer.y > (rect.min.y + 100.0);
+    let left_align = pointer.x >= (rect.min.x + 100.0);
+
+    let align = match (left_align, bottom_align) {
+        (false, true) => Align2::LEFT_BOTTOM,
+        (false, false) => Align2::LEFT_TOP,
+        (true, true) => Align2::RIGHT_BOTTOM,
+        (true, false) => Align2::RIGHT_TOP,
+    };
+
     plot.ui.fonts(|f| {
         shapes.push(Shape::text(
             f,
             pointer + vec2(3.0, -2.0),
-            Align2::LEFT_BOTTOM,
+            align,
             text,
             font_id,
             plot.ui.visuals().text_color(),
