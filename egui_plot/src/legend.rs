@@ -6,6 +6,7 @@ use egui::{
 };
 
 use super::items::PlotItem;
+use super::LegendFormatterFn;
 
 /// Where to place the plot legend.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -192,6 +193,7 @@ impl LegendWidget {
         config: Legend,
         items: &[Box<dyn PlotItem>],
         hidden_items: &ahash::HashSet<String>, // Existing hidden items in the plot memory.
+        formatter: Option<&LegendFormatterFn>,
     ) -> Option<Self> {
         // If `config.hidden_items` is not `None`, it is used.
         let hidden_items = config.hidden_items.as_ref().unwrap_or(hidden_items);
@@ -203,8 +205,12 @@ impl LegendWidget {
             .iter()
             .filter(|item| !item.name().is_empty())
             .for_each(|item| {
+                let name = formatter.map_or_else(
+                    || item.name().to_owned(),
+                    |formatter| formatter(item.name()).to_owned(),
+                );
                 entries
-                    .entry(item.name().to_owned())
+                    .entry(name.clone())
                     .and_modify(|entry| {
                         if entry.color != item.color() {
                             // Multiple items with different colors
@@ -213,7 +219,7 @@ impl LegendWidget {
                     })
                     .or_insert_with(|| {
                         let color = item.color();
-                        let checked = !hidden_items.contains(item.name());
+                        let checked = !hidden_items.contains(&name);
                         LegendEntry::new(color, checked)
                     });
             });
