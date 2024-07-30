@@ -187,10 +187,10 @@ pub(super) struct LegendWidget {
 impl LegendWidget {
     /// Create a new legend from items, the names of items that are hidden and the style of the
     /// text. Returns `None` if the legend has no entries.
-    pub(super) fn try_new(
+    pub(super) fn try_new<'a>(
         rect: Rect,
         config: Legend,
-        items: &[Box<dyn PlotItem>],
+        items: &[Box<dyn PlotItem + 'a>],
         hidden_items: &ahash::HashSet<String>, // Existing hidden items in the plot memory.
     ) -> Option<Self> {
         // If `config.hidden_items` is not `None`, it is used.

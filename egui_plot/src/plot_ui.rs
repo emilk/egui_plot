@@ -7,9 +7,9 @@ use crate::Plot;
 
 /// Provides methods to interact with a plot while building it. It is the single argument of the closure
 /// provided to [`Plot::show`]. See [`Plot`] for an example of how to use it.
-pub struct PlotUi {
+pub struct PlotUi<'a> {
     pub(crate) ctx: egui::Context,
-    pub(crate) items: Vec<Box<dyn PlotItem>>,
+    pub(crate) items: Vec<Box<dyn PlotItem + 'a>>,
     pub(crate) next_auto_color_idx: usize,
     pub(crate) last_plot_transform: PlotTransform,
     pub(crate) last_auto_bounds: Vec2b,
@@ -17,7 +17,7 @@ pub struct PlotUi {
     pub(crate) bounds_modifications: Vec<BoundsModification>,
 }
 
-impl PlotUi {
+impl<'a> PlotUi<'a> {
     fn auto_color(&mut self) -> Color32 {
         let i = self.next_auto_color_idx;
         self.next_auto_color_idx += 1;
@@ -122,12 +122,12 @@ impl PlotUi {
     }
 
     /// Add an arbitrary item.
-    pub fn add(&mut self, item: impl PlotItem + 'static) {
+    pub fn add(&mut self, item: impl PlotItem + 'a) {
         self.items.push(Box::new(item));
     }
 
     /// Add a data line.
-    pub fn line(&mut self, mut line: crate::Line) {
+    pub fn line(&mut self, mut line: crate::Line<'a>) {
         if line.series.is_empty() {
             return;
         };
@@ -140,7 +140,7 @@ impl PlotUi {
     }
 
     /// Add a polygon. The polygon has to be convex.
-    pub fn polygon(&mut self, mut polygon: crate::Polygon) {
+    pub fn polygon(&mut self, mut polygon: crate::Polygon<'a>) {
         if polygon.series.is_empty() {
             return;
         };
@@ -162,7 +162,7 @@ impl PlotUi {
     }
 
     /// Add data points.
-    pub fn points(&mut self, mut points: crate::Points) {
+    pub fn points(&mut self, mut points: crate::Points<'a>) {
         if points.series.is_empty() {
             return;
         };
@@ -175,7 +175,7 @@ impl PlotUi {
     }
 
     /// Add arrows.
-    pub fn arrows(&mut self, mut arrows: crate::Arrows) {
+    pub fn arrows(&mut self, mut arrows: crate::Arrows<'a>) {
         if arrows.origins.is_empty() || arrows.tips.is_empty() {
             return;
         };
