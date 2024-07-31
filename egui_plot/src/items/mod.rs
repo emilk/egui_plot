@@ -420,8 +420,8 @@ impl PlotItem for VLine {
 }
 
 /// A series of values forming a path.
-pub struct Line {
-    pub(super) series: PlotPoints,
+pub struct Line<'a> {
+    pub(super) series: PlotPoints<'a>,
     pub(super) stroke: Stroke,
     pub(super) name: String,
     pub(super) highlight: bool,
@@ -431,8 +431,8 @@ pub struct Line {
     id: Option<Id>,
 }
 
-impl Line {
-    pub fn new(series: impl Into<PlotPoints>) -> Self {
+impl<'a> Line<'a> {
+    pub fn new(series: impl Into<PlotPoints<'a>>) -> Self {
         Self {
             series: series.into(),
             stroke: Stroke::new(1.5, Color32::TRANSPARENT), // Note: a stroke of 1.0 (or less) can look bad on low-dpi-screens
@@ -522,7 +522,7 @@ fn y_intersection(p1: &Pos2, p2: &Pos2, y: f32) -> Option<f32> {
         .then_some(((y * (p1.x - p2.x)) - (p1.x * p2.y - p1.y * p2.x)) / (p1.y - p2.y))
 }
 
-impl PlotItem for Line {
+impl<'a> PlotItem for Line<'a> {
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
             series,
@@ -620,8 +620,8 @@ impl PlotItem for Line {
 }
 
 /// A convex polygon.
-pub struct Polygon {
-    pub(super) series: PlotPoints,
+pub struct Polygon<'a> {
+    pub(super) series: PlotPoints<'a>,
     pub(super) stroke: Stroke,
     pub(super) name: String,
     pub(super) highlight: bool,
@@ -631,8 +631,8 @@ pub struct Polygon {
     id: Option<Id>,
 }
 
-impl Polygon {
-    pub fn new(series: impl Into<PlotPoints>) -> Self {
+impl<'a> Polygon<'a> {
+    pub fn new(series: impl Into<PlotPoints<'a>>) -> Self {
         Self {
             series: series.into(),
             stroke: Stroke::new(1.0, Color32::TRANSPARENT),
@@ -709,7 +709,7 @@ impl Polygon {
     }
 }
 
-impl PlotItem for Polygon {
+impl<'a> PlotItem for Polygon<'a> {
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
             series,
@@ -918,8 +918,8 @@ impl PlotItem for Text {
 }
 
 /// A set of points.
-pub struct Points {
-    pub(super) series: PlotPoints,
+pub struct Points<'a> {
+    pub(super) series: PlotPoints<'a>,
 
     pub(super) shape: MarkerShape,
 
@@ -942,8 +942,8 @@ pub struct Points {
     id: Option<Id>,
 }
 
-impl Points {
-    pub fn new(series: impl Into<PlotPoints>) -> Self {
+impl<'a> Points<'a> {
+    pub fn new(series: impl Into<PlotPoints<'a>>) -> Self {
         Self {
             series: series.into(),
             shape: MarkerShape::Circle,
@@ -1028,7 +1028,7 @@ impl Points {
     }
 }
 
-impl PlotItem for Points {
+impl<'a> PlotItem for Points<'a> {
     #[allow(clippy::too_many_lines)] // TODO(emilk): shorten this function
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let sqrt_3 = 3_f32.sqrt();
@@ -1196,9 +1196,9 @@ impl PlotItem for Points {
 }
 
 /// A set of arrows.
-pub struct Arrows {
-    pub(super) origins: PlotPoints,
-    pub(super) tips: PlotPoints,
+pub struct Arrows<'a> {
+    pub(super) origins: PlotPoints<'a>,
+    pub(super) tips: PlotPoints<'a>,
     pub(super) tip_length: Option<f32>,
     pub(super) color: Color32,
     pub(super) name: String,
@@ -1207,8 +1207,8 @@ pub struct Arrows {
     id: Option<Id>,
 }
 
-impl Arrows {
-    pub fn new(origins: impl Into<PlotPoints>, tips: impl Into<PlotPoints>) -> Self {
+impl<'a> Arrows<'a> {
+    pub fn new(origins: impl Into<PlotPoints<'a>>, tips: impl Into<PlotPoints<'a>>) -> Self {
         Self {
             origins: origins.into(),
             tips: tips.into(),
@@ -1270,7 +1270,7 @@ impl Arrows {
     }
 }
 
-impl PlotItem for Arrows {
+impl<'a> PlotItem for Arrows<'a> {
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
             origins,

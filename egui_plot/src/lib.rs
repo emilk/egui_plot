@@ -728,20 +728,20 @@ impl<'a> Plot<'a> {
     }
 
     /// Interact with and add items to the plot and finally draw it.
-    pub fn show<R>(
+    pub fn show<'b, R>(
         self,
         ui: &mut Ui,
-        build_fn: impl FnOnce(&mut PlotUi) -> R + 'a,
+        build_fn: impl FnOnce(&mut PlotUi<'b>) -> R + 'a,
     ) -> PlotResponse<R> {
         self.show_dyn(ui, Box::new(build_fn))
     }
 
     #[allow(clippy::too_many_lines)] // TODO(emilk): shorten this function
     #[allow(clippy::type_complexity)] // build_fn
-    fn show_dyn<R>(
+    fn show_dyn<'b, R>(
         self,
         ui: &mut Ui,
-        build_fn: Box<dyn FnOnce(&mut PlotUi) -> R + 'a>,
+        build_fn: Box<dyn FnOnce(&mut PlotUi<'b>) -> R + 'a>,
     ) -> PlotResponse<R> {
         let Self {
             id_source,
@@ -1467,7 +1467,7 @@ pub fn uniform_grid_spacer<'a>(spacer: impl Fn(GridInput) -> [f64; 3] + 'a) -> G
 // ----------------------------------------------------------------------------
 
 struct PreparedPlot<'a> {
-    items: Vec<Box<dyn PlotItem>>,
+    items: Vec<Box<dyn PlotItem + 'a>>,
     show_x: bool,
     show_y: bool,
     label_formatter: LabelFormatter<'a>,
