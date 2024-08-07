@@ -32,15 +32,15 @@ emath = { version = "0.28.1", default-features = false }
 image = { version = "0.25", default-features = false }
 serde = { version = "1", features = ["derive"] }
 
+# If you fork https://github.com/emilk/egui you can test with:
+# egui = { path = "../egui/crates/egui" }
+# eframe = { path = "../egui/crates/eframe" }
+
 
 [patch.crates-io]
 # If you want to use the bleeding edge version of egui and eframe:
 # egui = { git = "https://github.com/emilk/egui", branch = "master" }
 # eframe = { git = "https://github.com/emilk/egui", branch = "master" }
-
-# If you fork https://github.com/emilk/egui you can test with:
-# egui = { path = "../egui/crates/egui" }
-# eframe = { path = "../egui/crates/eframe" }
 
 
 [workspace.lints.rust]
