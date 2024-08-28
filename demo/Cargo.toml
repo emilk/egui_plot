@@ -13,13 +13,22 @@ workspace = true
 
 [dependencies]
 egui_plot = { workspace = true, features = ["serde"] }
-
 egui = "0.28"
 eframe = { version = "0.28", default-features = false, features = [
     "default_fonts", # Embed the default egui fonts.
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
     "persistence",   # Enable restoring app state when restarting the app.
 ] }
+
+# If you fork https://github.com/emilk/egui you can test with:
+# egui_plot = { path = "../egui_plot", features = ["serde"] }
+# egui = { path = "../../egui/crates/egui" }
+# eframe = { path = "../../egui/crates/eframe", default-features = false, features = [
+#     "default_fonts", # Embed the default egui fonts.
+#     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
+#     "persistence",   # Enable restoring app state when restarting the app.
+# ] }
+
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
 
