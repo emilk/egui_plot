@@ -839,7 +839,7 @@ impl<'a> Plot<'a> {
             auto_bounds: default_auto_bounds,
             hovered_legend_item: None,
             hidden_items: Default::default(),
-            transform: PlotTransform::new(plot_rect, min_auto_bounds, center_axis.x, center_axis.y),
+            transform: PlotTransform::new(plot_rect, min_auto_bounds, center_axis),
             last_click_pos_for_zoom: None,
             x_axis_thickness: Default::default(),
             y_axis_thickness: Default::default(),
@@ -1005,7 +1005,7 @@ impl<'a> Plot<'a> {
             }
         }
 
-        mem.transform = PlotTransform::new(plot_rect, bounds, center_axis.x, center_axis.y);
+        mem.transform = PlotTransform::new(plot_rect, bounds, center_axis);
 
         // Enforce aspect ratio
         if let Some(data_aspect) = data_aspect {
