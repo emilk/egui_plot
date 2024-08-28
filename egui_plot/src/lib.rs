@@ -20,8 +20,8 @@ use std::{cmp::Ordering, ops::RangeInclusive, sync::Arc};
 use ahash::HashMap;
 use egui::{
     epaint, remap_clamp, vec2, Align2, Color32, CursorIcon, Id, Layout, NumExt, PointerButton,
-    Pos2, Rangef, Rect, Response, Rounding, Sense, Shape, Stroke, TextStyle, Ui, Vec2, Vec2b,
-    WidgetText,
+    Pos2, Rangef, Rect, Response, Rounding, Sense, Shape, Stroke, TextStyle, Ui, UiBuilder, Vec2,
+    Vec2b, WidgetText,
 };
 use emath::Float as _;
 
@@ -1503,7 +1503,11 @@ impl<'a> PreparedPlot<'a> {
 
         let transform = &self.transform;
 
-        let mut plot_ui = ui.child_ui(*transform.frame(), Layout::default(), None);
+        let mut plot_ui = ui.new_child(
+            UiBuilder::new()
+                .max_rect(*transform.frame())
+                .layout(Layout::default()),
+        );
         plot_ui.set_clip_rect(transform.frame().intersect(ui.clip_rect()));
         for item in &self.items {
             item.shapes(&plot_ui, transform, &mut shapes);
