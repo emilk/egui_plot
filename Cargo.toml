@@ -26,22 +26,22 @@ ahash = { version = "0.8.11", default-features = false, features = [
     "std",
 ] }
 document-features = " 0.2.8"
-eframe = { version = "0.28.1", default-features = false }
-egui = { version = "0.28.1", default-features = false }
 emath = { version = "0.28.1", default-features = false }
 image = { version = "0.25", default-features = false }
 serde = { version = "1", features = ["derive"] }
 
-# If you fork https://github.com/emilk/egui you can test with:
-# egui = { path = "../egui/crates/egui" }
-# eframe = { path = "../egui/crates/eframe" }
+eframe = { version = "0.28.1", default-features = false }
+egui = { version = "0.28.1", default-features = false }
 
+# If you fork https://github.com/emilk/egui you can test with:
+# egui = { path = "../egui/crates/egui", default-features = false }
+# eframe = { path = "../egui/crates/eframe", default-features = false }
+
+# If you want to use the bleeding edge version of egui and eframe:
+# egui = { git = "https://github.com/emilk/egui", branch = "master", default-features = false }
+# eframe = { git = "https://github.com/emilk/egui", branch = "master", default-features = false }
 
 [patch.crates-io]
-# If you want to use the bleeding edge version of egui and eframe:
-# egui = { git = "https://github.com/emilk/egui", branch = "master" }
-# eframe = { git = "https://github.com/emilk/egui", branch = "master" }
-
 
 [workspace.lints.rust]
 unsafe_code = "deny"
