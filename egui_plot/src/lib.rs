@@ -578,31 +578,17 @@ impl<'a> Plot<'a> {
 
     /// Add this plot to an axis link group so that this plot will share the bounds with other plots in the
     /// same group. A plot cannot belong to more than one axis group.
-    #[allow(clippy::fn_params_excessive_bools)] // TODO(emilk): use a `Vec2` as argument instead
     #[inline]
-    pub fn link_axis(mut self, group_id: impl Into<Id>, link_x: bool, link_y: bool) -> Self {
-        self.linked_axes = Some((
-            group_id.into(),
-            Vec2b {
-                x: link_x,
-                y: link_y,
-            },
-        ));
+    pub fn link_axis(mut self, group_id: impl Into<Id>, link: Vec2b) -> Self {
+        self.linked_axes = Some((group_id.into(), link));
         self
     }
 
     /// Add this plot to a cursor link group so that this plot will share the cursor position with other plots
     /// in the same group. A plot cannot belong to more than one cursor group.
-    #[allow(clippy::fn_params_excessive_bools)] // TODO(emilk): use a `Vec2` as argument instead
     #[inline]
-    pub fn link_cursor(mut self, group_id: impl Into<Id>, link_x: bool, link_y: bool) -> Self {
-        self.linked_cursors = Some((
-            group_id.into(),
-            Vec2b {
-                x: link_x,
-                y: link_y,
-            },
-        ));
+    pub fn link_cursor(mut self, group_id: impl Into<Id>, link: Vec2b) -> Self {
+        self.linked_cursors = Some((group_id.into(), link));
         self
     }
 
