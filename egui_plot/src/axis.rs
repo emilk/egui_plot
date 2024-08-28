@@ -244,13 +244,17 @@ impl<'a> AxisWidget<'a> {
     }
 
     /// Returns the actual thickness of the axis.
-    #[allow(clippy::too_many_lines)] // TODO(emilk): shorten this function
     pub fn ui(self, ui: &mut Ui, axis: Axis) -> (Response, f32) {
         let response = ui.allocate_rect(self.rect, Sense::hover());
 
         if !ui.is_rect_visible(response.rect) {
             return (response, 0.0);
         }
+
+        let Some(transform) = self.transform else {
+            return (response, 0.0);
+        };
+        let thickness = self.add_tick_labels(ui, transform, axis);
 
         let visuals = ui.style().visuals.clone();
 
@@ -309,15 +313,14 @@ impl<'a> AxisWidget<'a> {
                 .add(TextShape::new(text_pos, galley, text_color).with_angle(angle));
         }
 
+        (response, thickness)
+    }
+
+    /// Add tick labels to the axis. Returns the thickness of the axis.
+    fn add_tick_labels(&self, ui: &Ui, transform: PlotTransform, axis: Axis) -> f32 {
         let font_id = TextStyle::Body.resolve(ui.style());
-        let Some(transform) = self.transform else {
-            return (response, 0.0);
-        };
-
         let label_spacing = self.hints.label_spacing;
-
         let mut thickness: f32 = 0.0;
-
         // Add tick labels:
         for step in self.steps.iter() {
             let text = (self.hints.formatter)(*step, &self.range);
@@ -393,7 +396,6 @@ impl<'a> AxisWidget<'a> {
                 };
             }
         }
-
-        (response, thickness)
+        thickness
     }
 }
