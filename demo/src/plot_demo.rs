@@ -1,7 +1,9 @@
 use std::f64::consts::TAU;
 use std::ops::RangeInclusive;
 
-use egui::{remap, vec2, Color32, ComboBox, NumExt, Pos2, Response, Stroke, TextWrapMode, Vec2b};
+use egui::{
+    remap, vec2, Color32, ComboBox, NumExt, Pos2, Response, ScrollArea, Stroke, TextWrapMode, Vec2b,
+};
 
 use egui_plot::{
     Arrows, AxisHints, Bar, BarChart, BoxElem, BoxPlot, BoxSpread, CoordinatesFormatter, Corner,
@@ -63,7 +65,7 @@ impl PlotDemo {
             ui.add(crate::egui_github_link_file!());
         });
         ui.separator();
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
             ui.selectable_value(&mut self.open_panel, Panel::Lines, "Lines");
             ui.selectable_value(&mut self.open_panel, Panel::Markers, "Markers");
             ui.selectable_value(&mut self.open_panel, Panel::Legend, "Legend");
@@ -254,7 +256,9 @@ impl LineDemo {
 
 impl LineDemo {
     fn ui(&mut self, ui: &mut egui::Ui) -> Response {
-        self.options_ui(ui);
+        ScrollArea::horizontal().show(ui, |ui| {
+            self.options_ui(ui);
+        });
 
         if self.animate {
             ui.ctx().request_repaint();
@@ -392,8 +396,27 @@ impl LegendDemo {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui) -> Response {
-        let Self { config } = self;
+        ScrollArea::horizontal().show(ui, |ui| {
+            self.settings_ui(ui);
+        });
 
+        let Self { config } = self;
+        let legend_plot = Plot::new("legend_demo")
+            .legend(config.clone())
+            .data_aspect(1.0);
+        legend_plot
+            .show(ui, |plot_ui| {
+                plot_ui.line(Self::line_with_slope(0.5).name("lines"));
+                plot_ui.line(Self::line_with_slope(1.0).name("lines"));
+                plot_ui.line(Self::line_with_slope(2.0).name("lines"));
+                plot_ui.line(Self::sin().name("sin(x)"));
+                plot_ui.line(Self::cos().name("cos(x)"));
+            })
+            .response
+    }
+
+    fn settings_ui(&mut self, ui: &mut egui::Ui) {
+        let Self { config } = self;
         egui::Grid::new("settings").show(ui, |ui| {
             ui.label("Text style:");
             ui.horizontal(|ui| {
@@ -420,18 +443,6 @@ impl LegendDemo {
             );
             ui.end_row();
         });
-        let legend_plot = Plot::new("legend_demo")
-            .legend(config.clone())
-            .data_aspect(1.0);
-        legend_plot
-            .show(ui, |plot_ui| {
-                plot_ui.line(Self::line_with_slope(0.5).name("lines"));
-                plot_ui.line(Self::line_with_slope(1.0).name("lines"));
-                plot_ui.line(Self::line_with_slope(2.0).name("lines"));
-                plot_ui.line(Self::sin().name("sin(x)"));
-                plot_ui.line(Self::cos().name("cos(x)"));
-            })
-            .response
     }
 }
 
@@ -642,6 +653,13 @@ impl LinkedAxesDemo {
             ui.checkbox(&mut self.link_cursor_y, "Y");
         });
 
+        ScrollArea::horizontal()
+            .show(ui, |ui| self.plots_ui(ui))
+            .inner
+    }
+
+    fn plots_ui(&self, ui: &mut egui::Ui) -> Response {
+        ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
         let link_group_id = ui.id().with("linked_demo");
         ui.horizontal(|ui| {
             Plot::new("left-top")
@@ -877,6 +895,17 @@ impl Default for ChartsDemo {
 
 impl ChartsDemo {
     fn ui(&mut self, ui: &mut egui::Ui) -> Response {
+        ScrollArea::horizontal().show(ui, |ui| {
+            self.options_ui(ui);
+        });
+        match self.chart {
+            Chart::GaussBars => self.bar_gauss(ui),
+            Chart::StackedBars => self.bar_stacked(ui),
+            Chart::BoxPlot => self.box_plot(ui),
+        }
+    }
+
+    fn options_ui(&mut self, ui: &mut egui::Ui) -> Response {
         ui.horizontal(|ui| {
             ui.vertical(|ui| {
                 ui.label("Type:");
@@ -912,12 +941,8 @@ impl ChartsDemo {
                     });
                 });
             });
-        });
-        match self.chart {
-            Chart::GaussBars => self.bar_gauss(ui),
-            Chart::StackedBars => self.bar_stacked(ui),
-            Chart::BoxPlot => self.box_plot(ui),
-        }
+        })
+        .response
     }
 
     fn bar_gauss(&self, ui: &mut egui::Ui) -> Response {
