@@ -156,7 +156,7 @@ impl Default for Orientation {
 /// These can be an owned `Vec` or generated with a function.
 pub enum PlotPoints<'a> {
     Owned(Vec<PlotPoint>),
-    Generator(ExplicitGenerator),
+    Generator(ExplicitGenerator<'a>),
     Borrowed(&'a [PlotPoint]),
 }
 
@@ -207,7 +207,7 @@ impl<'a> PlotPoints<'a> {
 
     /// Draw a line based on a function `y=f(x)`, a range (which can be infinite) for x and the number of points.
     pub fn from_explicit_callback(
-        function: impl Fn(f64) -> f64 + 'static,
+        function: impl Fn(f64) -> f64 + 'a,
         x_range: impl RangeBounds<f64>,
         points: usize,
     ) -> Self {
@@ -391,13 +391,13 @@ pub enum PlotGeometry<'a> {
 // ----------------------------------------------------------------------------
 
 /// Describes a function y = f(x) with an optional range for x and a number of points.
-pub struct ExplicitGenerator {
-    function: Box<dyn Fn(f64) -> f64>,
+pub struct ExplicitGenerator<'a> {
+    function: Box<dyn Fn(f64) -> f64 + 'a>,
     x_range: RangeInclusive<f64>,
     points: usize,
 }
 
-impl ExplicitGenerator {
+impl ExplicitGenerator<'_> {
     fn estimate_bounds(&self) -> PlotBounds {
         let mut bounds = PlotBounds::NOTHING;
 
