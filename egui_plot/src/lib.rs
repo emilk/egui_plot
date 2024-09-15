@@ -32,7 +32,7 @@ pub use crate::{
         MarkerShape, Orientation, PlotConfig, PlotGeometry, PlotImage, PlotItem, PlotPoint,
         PlotPoints, Points, Polygon, Text, VLine,
     },
-    legend::{Corner, Legend},
+    legend::{ColorConflictHandling, Corner, Legend},
     memory::PlotMemory,
     plot_ui::PlotUi,
     transform::{PlotBounds, PlotTransform},
