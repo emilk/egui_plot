@@ -180,7 +180,7 @@ pub struct Plot<'a> {
     x_axes: Vec<AxisHints<'a>>, // default x axes
     y_axes: Vec<AxisHints<'a>>, // default y axes
     legend_config: Option<Legend>,
-    ruler_color: Option<Color32>,
+    cursor_color: Option<Color32>,
     show_background: bool,
     show_axes: Vec2b,
 
@@ -228,7 +228,7 @@ impl<'a> Plot<'a> {
             x_axes: vec![AxisHints::new(Axis::X)],
             y_axes: vec![AxisHints::new(Axis::Y)],
             legend_config: None,
-            ruler_color: None,
+            cursor_color: None,
             show_background: true,
             show_axes: true.into(),
 
@@ -729,12 +729,12 @@ impl<'a> Plot<'a> {
         self
     }
 
-    /// Set color of the rulers.
+    /// Set custom cursor color.
     ///
-    /// You may set the color to Color32::TRANSPARENT to hide the rulers.
+    /// You may set the color to ``Color32::TRANSPARENT`` to hide the cursors.
     #[inline]
-    pub fn custom_ruler_color(mut self, color: Color32) -> Self {
-        self.ruler_color = Some(color);
+    pub fn custom_cursor_color(mut self, color: Color32) -> Self {
+        self.cursor_color = Some(color);
         self
     }
 
@@ -779,7 +779,7 @@ impl<'a> Plot<'a> {
             x_axes,
             y_axes,
             legend_config,
-            ruler_color,
+            cursor_color,
             reset,
             show_background,
             show_axes,
@@ -1208,7 +1208,7 @@ impl<'a> Plot<'a> {
             draw_cursor_x: linked_cursors.as_ref().map_or(false, |group| group.1.x),
             draw_cursor_y: linked_cursors.as_ref().map_or(false, |group| group.1.y),
             draw_cursors,
-            ruler_color,
+            cursor_color,
             grid_spacers,
             sharp_grid_lines,
             clamp_grid,
@@ -1493,7 +1493,7 @@ struct PreparedPlot<'a> {
     draw_cursor_x: bool,
     draw_cursor_y: bool,
     draw_cursors: Vec<Cursor>,
-    ruler_color: Option<Color32>,
+    cursor_color: Option<Color32>,
 
     sharp_grid_lines: bool,
     clamp_grid: bool,
@@ -1531,7 +1531,7 @@ impl<'a> PreparedPlot<'a> {
         };
 
         // Draw cursors
-        let line_color = self.ruler_color.unwrap_or_else(|| rulers_color(ui));
+        let line_color = self.cursor_color.unwrap_or_else(|| rulers_color(ui));
 
         let mut draw_cursor = |cursors: &Vec<Cursor>, always| {
             for &cursor in cursors {
