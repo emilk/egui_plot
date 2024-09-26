@@ -579,8 +579,8 @@ impl<'a> Plot<'a> {
     /// Add this plot to an axis link group so that this plot will share the bounds with other plots in the
     /// same group. A plot cannot belong to more than one axis group.
     #[inline]
-    pub fn link_axis(mut self, group_id: impl Into<Id>, link: Vec2b) -> Self {
-        self.linked_axes = Some((group_id.into(), link));
+    pub fn link_axis(mut self, group_id: impl Into<Id>, link: impl Into<Vec2b>) -> Self {
+        self.linked_axes = Some((group_id.into(), link.into()));
         self
     }
 
