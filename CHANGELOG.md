@@ -5,6 +5,10 @@ This file is updated upon each release.
 Changes since the last release can be found at <https://github.com/emilk/egui_plot/compare/latest...HEAD> or by running the `scripts/generate_changelog.py` script.
 
 
+## 0.29.0 - 2024-09-26
+* Update to egui 0.29 [#48](https://github.com/emilk/egui_plot/pull/48) by [@emilk](https://github.com/emilk)
+
+
 ## 0.28.1 - 2024-07-05
 Nothing new
 
