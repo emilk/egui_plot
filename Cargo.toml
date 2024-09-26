@@ -25,7 +25,7 @@ ahash = { version = "0.8.11", default-features = false, features = [
     "no-rng", # we don't need DOS-protection, so we let users opt-in to it instead
     "std",
 ] }
-document-features = " 0.2.8"
+document-features = "0.2.10"
 eframe = { version = "0.28.1", default-features = false }
 egui = { version = "0.28.1", default-features = false }
 emath = { version = "0.28.1", default-features = false }
@@ -34,9 +34,8 @@ serde = { version = "1", features = ["derive"] }
 
 
 [patch.crates-io]
-# If you want to use the bleeding edge version of egui and eframe:
-# egui = { git = "https://github.com/emilk/egui", branch = "master" }
-# eframe = { git = "https://github.com/emilk/egui", branch = "master" }
+egui = { git = "https://github.com/emilk/egui", rev = "a72ebbeafcfc0364407dc5a94151ebf10152408b" }
+eframe = { git = "https://github.com/emilk/egui", rev = "a72ebbeafcfc0364407dc5a94151ebf10152408b" }
 
 # If you fork https://github.com/emilk/egui you can test with:
 # egui = { path = "../egui/crates/egui" }
