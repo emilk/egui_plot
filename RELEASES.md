@@ -51,7 +51,7 @@ We don't update the MSRV in a patch release, unless we really, really need to.
 I usually do this all on the `main` branch, but doing it in a release branch is also fine, as long as you remember to merge it into `main` later.
 
 * [ ] `git commit -m 'Release 0.x.0 - summary'`
-* [ ] `cargo publish`
+* [ ] `cargo publish -p egui_plot`
 * [ ] `git tag -a 0.x.0 -m 'Release 0.x.0 - summary'`
 * [ ] `git pull --tags ; git tag -d latest && git tag -a latest -m 'Latest release' && git push --tags origin latest --force ; git push --tags`
 * [ ] merge release PR or push to `main`

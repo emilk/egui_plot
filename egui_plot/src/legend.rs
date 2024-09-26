@@ -261,7 +261,8 @@ impl Widget for &mut LegendWidget {
         let layout = Layout::from_main_dir_and_cross_align(main_dir, cross_align);
         let legend_pad = 4.0;
         let legend_rect = rect.shrink(legend_pad);
-        let mut legend_ui = ui.child_ui(legend_rect, layout, None);
+        let mut legend_ui =
+            ui.new_child(egui::UiBuilder::new().max_rect(legend_rect).layout(layout));
         legend_ui
             .scope(|ui| {
                 let background_frame = Frame {
