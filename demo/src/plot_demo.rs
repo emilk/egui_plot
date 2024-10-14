@@ -7,8 +7,8 @@ use egui::{
 
 use egui_plot::{
     Arrows, AxisHints, Bar, BarChart, BoxElem, BoxPlot, BoxSpread, CoordinatesFormatter, Corner,
-    GridInput, GridMark, HLine, Legend, Line, LineStyle, MarkerShape, Plot, PlotImage, PlotPoint,
-    PlotPoints, PlotResponse, Points, Polygon, Text, VLine,
+    GridInput, GridMark, HLine, Legend, Line, LineStyle, MarkerShape, Plot, PlotBounds, PlotImage,
+    PlotPoint, PlotPoints, PlotResponse, Points, Polygon, Text, VLine,
 };
 
 // ----------------------------------------------------------------------------
@@ -23,6 +23,7 @@ enum Panel {
     Interaction,
     CustomAxes,
     LinkedAxes,
+    LogAxes,
 }
 
 impl Default for Panel {
@@ -43,6 +44,7 @@ pub struct PlotDemo {
     interaction_demo: InteractionDemo,
     custom_axes_demo: CustomAxesDemo,
     linked_axes_demo: LinkedAxesDemo,
+    log_axes_demo: LogAxesDemo,
     open_panel: Panel,
 }
 
@@ -74,6 +76,7 @@ impl PlotDemo {
             ui.selectable_value(&mut self.open_panel, Panel::Interaction, "Interaction");
             ui.selectable_value(&mut self.open_panel, Panel::CustomAxes, "Custom Axes");
             ui.selectable_value(&mut self.open_panel, Panel::LinkedAxes, "Linked Axes");
+            ui.selectable_value(&mut self.open_panel, Panel::LogAxes, "Log Axes");
         });
         ui.separator();
 
@@ -101,6 +104,9 @@ impl PlotDemo {
             }
             Panel::LinkedAxes => {
                 self.linked_axes_demo.ui(ui);
+            }
+            Panel::LogAxes => {
+                self.log_axes_demo.ui(ui);
             }
         }
     }
@@ -687,6 +693,76 @@ impl LinkedAxesDemo {
             .link_axis(link_group_id, self.link_x, self.link_y)
             .link_cursor(link_group_id, self.link_cursor_x, self.link_cursor_y)
             .show(ui, Self::configure_plot)
+            .response
+    }
+}
+
+// ----------------------------------------------------------------------------
+#[derive(PartialEq, serde::Deserialize, serde::Serialize)]
+struct LogAxesDemo {
+    log_axes: Vec2b,
+}
+
+impl Default for LogAxesDemo {
+    fn default() -> Self {
+        Self {
+            log_axes: Vec2b::new(false, true),
+        }
+    }
+}
+
+impl LogAxesDemo {
+    fn line_exp() -> Line {
+        Line::new(PlotPoints::from_explicit_callback(
+            move |x| 10.0_f64.powf(x / 200.0),
+            0.1..=1000.0,
+            1000,
+        ))
+        .name("y = 10^(x/200)")
+        .color(Color32::RED)
+    }
+
+    fn line_lin() -> Line {
+        Line::new(PlotPoints::from_explicit_callback(
+            move |x| -5.0 + x,
+            0.1..=1000.0,
+            1000,
+        ))
+        .name("y = -5 + x")
+        .color(Color32::GREEN)
+    }
+
+    fn line_log() -> Line {
+        Line::new(PlotPoints::from_explicit_callback(
+            move |x| x.log10(),
+            0.1..=1000.0,
+            1000,
+        ))
+        .name("y = log10(x)")
+        .color(Color32::BLUE)
+    }
+
+    fn ui(&mut self, ui: &mut egui::Ui) -> Response {
+        let just_changed = ui.checkbox(&mut self.log_axes.x, "Log X-Axis").clicked();
+        ui.checkbox(&mut self.log_axes.y, "Log Y-Axis");
+        Plot::new("log_demo")
+            .log_axes(self.log_axes)
+            .x_axis_label("x")
+            .y_axis_label("y")
+            .show_axes(Vec2b::new(true, true))
+            .legend(Legend::default())
+            .show(ui, |ui| {
+                if just_changed {
+                    if self.log_axes.x {
+                        ui.set_plot_bounds(PlotBounds::from_min_max([0.1, 0.1], [1e3, 1e4]));
+                    } else {
+                        ui.set_plot_bounds(PlotBounds::from_min_max([0.0, 0.0], [3.0, 1000.0]));
+                    }
+                }
+                ui.line(Self::line_exp());
+                ui.line(Self::line_lin());
+                ui.line(Self::line_log());
+            })
             .response
     }
 }
