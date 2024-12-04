@@ -26,9 +26,9 @@ ahash = { version = "0.8.11", default-features = false, features = [
     "std",
 ] }
 document-features = "0.2.10"
-eframe = { version = "0.29.0", default-features = false }
-egui = { version = "0.29.0", default-features = false }
-emath = { version = "0.29.0", default-features = false }
+eframe = { version = "0.29.1", default-features = false }
+egui = { version = "0.29.1", default-features = false }
+emath = { version = "0.29.1", default-features = false }
 env_logger = { version = "0.10", default-features = false, features = [
     "auto-color",
     "humantime",
@@ -37,7 +37,7 @@ image = { version = "0.25", default-features = false }
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
 wasm-bindgen-futures = "0.4"
-web-sys = "0.3.4"
+web-sys = "0.3.70"
 
 
 [patch.crates-io]
