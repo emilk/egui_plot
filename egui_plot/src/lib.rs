@@ -578,31 +578,17 @@ impl<'a> Plot<'a> {
 
     /// Add this plot to an axis link group so that this plot will share the bounds with other plots in the
     /// same group. A plot cannot belong to more than one axis group.
-    #[allow(clippy::fn_params_excessive_bools)] // TODO(emilk): use a `Vec2` as argument instead
     #[inline]
-    pub fn link_axis(mut self, group_id: impl Into<Id>, link_x: bool, link_y: bool) -> Self {
-        self.linked_axes = Some((
-            group_id.into(),
-            Vec2b {
-                x: link_x,
-                y: link_y,
-            },
-        ));
+    pub fn link_axis(mut self, group_id: impl Into<Id>, link: impl Into<Vec2b>) -> Self {
+        self.linked_axes = Some((group_id.into(), link.into()));
         self
     }
 
     /// Add this plot to a cursor link group so that this plot will share the cursor position with other plots
     /// in the same group. A plot cannot belong to more than one cursor group.
-    #[allow(clippy::fn_params_excessive_bools)] // TODO(emilk): use a `Vec2` as argument instead
     #[inline]
-    pub fn link_cursor(mut self, group_id: impl Into<Id>, link_x: bool, link_y: bool) -> Self {
-        self.linked_cursors = Some((
-            group_id.into(),
-            Vec2b {
-                x: link_x,
-                y: link_y,
-            },
-        ));
+    pub fn link_cursor(mut self, group_id: impl Into<Id>, link: Vec2b) -> Self {
+        self.linked_cursors = Some((group_id.into(), link));
         self
     }
 
@@ -853,7 +839,7 @@ impl<'a> Plot<'a> {
             auto_bounds: default_auto_bounds,
             hovered_legend_item: None,
             hidden_items: Default::default(),
-            transform: PlotTransform::new(plot_rect, min_auto_bounds, center_axis.x, center_axis.y),
+            transform: PlotTransform::new(plot_rect, min_auto_bounds, center_axis),
             last_click_pos_for_zoom: None,
             x_axis_thickness: Default::default(),
             y_axis_thickness: Default::default(),
@@ -1019,7 +1005,7 @@ impl<'a> Plot<'a> {
             }
         }
 
-        mem.transform = PlotTransform::new(plot_rect, bounds, center_axis.x, center_axis.y);
+        mem.transform = PlotTransform::new(plot_rect, bounds, center_axis);
 
         // Enforce aspect ratio
         if let Some(data_aspect) = data_aspect {

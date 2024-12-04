@@ -1,6 +1,6 @@
 use std::ops::RangeInclusive;
 
-use egui::{pos2, remap, Pos2, Rect, Vec2};
+use egui::{pos2, remap, Pos2, Rect, Vec2, Vec2b};
 
 use crate::Axis;
 
@@ -274,16 +274,12 @@ pub struct PlotTransform {
     /// The plot bounds.
     bounds: PlotBounds,
 
-    /// Whether to always center the x-range of the bounds.
-    x_centered: bool,
-
-    /// Whether to always center the y-range of the bounds.
-    y_centered: bool,
+    /// Whether to always center the x-range or y-range of the bounds.
+    centered: Vec2b,
 }
 
 impl PlotTransform {
-    #[allow(clippy::fn_params_excessive_bools)] // TODO(emilk): use a `Vec2` as argument instead
-    pub fn new(frame: Rect, bounds: PlotBounds, x_centered: bool, y_centered: bool) -> Self {
+    pub fn new(frame: Rect, bounds: PlotBounds, center_axis: Vec2b) -> Self {
         debug_assert!(
             0.0 <= frame.width() && 0.0 <= frame.height(),
             "Bad plot frame: {frame:?}"
@@ -325,10 +321,10 @@ impl PlotTransform {
         };
 
         // Scale axes so that the origin is in the center.
-        if x_centered {
+        if center_axis.x {
             new_bounds.make_x_symmetrical();
         };
-        if y_centered {
+        if center_axis.y {
             new_bounds.make_y_symmetrical();
         };
 
@@ -340,8 +336,7 @@ impl PlotTransform {
         Self {
             frame,
             bounds: new_bounds,
-            x_centered,
-            y_centered,
+            centered: center_axis,
         }
     }
 
@@ -363,10 +358,10 @@ impl PlotTransform {
     }
 
     pub fn translate_bounds(&mut self, mut delta_pos: (f64, f64)) {
-        if self.x_centered {
+        if self.centered.x {
             delta_pos.0 = 0.;
         }
-        if self.y_centered {
+        if self.centered.y {
             delta_pos.1 = 0.;
         }
         delta_pos.0 *= self.dvalue_dpos()[0];
