@@ -1,7 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 #![allow(rustdoc::missing_crate_level_docs)] // it's an example
 
-use eframe::egui;
+use eframe::egui::{self, UserData};
 use egui_plot::{Legend, Line, Plot, PlotPoints};
 
 fn main() -> eframe::Result {
@@ -26,7 +26,7 @@ impl eframe::App for MyApp {
         let mut plot_rect = None;
         egui::CentralPanel::default().show(ctx, |ui| {
             if ui.button("Save Plot").clicked() {
-                ctx.send_viewport_cmd(egui::ViewportCommand::Screenshot);
+                ctx.send_viewport_cmd(egui::ViewportCommand::Screenshot(UserData::default()));
             }
 
             let my_plot = Plot::new("My Plot").legend(Legend::default());

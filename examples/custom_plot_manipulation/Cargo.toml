@@ -14,7 +14,7 @@ workspace = true
 [dependencies]
 eframe = { workspace = true, features = ["default"] }
 egui_plot.workspace = true
-env_logger = { version = "0.10", default-features = false, features = [
+env_logger = { workspace = true, default-features = false, features = [
     "auto-color",
     "humantime",
 ] }
