@@ -563,6 +563,10 @@ impl CustomAxesDemo {
         ui.label("Zoom in on the X-axis to see hours and minutes");
 
         let x_axes = vec![
+            AxisHints::new_x()
+                .label("Time")
+                .formatter(time_formatter)
+                .placement(egui_plot::VPlacement::Top),
             AxisHints::new_x().label("Time").formatter(time_formatter),
             AxisHints::new_x().label("Value"),
         ];
