@@ -731,7 +731,7 @@ impl<'a> Plot<'a> {
 
     /// Set custom cursor color.
     ///
-    /// You may set the color to ``Color32::TRANSPARENT`` to hide the cursors.
+    /// You may set the color to [`Color32::TRANSPARENT`] to hide the cursors.
     #[inline]
     pub fn custom_cursor_color(mut self, color: Color32) -> Self {
         self.cursor_color = Some(color);
