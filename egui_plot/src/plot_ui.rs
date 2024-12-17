@@ -126,6 +126,11 @@ impl PlotUi {
         self.items.push(Box::new(item));
     }
 
+    /// Add an arbitrary item.
+    pub fn add_item(&mut self, item: Box<dyn PlotItem>) {
+        self.items.push(item);
+    }
+
     /// Add a data line.
     pub fn line(&mut self, mut line: crate::Line) {
         if line.series.is_empty() {
