@@ -53,7 +53,7 @@ I usually do this all on the `main` branch, but doing it in a release branch is 
 * [ ] `git commit -m 'Release 0.x.0 - summary'`
 * [ ] `cargo publish -p egui_plot`
 * [ ] `git tag -a 0.x.0 -m 'Release 0.x.0 - summary'`
-* [ ] `git pull --tags ; git tag -d latest && git tag -a latest -m 'Latest release' && git push --tags origin latest --force ; git push --tags`
+* [ ] `git pull --tags && git tag -d latest && git tag -a latest -m 'Latest release' && git push --tags origin latest --force && git push origin main ; git push --tags`
 * [ ] merge release PR or push to `main`
 * [ ] check that CI is green
 * [ ] do a GitHub release: https://github.com/emilk/egui/releases/new
