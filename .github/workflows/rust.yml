@@ -1,5 +1,10 @@
 # Copied from https://github.com/rerun-io/rerun_template
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    types: [ opened, synchronize ]
 
 name: Rust
 
@@ -129,12 +134,12 @@ jobs:
     name: Check Rust dependencies (cargo-deny)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: EmbarkStudios/cargo-deny-action@v1
-        with:
-          rust-version: "1.80.0"
-          log-level: warn
-          command: check
+    - uses: actions/checkout@v3
+    - uses: EmbarkStudios/cargo-deny-action@v1
+      with:
+        rust-version: "1.80.0"
+        log-level: warn
+        command: check
 
   # ---------------------------------------------------------------------------
 
