@@ -19,7 +19,7 @@ Nothing new
 
 ### 🔧 Changed
 * `Plot::Items:allow_hover` give possibility to masked the interaction on hovered item [#2558](https://github.com/emilk/egui/pull/2558) by [@haricot](https://github.com/haricot)
-* Expose `ClosestElem` and `PlotConfig` [#4380](https://github.com/emilk/egui/pull/4380) by [@Narcha](https://github.com/Narcha)
+* Expose `ClosestElem` and `PlotConfig` [#4380](https://github.com/emilk/egui/pull/4380) by [@rmburg](https://github.com/rmburg)
 * Introduce lifetime to `egui_plot::Plot` to replace `'static` fields [#4435](https://github.com/emilk/egui/pull/4435) by [@Fabus1184](https://github.com/Fabus1184)
 * Plot now respects the `interact_radius` set in the UI's style [#4520](https://github.com/emilk/egui/pull/4520) by [@YgorSouza](https://github.com/YgorSouza)
 * Improve behavior of plot auto-bounds with reduced data [#4632](https://github.com/emilk/egui/pull/4632) by [@abey79](https://github.com/abey79)
