@@ -1343,6 +1343,12 @@ fn axis_widgets<'a>(
         }
     }
 
+    // The loops iterated through {x,y}_axes in reverse order, so we have to reverse the
+    // {x,y}_axis_widgets vec as well. Otherwise, the indices are messed up and the plot memory
+    // (mem.{x,y}_axis_thickness) will access the wrong axis given an index.
+    x_axis_widgets.reverse();
+    y_axis_widgets.reverse();
+
     let mut plot_rect = rect_left;
 
     // If too little space, remove axis widgets
