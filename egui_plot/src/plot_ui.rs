@@ -127,7 +127,7 @@ impl PlotUi {
     }
 
     /// Add an arbitrary item.
-    pub fn add_boxed(&mut self, item: Box<dyn PlotItem>) {
+    pub fn add_item(&mut self, item: Box<dyn PlotItem>) {
         self.items.push(item);
     }
 
