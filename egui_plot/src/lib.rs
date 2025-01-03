@@ -19,9 +19,9 @@ use std::{cmp::Ordering, ops::RangeInclusive, sync::Arc};
 
 use ahash::HashMap;
 use egui::{
-    epaint, remap_clamp, vec2, Align2, Color32, CursorIcon, Id, Layout, NumExt, PointerButton,
-    Pos2, Rangef, Rect, Response, Rounding, Sense, Shape, Stroke, TextStyle, Ui, Vec2, Vec2b,
-    WidgetText,
+    emath::GuiRounding, epaint, remap_clamp, vec2, Align2, Color32, CursorIcon, Id, Layout, NumExt,
+    PointerButton, Pos2, Rangef, Rect, Response, Rounding, Sense, Shape, Stroke, TextStyle, Ui,
+    Vec2, Vec2b, WidgetText,
 };
 use emath::Float as _;
 
@@ -1666,8 +1666,8 @@ impl<'a> PreparedPlot<'a> {
 
             if self.sharp_grid_lines {
                 // Round to avoid aliasing
-                p0 = ui.painter().round_pos_to_pixels(p0);
-                p1 = ui.painter().round_pos_to_pixels(p1);
+                p0 = p0.round_to_pixels(ui.pixels_per_point());
+                p1 = p1.round_to_pixels(ui.pixels_per_point());
             }
 
             shapes.push((
