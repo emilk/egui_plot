@@ -19,9 +19,9 @@ use std::{cmp::Ordering, ops::RangeInclusive, sync::Arc};
 
 use ahash::HashMap;
 use egui::{
-    emath::GuiRounding, epaint, remap_clamp, vec2, Align2, Color32, CursorIcon, Id, Layout, NumExt,
-    PointerButton, Pos2, Rangef, Rect, Response, Rounding, Sense, Shape, Stroke, TextStyle, Ui,
-    Vec2, Vec2b, WidgetText,
+    epaint, remap_clamp, vec2, Align2, Color32, CursorIcon, Id, Layout, NumExt, PointerButton,
+    Pos2, Rangef, Rect, Response, Rounding, Sense, Shape, Stroke, TextStyle, Ui, Vec2, Vec2b,
+    WidgetText,
 };
 use emath::Float as _;
 
@@ -187,7 +187,6 @@ pub struct Plot<'a> {
     show_grid: Vec2b,
     grid_spacing: Rangef,
     grid_spacers: [GridSpacer<'a>; 2],
-    sharp_grid_lines: bool,
     clamp_grid: bool,
 
     sense: Sense,
@@ -235,7 +234,6 @@ impl<'a> Plot<'a> {
             show_grid: true.into(),
             grid_spacing: Rangef::new(8.0, 300.0),
             grid_spacers: [log_grid_spacer(10), log_grid_spacer(10)],
-            sharp_grid_lines: true,
             clamp_grid: false,
 
             sense: egui::Sense::click_and_drag(),
@@ -597,8 +595,8 @@ impl<'a> Plot<'a> {
     /// Round grid positions to full pixels to avoid aliasing. Improves plot appearance but might have an
     /// undesired effect when shifting the plot bounds. Enabled by default.
     #[inline]
-    pub fn sharp_grid_lines(mut self, enabled: bool) -> Self {
-        self.sharp_grid_lines = enabled;
+    #[deprecated = "This no longer has any effect and is always enabled."]
+    pub fn sharp_grid_lines(self, _enabled: bool) -> Self {
         self
     }
 
@@ -776,7 +774,6 @@ impl<'a> Plot<'a> {
 
             clamp_grid,
             grid_spacers,
-            sharp_grid_lines,
             sense,
         } = self;
 
@@ -1196,7 +1193,6 @@ impl<'a> Plot<'a> {
             draw_cursors,
             cursor_color,
             grid_spacers,
-            sharp_grid_lines,
             clamp_grid,
         };
 
@@ -1487,7 +1483,6 @@ struct PreparedPlot<'a> {
     draw_cursors: Vec<Cursor>,
     cursor_color: Option<Color32>,
 
-    sharp_grid_lines: bool,
     clamp_grid: bool,
 }
 
@@ -1662,12 +1657,6 @@ impl<'a> PreparedPlot<'a> {
                         p1.x = transform.position_from_point_x(clamp_range.max[0]);
                     }
                 }
-            }
-
-            if self.sharp_grid_lines {
-                // Round to avoid aliasing
-                p0 = p0.round_to_pixels(ui.pixels_per_point());
-                p1 = p1.round_to_pixels(ui.pixels_per_point());
             }
 
             shapes.push((

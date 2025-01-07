@@ -4,7 +4,6 @@
 use std::ops::RangeInclusive;
 
 use egui::{
-    emath::GuiRounding,
     emath::Rot2,
     epaint::{CircleShape, TextShape},
     pos2, vec2, Align2, Color32, Id, ImageOptions, Mesh, NumExt as _, Pos2, Rect, Rgba, Rounding,
@@ -213,7 +212,7 @@ impl HLine {
 }
 
 impl PlotItem for HLine {
-    fn shapes(&self, ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
+    fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
             y,
             stroke,
@@ -222,14 +221,9 @@ impl PlotItem for HLine {
             ..
         } = self;
 
-        // Round to minimize aliasing:
         let points = vec![
-            transform
-                .position_from_point(&PlotPoint::new(transform.bounds().min[0], *y))
-                .round_to_pixels(ui.pixels_per_point()),
-            transform
-                .position_from_point(&PlotPoint::new(transform.bounds().max[0], *y))
-                .round_to_pixels(ui.pixels_per_point()),
+            transform.position_from_point(&PlotPoint::new(transform.bounds().min[0], *y)),
+            transform.position_from_point(&PlotPoint::new(transform.bounds().max[0], *y)),
         ];
         style.style_line(points, *stroke, *highlight, shapes);
     }
@@ -361,7 +355,7 @@ impl VLine {
 }
 
 impl PlotItem for VLine {
-    fn shapes(&self, ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
+    fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
             x,
             stroke,
@@ -370,14 +364,9 @@ impl PlotItem for VLine {
             ..
         } = self;
 
-        // Round to minimize aliasing:
         let points = vec![
-            transform
-                .position_from_point(&PlotPoint::new(*x, transform.bounds().min[1]))
-                .round_to_pixels(ui.pixels_per_point()),
-            transform
-                .position_from_point(&PlotPoint::new(*x, transform.bounds().max[1]))
-                .round_to_pixels(ui.pixels_per_point()),
+            transform.position_from_point(&PlotPoint::new(*x, transform.bounds().min[1])),
+            transform.position_from_point(&PlotPoint::new(*x, transform.bounds().max[1])),
         ];
         style.style_line(points, *stroke, *highlight, shapes);
     }
