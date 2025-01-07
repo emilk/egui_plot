@@ -47,7 +47,7 @@ pub struct Legend {
     pub background_alpha: f32,
     pub position: Corner,
 
-    insertion_order: bool,
+    follow_insertion_order: bool,
     color_conflict_handling: ColorConflictHandling,
 
     /// Used for overriding the `hidden_items` set in [`LegendWidget`].
@@ -60,7 +60,7 @@ impl Default for Legend {
             text_style: TextStyle::Body,
             background_alpha: 0.75,
             position: Corner::RightTop,
-            insertion_order: false,
+            follow_insertion_order: false,
             color_conflict_handling: ColorConflictHandling::RemoveColor,
             hidden_items: None,
         }
@@ -101,9 +101,11 @@ impl Legend {
     }
 
     /// Specifies if the legend item order should be the inserted order.
+    /// Default: `false`.
+    /// If `true`, the order of the legend items will be the same as the order as they were added.
     #[inline]
-    pub fn insertion_order(mut self, insertion_order: bool) -> Self {
-        self.insertion_order = insertion_order;
+    pub fn follow_insertion_order(mut self, follow: bool) -> Self {
+        self.follow_insertion_order = follow;
         self
     }
 
@@ -235,7 +237,7 @@ impl LegendWidget {
             .filter(|item| !item.name().is_empty())
             .for_each(|item| {
                 let next_entry = entries.len();
-                let key = if config.insertion_order {
+                let key = if config.follow_insertion_order {
                     *keys.entry(item.name().to_owned()).or_insert(next_entry)
                 } else {
                     // Use the same key if we don't want insertion order
