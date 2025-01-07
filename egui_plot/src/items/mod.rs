@@ -212,7 +212,7 @@ impl HLine {
 }
 
 impl PlotItem for HLine {
-    fn shapes(&self, ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
+    fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
             y,
             stroke,
@@ -221,14 +221,9 @@ impl PlotItem for HLine {
             ..
         } = self;
 
-        // Round to minimize aliasing:
         let points = vec![
-            ui.painter().round_pos_to_pixels(
-                transform.position_from_point(&PlotPoint::new(transform.bounds().min[0], *y)),
-            ),
-            ui.painter().round_pos_to_pixels(
-                transform.position_from_point(&PlotPoint::new(transform.bounds().max[0], *y)),
-            ),
+            transform.position_from_point(&PlotPoint::new(transform.bounds().min[0], *y)),
+            transform.position_from_point(&PlotPoint::new(transform.bounds().max[0], *y)),
         ];
         style.style_line(points, *stroke, *highlight, shapes);
     }
@@ -360,7 +355,7 @@ impl VLine {
 }
 
 impl PlotItem for VLine {
-    fn shapes(&self, ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
+    fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
             x,
             stroke,
@@ -369,14 +364,9 @@ impl PlotItem for VLine {
             ..
         } = self;
 
-        // Round to minimize aliasing:
         let points = vec![
-            ui.painter().round_pos_to_pixels(
-                transform.position_from_point(&PlotPoint::new(*x, transform.bounds().min[1])),
-            ),
-            ui.painter().round_pos_to_pixels(
-                transform.position_from_point(&PlotPoint::new(*x, transform.bounds().max[1])),
-            ),
+            transform.position_from_point(&PlotPoint::new(*x, transform.bounds().min[1])),
+            transform.position_from_point(&PlotPoint::new(*x, transform.bounds().max[1])),
         ];
         style.style_line(points, *stroke, *highlight, shapes);
     }
@@ -586,7 +576,7 @@ impl PlotItem for Line {
             let last = values_tf[n_values - 1];
             mesh.colored_vertex(last, fill_color);
             mesh.colored_vertex(pos2(last.x, y), fill_color);
-            shapes.push(Shape::Mesh(mesh));
+            shapes.push(Shape::Mesh(std::sync::Arc::new(mesh)));
         }
         style.style_line(values_tf, *stroke, *highlight, shapes);
     }
