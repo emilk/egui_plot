@@ -153,7 +153,9 @@ impl Default for Orientation {
 
 /// Represents many [`PlotPoint`]s.
 ///
-/// These can be an owned `Vec` or generated with a function.
+/// These can be an owned `Vec`
+/// or generated on-the-fly by a function
+/// or borrowed from a slice.
 pub enum PlotPoints<'a> {
     Owned(Vec<PlotPoint>),
     Generator(ExplicitGenerator<'a>),
