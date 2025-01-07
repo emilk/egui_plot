@@ -29,7 +29,7 @@ document-features = "0.2.10"
 eframe = { version = "0.30.0", default-features = false }
 egui = { version = "0.30.0", default-features = false }
 emath = { version = "0.30.0", default-features = false }
-env_logger = { version = "0.11.5", default-features = false, features = [
+env_logger = { version = "0.11.6", default-features = false, features = [
     "auto-color",
     "humantime",
 ] }
