@@ -41,6 +41,10 @@ web-sys = "0.3.70"
 
 
 [patch.crates-io]
+eframe = { git = "https://github.com/emilk/egui", rev = "938d8b0d2e2a551ac354d76d6208188e5942b21e" }   # egui master 2025-01-03
+egui = { git = "https://github.com/emilk/egui", rev = "938d8b0d2e2a551ac354d76d6208188e5942b21e" }     # egui master 2025-01-03
+emath = { git = "https://github.com/emilk/egui", rev = "938d8b0d2e2a551ac354d76d6208188e5942b21e" }    # egui master 2025-01-03
+
 # If you want to use the bleeding edge version of egui and eframe:
 # egui = { git = "https://github.com/emilk/egui", branch = "master" }
 # eframe = { git = "https://github.com/emilk/egui", branch = "master" }
