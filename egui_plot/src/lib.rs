@@ -1103,7 +1103,7 @@ impl<'a> Plot<'a> {
         // For instance: The user is painting another interactive widget on top of the plot
         // but they still want to be able to pan/zoom the plot.
         if let (true, Some(hover_pos)) = (
-            response.contains_pointer,
+            response.contains_pointer(),
             ui.input(|i| i.pointer.hover_pos()),
         ) {
             if allow_zoom.any() {
