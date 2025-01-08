@@ -520,8 +520,8 @@ impl<'a> Plot<'a> {
     ///
     /// This is enabled by default.
     #[inline]
-    pub fn auto_bounds(mut self, auto_bounds: Vec2b) -> Self {
-        self.default_auto_bounds = auto_bounds;
+    pub fn auto_bounds(mut self, auto_bounds: impl Into<Vec2b>) -> Self {
+        self.default_auto_bounds = auto_bounds.into();
         self
     }
 
@@ -1262,7 +1262,7 @@ impl<'a> Plot<'a> {
 /// Returns the rect left after adding axes.
 fn axis_widgets<'a>(
     mem: Option<&PlotMemory>,
-    show_axes: Vec2b,
+    show_axes: impl Into<Vec2b>,
     complete_rect: Rect,
     [x_axes, y_axes]: [&'a [AxisHints<'a>]; 2],
 ) -> ([Vec<AxisWidget<'a>>; 2], Rect) {
@@ -1288,6 +1288,7 @@ fn axis_widgets<'a>(
     //      |      X-axis 1      |   |
     //  +   +--------------------+---+
     //
+    let show_axes = show_axes.into();
 
     let mut x_axis_widgets = Vec::<AxisWidget<'_>>::new();
     let mut y_axis_widgets = Vec::<AxisWidget<'_>>::new();

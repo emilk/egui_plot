@@ -56,9 +56,9 @@ impl PlotUi {
     }
 
     /// Set the auto-bounds mode for the plot axes.
-    pub fn set_auto_bounds(&mut self, auto_bounds: Vec2b) {
+    pub fn set_auto_bounds(&mut self, auto_bounds: impl Into<Vec2b>) {
         self.bounds_modifications
-            .push(BoundsModification::AutoBounds(auto_bounds));
+            .push(BoundsModification::AutoBounds(auto_bounds.into()));
     }
 
     /// Can be used to check if the plot was hovered or clicked.
