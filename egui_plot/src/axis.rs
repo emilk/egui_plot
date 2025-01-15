@@ -254,7 +254,7 @@ impl<'a> AxisWidget<'a> {
         let Some(transform) = self.transform else {
             return (response, 0.0);
         };
-        let labels_thickness = self.add_tick_labels(ui, transform, axis);
+        let tick_labels_thickness = self.add_tick_labels(ui, transform, axis);
 
         let galley = self.hints.label.into_galley(
             ui,
@@ -263,19 +263,22 @@ impl<'a> AxisWidget<'a> {
             TextStyle::Body,
         );
 
+        // Gap between tick labels and axis label in units of the axis label height
+        const GAP: f32 = 0.25;
+
         let text_pos = match self.hints.placement {
             Placement::LeftBottom => match axis {
                 Axis::X => {
                     let pos = response.rect.center_bottom();
                     Pos2 {
                         x: pos.x - galley.size().x * 0.5,
-                        y: pos.y - galley.size().y * 1.25,
+                        y: pos.y - galley.size().y * (1.0 + GAP),
                     }
                 }
                 Axis::Y => {
                     let pos = response.rect.left_center();
                     Pos2 {
-                        x: pos.x - galley.size().y * 0.25,
+                        x: pos.x - galley.size().y * GAP,
                         y: pos.y + galley.size().x * 0.5,
                     }
                 }
@@ -285,19 +288,19 @@ impl<'a> AxisWidget<'a> {
                     let pos = response.rect.center_top();
                     Pos2 {
                         x: pos.x - galley.size().x * 0.5,
-                        y: pos.y + galley.size().y * 0.25,
+                        y: pos.y + galley.size().y * GAP,
                     }
                 }
                 Axis::Y => {
                     let pos = response.rect.right_center();
                     Pos2 {
-                        x: pos.x - galley.size().y * 0.75,
+                        x: pos.x - galley.size().y * (1.0 - GAP),
                         y: pos.y + galley.size().x * 0.5,
                     }
                 }
             },
         };
-        let text_thickness = galley.size().y;
+        let axis_label_thickness = galley.size().y * (1.0 + GAP);
         let angle = match axis {
             Axis::X => 0.0,
             Axis::Y => -std::f32::consts::FRAC_PI_2,
@@ -306,7 +309,7 @@ impl<'a> AxisWidget<'a> {
         ui.painter()
             .add(TextShape::new(text_pos, galley, ui.visuals().text_color()).with_angle(angle));
 
-        (response, labels_thickness + text_thickness)
+        (response, tick_labels_thickness + axis_label_thickness)
     }
 
     /// Add tick labels to the axis. Returns the thickness of the axis.
