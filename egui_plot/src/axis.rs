@@ -254,80 +254,59 @@ impl<'a> AxisWidget<'a> {
         let Some(transform) = self.transform else {
             return (response, 0.0);
         };
-        let thickness = self.add_tick_labels(ui, transform, axis);
+        let labels_thickness = self.add_tick_labels(ui, transform, axis);
 
-        let visuals = ui.style().visuals.clone();
+        let galley = self.hints.label.into_galley(
+            ui,
+            Some(TextWrapMode::Extend),
+            f32::INFINITY,
+            TextStyle::Body,
+        );
 
-        let text_thickness = {
-            let text = self.hints.label;
-            let galley = text.into_galley(
-                ui,
-                Some(TextWrapMode::Extend),
-                f32::INFINITY,
-                TextStyle::Body,
-            );
-            let text_color = visuals
-                .override_text_color
-                .unwrap_or_else(|| ui.visuals().text_color());
-            let angle: f32 = match axis {
-                Axis::X => 0.0,
-                Axis::Y => -std::f32::consts::TAU * 0.25,
-            };
-            // select text_pos and angle depending on placement and orientation of widget
-            let (text_pos, text_thickness) = match self.hints.placement {
-                Placement::LeftBottom => match axis {
-                    Axis::X => {
-                        let pos = response.rect.center_bottom();
-                        (
-                            Pos2 {
-                                x: pos.x - galley.size().x / 2.0,
-                                y: pos.y - galley.size().y * 1.25,
-                            },
-                            0.0,
-                        )
+        let text_pos = match self.hints.placement {
+            Placement::LeftBottom => match axis {
+                Axis::X => {
+                    let pos = response.rect.center_bottom();
+                    Pos2 {
+                        x: pos.x - galley.size().x * 0.5,
+                        y: pos.y - galley.size().y * 1.25,
                     }
-                    Axis::Y => {
-                        let pos = response.rect.left_center();
-                        (
-                            Pos2 {
-                                x: pos.x,
-                                y: pos.y + galley.size().x / 2.0,
-                            },
-                            galley.size().x * 0.5,
-                        )
+                }
+                Axis::Y => {
+                    let pos = response.rect.left_center();
+                    Pos2 {
+                        x: pos.x - galley.size().y * 0.25,
+                        y: pos.y + galley.size().x * 0.5,
                     }
-                },
-                Placement::RightTop => match axis {
-                    Axis::X => {
-                        let pos = response.rect.center_top();
-                        (
-                            Pos2 {
-                                x: pos.x - galley.size().x / 2.0,
-                                y: pos.y + galley.size().y * 0.25,
-                            },
-                            0.0,
-                        )
+                }
+            },
+            Placement::RightTop => match axis {
+                Axis::X => {
+                    let pos = response.rect.center_top();
+                    Pos2 {
+                        x: pos.x - galley.size().x * 0.5,
+                        y: pos.y + galley.size().y * 0.25,
                     }
-                    Axis::Y => {
-                        let pos = response.rect.right_center();
-                        (
-                            Pos2 {
-                                x: pos.x - galley.size().y * 1.5,
-                                y: pos.y + galley.size().x / 2.0,
-                            },
-                            galley.size().x * 0.75,
-                        )
+                }
+                Axis::Y => {
+                    let pos = response.rect.right_center();
+                    Pos2 {
+                        x: pos.x - galley.size().y * 0.75,
+                        y: pos.y + galley.size().x * 0.5,
                     }
-                },
-            };
-
-            ui.painter()
-                .add(TextShape::new(text_pos, galley, text_color).with_angle(angle));
-
-            text_thickness
+                }
+            },
+        };
+        let text_thickness = galley.size().y;
+        let angle = match axis {
+            Axis::X => 0.0,
+            Axis::Y => -std::f32::consts::FRAC_PI_2,
         };
 
-        (response, thickness + text_thickness)
+        ui.painter()
+            .add(TextShape::new(text_pos, galley, ui.visuals().text_color()).with_angle(angle));
+
+        (response, labels_thickness + text_thickness)
     }
 
     /// Add tick labels to the axis. Returns the thickness of the axis.
