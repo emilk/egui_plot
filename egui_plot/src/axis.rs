@@ -8,6 +8,9 @@ use egui::{
 
 use super::{transform::PlotTransform, GridMark};
 
+// Gap between tick labels and axis label in units of the axis label height
+const AXIS_LABEL_GAP: f32 = 0.25;
+
 pub(super) type AxisFormatterFn<'a> = dyn Fn(GridMark, &RangeInclusive<f64>) -> String + 'a;
 
 /// X or Y axis.
@@ -263,22 +266,19 @@ impl<'a> AxisWidget<'a> {
             TextStyle::Body,
         );
 
-        // Gap between tick labels and axis label in units of the axis label height
-        const GAP: f32 = 0.25;
-
         let text_pos = match self.hints.placement {
             Placement::LeftBottom => match axis {
                 Axis::X => {
                     let pos = response.rect.center_bottom();
                     Pos2 {
                         x: pos.x - galley.size().x * 0.5,
-                        y: pos.y - galley.size().y * (1.0 + GAP),
+                        y: pos.y - galley.size().y * (1.0 + AXIS_LABEL_GAP),
                     }
                 }
                 Axis::Y => {
                     let pos = response.rect.left_center();
                     Pos2 {
-                        x: pos.x - galley.size().y * GAP,
+                        x: pos.x - galley.size().y * AXIS_LABEL_GAP,
                         y: pos.y + galley.size().x * 0.5,
                     }
                 }
@@ -288,19 +288,19 @@ impl<'a> AxisWidget<'a> {
                     let pos = response.rect.center_top();
                     Pos2 {
                         x: pos.x - galley.size().x * 0.5,
-                        y: pos.y + galley.size().y * GAP,
+                        y: pos.y + galley.size().y * AXIS_LABEL_GAP,
                     }
                 }
                 Axis::Y => {
                     let pos = response.rect.right_center();
                     Pos2 {
-                        x: pos.x - galley.size().y * (1.0 - GAP),
+                        x: pos.x - galley.size().y * (1.0 - AXIS_LABEL_GAP),
                         y: pos.y + galley.size().x * 0.5,
                     }
                 }
             },
         };
-        let axis_label_thickness = galley.size().y * (1.0 + GAP);
+        let axis_label_thickness = galley.size().y * (1.0 + AXIS_LABEL_GAP);
         let angle = match axis {
             Axis::X => 0.0,
             Axis::Y => -std::f32::consts::FRAC_PI_2,
