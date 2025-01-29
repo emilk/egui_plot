@@ -872,9 +872,10 @@ impl PlotItem for Text {
 
         if self.highlight {
             shapes.push(Shape::rect_stroke(
-                rect.expand(2.0),
+                rect.expand(1.0),
                 1.0,
                 Stroke::new(0.5, color),
+                egui::StrokeKind::Outside,
             ));
         }
     }
