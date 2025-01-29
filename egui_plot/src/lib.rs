@@ -520,8 +520,8 @@ impl<'a> Plot<'a> {
     ///
     /// This is enabled by default.
     #[inline]
-    pub fn auto_bounds(mut self, auto_bounds: Vec2b) -> Self {
-        self.default_auto_bounds = auto_bounds;
+    pub fn auto_bounds(mut self, auto_bounds: impl Into<Vec2b>) -> Self {
+        self.default_auto_bounds = auto_bounds.into();
         self
     }
 
@@ -587,8 +587,8 @@ impl<'a> Plot<'a> {
     /// Add this plot to a cursor link group so that this plot will share the cursor position with other plots
     /// in the same group. A plot cannot belong to more than one cursor group.
     #[inline]
-    pub fn link_cursor(mut self, group_id: impl Into<Id>, link: Vec2b) -> Self {
-        self.linked_cursors = Some((group_id.into(), link));
+    pub fn link_cursor(mut self, group_id: impl Into<Id>, link: impl Into<Vec2b>) -> Self {
+        self.linked_cursors = Some((group_id.into(), link.into()));
         self
     }
 
@@ -1262,7 +1262,7 @@ impl<'a> Plot<'a> {
 /// Returns the rect left after adding axes.
 fn axis_widgets<'a>(
     mem: Option<&PlotMemory>,
-    show_axes: Vec2b,
+    show_axes: impl Into<Vec2b>,
     complete_rect: Rect,
     [x_axes, y_axes]: [&'a [AxisHints<'a>]; 2],
 ) -> ([Vec<AxisWidget<'a>>; 2], Rect) {
@@ -1288,6 +1288,7 @@ fn axis_widgets<'a>(
     //      |      X-axis 1      |   |
     //  +   +--------------------+---+
     //
+    let show_axes = show_axes.into();
 
     let mut x_axis_widgets = Vec::<AxisWidget<'_>>::new();
     let mut y_axis_widgets = Vec::<AxisWidget<'_>>::new();

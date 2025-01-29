@@ -279,11 +279,12 @@ pub struct PlotTransform {
 }
 
 impl PlotTransform {
-    pub fn new(frame: Rect, bounds: PlotBounds, center_axis: Vec2b) -> Self {
+    pub fn new(frame: Rect, bounds: PlotBounds, center_axis: impl Into<Vec2b>) -> Self {
         debug_assert!(
             0.0 <= frame.width() && 0.0 <= frame.height(),
             "Bad plot frame: {frame:?}"
         );
+        let center_axis = center_axis.into();
 
         // Since the current Y bounds an affect the final X bounds and vice versa, we need to keep
         // the original version of the `bounds` before we start modifying it.
