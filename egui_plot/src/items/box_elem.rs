@@ -158,7 +158,13 @@ impl BoxElem {
             &self.point_at(self.argument - self.box_width / 2.0, self.spread.quartile1),
             &self.point_at(self.argument + self.box_width / 2.0, self.spread.quartile3),
         );
-        let rect = Shape::Rect(RectShape::new(rect, Rounding::ZERO, fill, stroke));
+        let rect = Shape::Rect(RectShape::new(
+            rect,
+            Rounding::ZERO,
+            fill,
+            stroke,
+            egui::StrokeKind::Inside,
+        ));
         shapes.push(rect);
 
         let line_between = |v1, v2| {

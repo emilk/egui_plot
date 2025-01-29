@@ -884,6 +884,7 @@ impl<'a> Plot<'a> {
                     Rounding::same(2),
                     ui.visuals().extreme_bg_color,
                     ui.visuals().widgets.noninteractive.bg_stroke,
+                    egui::StrokeKind::Inside,
                 ));
         }
 
@@ -1067,11 +1068,13 @@ impl<'a> Plot<'a> {
                             rect,
                             0.0,
                             epaint::Stroke::new(4., Color32::DARK_BLUE),
+                            egui::StrokeKind::Middle,
                         ), // Outer stroke
                         epaint::RectShape::stroke(
                             rect,
                             0.0,
                             epaint::Stroke::new(2., Color32::WHITE),
+                            egui::StrokeKind::Middle,
                         ), // Inner stroke
                     ));
                 }
