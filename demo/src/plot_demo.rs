@@ -957,11 +957,12 @@ impl ChartsDemo {
                     )
                 })
                 // The 10 factor here is purely for a nice 1:1 aspect ratio
-                .map(|(x, f)| Bar::new(x, f * 10.0).width(0.095))
+                .map(|(x, f)| Bar::new(x, f * 10.0).width(0.1))
                 .collect(),
         )
         .color(Color32::LIGHT_BLUE)
         .name("Normal Distribution");
+
         if !self.vertical {
             chart = chart.horizontal();
         }
