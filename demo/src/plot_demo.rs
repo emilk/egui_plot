@@ -211,9 +211,9 @@ impl LineDemo {
         });
     }
 
-    fn circle(&self) -> Line {
+    fn circle<'a>(&self) -> Line<'a> {
         let n = 512;
-        let circle_points: PlotPoints = (0..=n)
+        let circle_points: PlotPoints<'_> = (0..=n)
             .map(|i| {
                 let t = remap(i as f64, 0.0..=(n as f64), 0.0..=TAU);
                 let r = self.circle_radius;
@@ -229,7 +229,7 @@ impl LineDemo {
             .name("circle")
     }
 
-    fn sin(&self) -> Line {
+    fn sin<'a>(&self) -> Line<'a> {
         let time = self.time;
         Line::new(PlotPoints::from_explicit_callback(
             move |x| 0.5 * (2.0 * x).sin() * time.sin(),
@@ -241,7 +241,7 @@ impl LineDemo {
         .name("wave")
     }
 
-    fn thingy(&self) -> Line {
+    fn thingy<'a>(&self) -> Line<'a> {
         let time = self.time;
         Line::new(PlotPoints::from_parametric_callback(
             move |t| ((2.0 * t + time).sin(), (3.0 * t).sin()),
@@ -308,7 +308,7 @@ impl Default for MarkerDemo {
 }
 
 impl MarkerDemo {
-    fn markers(&self) -> Vec<Points> {
+    fn markers<'a>(&self) -> Vec<Points<'a>> {
         MarkerShape::all()
             .enumerate()
             .map(|(i, marker)| {
@@ -371,7 +371,7 @@ struct LegendDemo {
 }
 
 impl LegendDemo {
-    fn line_with_slope(slope: f64) -> Line {
+    fn line_with_slope<'a>(slope: f64) -> Line<'a> {
         Line::new(PlotPoints::from_explicit_callback(
             move |x| slope * x,
             ..,
@@ -379,7 +379,7 @@ impl LegendDemo {
         ))
     }
 
-    fn sin() -> Line {
+    fn sin<'a>() -> Line<'a> {
         Line::new(PlotPoints::from_explicit_callback(
             move |x| x.sin(),
             ..,
@@ -387,7 +387,7 @@ impl LegendDemo {
         ))
     }
 
-    fn cos() -> Line {
+    fn cos<'a>() -> Line<'a> {
         Line::new(PlotPoints::from_explicit_callback(
             move |x| x.cos(),
             ..,
@@ -455,7 +455,7 @@ impl CustomAxesDemo {
     const MINS_PER_DAY: f64 = 24.0 * 60.0;
     const MINS_PER_H: f64 = 60.0;
 
-    fn logistic_fn() -> Line {
+    fn logistic_fn<'a>() -> Line<'a> {
         fn days(min: f64) -> f64 {
             CustomAxesDemo::MINS_PER_DAY * min
         }
@@ -609,7 +609,7 @@ impl Default for LinkedAxesDemo {
 }
 
 impl LinkedAxesDemo {
-    fn line_with_slope(slope: f64) -> Line {
+    fn line_with_slope<'a>(slope: f64) -> Line<'a> {
         Line::new(PlotPoints::from_explicit_callback(
             move |x| slope * x,
             ..,
@@ -617,7 +617,7 @@ impl LinkedAxesDemo {
         ))
     }
 
-    fn sin() -> Line {
+    fn sin<'a>() -> Line<'a> {
         Line::new(PlotPoints::from_explicit_callback(
             move |x| x.sin(),
             ..,
@@ -625,7 +625,7 @@ impl LinkedAxesDemo {
         ))
     }
 
-    fn cos() -> Line {
+    fn cos<'a>() -> Line<'a> {
         Line::new(PlotPoints::from_explicit_callback(
             move |x| x.cos(),
             ..,
@@ -633,7 +633,7 @@ impl LinkedAxesDemo {
         ))
     }
 
-    fn configure_plot(plot_ui: &mut egui_plot::PlotUi) {
+    fn configure_plot(plot_ui: &mut egui_plot::PlotUi<'_>) {
         plot_ui.line(Self::line_with_slope(0.5));
         plot_ui.line(Self::line_with_slope(1.0));
         plot_ui.line(Self::line_with_slope(2.0));

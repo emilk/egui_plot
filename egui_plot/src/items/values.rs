@@ -153,38 +153,48 @@ impl Default for Orientation {
 
 /// Represents many [`PlotPoint`]s.
 ///
-/// These can be an owned `Vec` or generated with a function.
-pub enum PlotPoints {
+/// These can be an owned `Vec`
+/// or generated on-the-fly by a function
+/// or borrowed from a slice.
+pub enum PlotPoints<'a> {
     Owned(Vec<PlotPoint>),
-    Generator(ExplicitGenerator),
-    // Borrowed(&[PlotPoint]), // TODO(EmbersArc): Lifetimes are tricky in this case.
+    Generator(ExplicitGenerator<'a>),
+    Borrowed(&'a [PlotPoint]),
 }
 
-impl Default for PlotPoints {
+impl<'a> Default for PlotPoints<'a> {
     fn default() -> Self {
         Self::Owned(Vec::new())
     }
 }
 
-impl From<[f64; 2]> for PlotPoints {
+impl<'a> From<[f64; 2]> for PlotPoints<'a> {
     fn from(coordinate: [f64; 2]) -> Self {
         Self::new(vec![coordinate])
     }
 }
 
-impl From<Vec<[f64; 2]>> for PlotPoints {
+impl<'a> From<Vec<[f64; 2]>> for PlotPoints<'a> {
+    #[inline]
     fn from(coordinates: Vec<[f64; 2]>) -> Self {
         Self::new(coordinates)
     }
 }
 
-impl FromIterator<[f64; 2]> for PlotPoints {
+impl<'a> From<&'a [PlotPoint]> for PlotPoints<'a> {
+    #[inline]
+    fn from(points: &'a [PlotPoint]) -> Self {
+        Self::Borrowed(points)
+    }
+}
+
+impl<'a> FromIterator<[f64; 2]> for PlotPoints<'a> {
     fn from_iter<T: IntoIterator<Item = [f64; 2]>>(iter: T) -> Self {
         Self::Owned(iter.into_iter().map(|point| point.into()).collect())
     }
 }
 
-impl PlotPoints {
+impl<'a> PlotPoints<'a> {
     pub fn new(points: Vec<[f64; 2]>) -> Self {
         Self::from_iter(points)
     }
@@ -193,12 +203,13 @@ impl PlotPoints {
         match self {
             Self::Owned(points) => points.as_slice(),
             Self::Generator(_) => &[],
+            Self::Borrowed(points) => points,
         }
     }
 
     /// Draw a line based on a function `y=f(x)`, a range (which can be infinite) for x and the number of points.
     pub fn from_explicit_callback(
-        function: impl Fn(f64) -> f64 + 'static,
+        function: impl Fn(f64) -> f64 + 'a,
         x_range: impl RangeBounds<f64>,
         points: usize,
     ) -> Self {
@@ -271,6 +282,7 @@ impl PlotPoints {
         match self {
             Self::Owned(points) => points.is_empty(),
             Self::Generator(_) => false,
+            Self::Borrowed(points) => points.is_empty(),
         }
     }
 
@@ -314,6 +326,13 @@ impl PlotPoints {
                 bounds
             }
             Self::Generator(generator) => generator.estimate_bounds(),
+            Self::Borrowed(points) => {
+                let mut bounds = PlotBounds::NOTHING;
+                for point in *points {
+                    bounds.extend_with(point);
+                }
+                bounds
+            }
         }
     }
 }
@@ -374,13 +393,13 @@ pub enum PlotGeometry<'a> {
 // ----------------------------------------------------------------------------
 
 /// Describes a function y = f(x) with an optional range for x and a number of points.
-pub struct ExplicitGenerator {
-    function: Box<dyn Fn(f64) -> f64>,
+pub struct ExplicitGenerator<'a> {
+    function: Box<dyn Fn(f64) -> f64 + 'a>,
     x_range: RangeInclusive<f64>,
     points: usize,
 }
 
-impl ExplicitGenerator {
+impl ExplicitGenerator<'_> {
     fn estimate_bounds(&self) -> PlotBounds {
         let mut bounds = PlotBounds::NOTHING;
 
