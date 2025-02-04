@@ -24,13 +24,12 @@ fn test_demos() {
         }
     }
 
-    if !errors.is_empty() {
-        panic!("Errors: {:#?}", errors);
-    }
+    assert!(errors.is_empty(), "Errors: {errors:#?}");
 }
 
 #[test]
 fn test_scales() {
+    let mut errors = Vec::new();
     for scale in [0.5, 1.0, 1.39, 2.0] {
         let mut harness = egui_kittest::HarnessBuilder::default()
             .with_pixels_per_point(scale)
@@ -38,10 +37,12 @@ fn test_scales() {
 
         harness.run();
 
-        if let Err(error) = harness.try_snapshot(&format!("scale_{:.2}", scale)) {
-            panic!("{}", error);
+        if let Err(error) = harness.try_snapshot(&format!("scale_{scale:.2}")) {
+            errors.push(error);
         }
     }
+
+    assert!(errors.is_empty(), "Errors: {errors:#?}");
 }
 
 #[test]
