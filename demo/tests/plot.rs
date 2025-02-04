@@ -19,7 +19,7 @@ fn test_demos() {
         harness.get_by_label(&name).click();
         harness.run();
 
-        if let Err(error) = harness.try_snapshot(&format!("demos/{}", name)) {
+        if let Err(error) = harness.try_snapshot(&format!("demos/{name}")) {
             errors.push(error);
         }
     }
