@@ -5,8 +5,7 @@ use egui_kittest::kittest::Queryable;
 
 #[test]
 fn test_demos() {
-    let mut harness =
-        egui_kittest::Harness::new_eframe(|cc| TemplateApp::new(cc));
+    let mut harness = egui_kittest::Harness::new_eframe(|cc| TemplateApp::new(cc));
 
     let demo_names: Vec<_> = harness
         .get_by_role_and_label(Role::RadioGroup, "Select Demo")
@@ -47,8 +46,7 @@ fn test_scales() {
 
 #[test]
 fn test_light_mode() {
-    let mut harness =
-        egui_kittest::Harness::new_eframe(|cc| TemplateApp::new(cc));
+    let mut harness = egui_kittest::Harness::new_eframe(|cc| TemplateApp::new(cc));
 
     harness.ctx.set_theme(ThemePreference::Light);
     harness.run();
