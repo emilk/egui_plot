@@ -6,8 +6,8 @@ use std::ops::RangeInclusive;
 use egui::{
     emath::Rot2,
     epaint::{CircleShape, TextShape},
-    pos2, vec2, Align2, Color32, Id, ImageOptions, Mesh, NumExt as _, Pos2, Rect, Rgba, Rounding,
-    Shape, Stroke, TextStyle, TextureId, Ui, Vec2, WidgetText,
+    pos2, vec2, Align2, Color32, CornerRadius, Id, ImageOptions, Mesh, NumExt as _, Pos2, Rect,
+    Rgba, Shape, Stroke, TextStyle, TextureId, Ui, Vec2, WidgetText,
 };
 
 use emath::Float as _;
@@ -1482,7 +1482,7 @@ impl PlotItem for PlotImage {
                 bg_fill: *bg_fill,
                 tint: *tint,
                 rotation: Some((Rot2::from_angle(screen_rotation), Vec2::splat(0.5))),
-                rounding: Rounding::ZERO,
+                corner_radius: CornerRadius::ZERO,
             },
             &(*texture_id, image_screen_rect.size()).into(),
         );

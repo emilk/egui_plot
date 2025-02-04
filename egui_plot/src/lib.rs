@@ -19,8 +19,8 @@ use std::{cmp::Ordering, ops::RangeInclusive, sync::Arc};
 
 use ahash::HashMap;
 use egui::{
-    epaint, remap_clamp, vec2, Align2, Color32, CursorIcon, Id, Layout, NumExt, PointerButton,
-    Pos2, Rangef, Rect, Response, Rounding, Sense, Shape, Stroke, TextStyle, Ui, Vec2, Vec2b,
+    epaint, remap_clamp, vec2, Align2, Color32,  CursorIcon, Id, Layout, NumExt,
+    PointerButton, Pos2, Rangef, Rect, Response, Sense, Shape, Stroke, TextStyle, Ui, Vec2, Vec2b,
     WidgetText,
 };
 use emath::Float as _;
@@ -881,7 +881,7 @@ impl<'a> Plot<'a> {
                 .with_clip_rect(plot_rect)
                 .add(epaint::RectShape::new(
                     plot_rect,
-                    Rounding::same(2),
+                    2,
                     ui.visuals().extreme_bg_color,
                     ui.visuals().widgets.noninteractive.bg_stroke,
                     egui::StrokeKind::Inside,
