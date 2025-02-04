@@ -44,8 +44,8 @@ web-sys = "0.3.70"
 # When we want to use the bleeding edge version of egui and eframe:
 eframe = { git = "https://github.com/emilk/egui", branch = "master" }
 egui = { git = "https://github.com/emilk/egui", branch = "master" }
-emath = { git = "https://github.com/emilk/egui", branch = "master" }
 egui_kittest = { git = "https://github.com/emilk/egui", branch = "master" }
+emath = { git = "https://github.com/emilk/egui", branch = "master" }
 
 # If you fork https://github.com/emilk/egui you can test with:
 # eframe = { path = "../egui/crates/eframe" }

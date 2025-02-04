@@ -145,7 +145,8 @@ jobs:
 
   tests:
     name: Run tests
-    # We run the tests on macOS because it will run with an actual GPU
+    # We run the tests on macOS because it will run with an actual GPU,
+    # which is needed by the egui_kittest snapshot tests.
     runs-on: macos-latest
 
     steps:

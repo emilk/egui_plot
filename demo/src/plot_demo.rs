@@ -76,6 +76,7 @@ impl PlotDemo {
 
             // TODO(lucasmerlin): The parent ui should ideally be automatically set as AccessKit parent
             // or at least, with an opt in via UiBuilder, making this much more readable
+            // See https://github.com/emilk/egui/issues/5674
             ui.ctx()
                 .clone()
                 .with_accessibility_parent(container_response.id, || {
