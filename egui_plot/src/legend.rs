@@ -267,7 +267,7 @@ impl Widget for &mut LegendWidget {
             .scope(|ui| {
                 let background_frame = Frame {
                     inner_margin: vec2(8.0, 4.0).into(),
-                    rounding: ui.style().visuals.window_rounding,
+                    corner_radius: ui.style().visuals.window_corner_radius,
                     shadow: Shadow::NONE,
                     fill: ui.style().visuals.extreme_bg_color,
                     stroke: ui.style().visuals.window_stroke(),

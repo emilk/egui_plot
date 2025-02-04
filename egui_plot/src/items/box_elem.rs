@@ -1,5 +1,5 @@
 use egui::emath::NumExt as _;
-use egui::epaint::{Color32, RectShape, Rounding, Shape, Stroke};
+use egui::epaint::{Color32, CornerRadius, RectShape, Shape, Stroke};
 
 use crate::{BoxPlot, Cursor, PlotPoint, PlotTransform};
 
@@ -160,7 +160,7 @@ impl BoxElem {
         );
         let rect = Shape::Rect(RectShape::new(
             rect,
-            Rounding::ZERO,
+            CornerRadius::ZERO,
             fill,
             stroke,
             egui::StrokeKind::Inside,
