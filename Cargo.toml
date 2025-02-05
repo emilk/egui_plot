@@ -29,7 +29,7 @@ document-features = "0.2.10"
 eframe = { version = "0.31.0", default-features = false }
 egui = { version = "0.31.0", default-features = false }
 emath = { version = "0.31.0", default-features = false }
-env_logger = { version = "0.11.5", default-features = false, features = [
+env_logger = { version = "0.11.6", default-features = false, features = [
     "auto-color",
     "humantime",
 ] }
@@ -43,6 +43,7 @@ web-sys = "0.3.70"
 [patch.crates-io]
 # When we want to use the bleeding edge version of egui and eframe:
 # egui = { git = "https://github.com/emilk/egui", branch = "master" }
+# egui_kittest = { git = "https://github.com/emilk/egui", branch = "master" }
 # eframe = { git = "https://github.com/emilk/egui", branch = "master" }
 # emath = { git = "https://github.com/emilk/egui", branch = "master" }
 

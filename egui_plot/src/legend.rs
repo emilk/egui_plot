@@ -30,6 +30,15 @@ impl Corner {
     }
 }
 
+/// How to handle multiple conflicting color for a legend item.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+pub enum ColorConflictHandling {
+    PickFirst,
+    PickLast,
+    RemoveColor,
+}
+
 /// The configuration for a plot legend.
 #[derive(Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
@@ -37,6 +46,9 @@ pub struct Legend {
     pub text_style: TextStyle,
     pub background_alpha: f32,
     pub position: Corner,
+
+    follow_insertion_order: bool,
+    color_conflict_handling: ColorConflictHandling,
 
     /// Used for overriding the `hidden_items` set in [`LegendWidget`].
     hidden_items: Option<ahash::HashSet<String>>,
@@ -48,7 +60,8 @@ impl Default for Legend {
             text_style: TextStyle::Body,
             background_alpha: 0.75,
             position: Corner::RightTop,
-
+            follow_insertion_order: false,
+            color_conflict_handling: ColorConflictHandling::RemoveColor,
             hidden_items: None,
         }
     }
@@ -84,6 +97,26 @@ impl Legend {
         I: IntoIterator<Item = String>,
     {
         self.hidden_items = Some(hidden_items.into_iter().collect());
+        self
+    }
+
+    /// Specifies if the legend item order should be the inserted order.
+    /// Default: `false`.
+    /// If `true`, the order of the legend items will be the same as the order as they were added.
+    /// By default it will be sorted alphabetically.
+    #[inline]
+    pub fn follow_insertion_order(mut self, follow: bool) -> Self {
+        self.follow_insertion_order = follow;
+        self
+    }
+
+    /// Specifies how to handle conflicting colors for an item.
+    #[inline]
+    pub fn color_conflict_handling(
+        mut self,
+        color_conflict_handling: ColorConflictHandling,
+    ) -> Self {
+        self.color_conflict_handling = color_conflict_handling;
         self
     }
 }
@@ -180,17 +213,17 @@ impl LegendEntry {
 #[derive(Clone)]
 pub(super) struct LegendWidget {
     rect: Rect,
-    entries: BTreeMap<String, LegendEntry>,
+    entries: Vec<(String, LegendEntry)>,
     config: Legend,
 }
 
 impl LegendWidget {
     /// Create a new legend from items, the names of items that are hidden and the style of the
     /// text. Returns `None` if the legend has no entries.
-    pub(super) fn try_new(
+    pub(super) fn try_new<'a>(
         rect: Rect,
         config: Legend,
-        items: &[Box<dyn PlotItem>],
+        items: &[Box<dyn PlotItem + 'a>],
         hidden_items: &ahash::HashSet<String>, // Existing hidden items in the plot memory.
     ) -> Option<Self> {
         // If `config.hidden_items` is not `None`, it is used.
@@ -198,17 +231,31 @@ impl LegendWidget {
 
         // Collect the legend entries. If multiple items have the same name, they share a
         // checkbox. If their colors don't match, we pick a neutral color for the checkbox.
-        let mut entries: BTreeMap<String, LegendEntry> = BTreeMap::new();
+        let mut keys: BTreeMap<String, usize> = BTreeMap::new();
+        let mut entries: BTreeMap<(usize, String), LegendEntry> = BTreeMap::new();
         items
             .iter()
             .filter(|item| !item.name().is_empty())
             .for_each(|item| {
+                let next_entry = entries.len();
+                let key = if config.follow_insertion_order {
+                    *keys.entry(item.name().to_owned()).or_insert(next_entry)
+                } else {
+                    // Use the same key if we don't want insertion order
+                    0
+                };
                 entries
-                    .entry(item.name().to_owned())
+                    .entry((key, item.name().to_owned()))
                     .and_modify(|entry| {
                         if entry.color != item.color() {
-                            // Multiple items with different colors
-                            entry.color = Color32::TRANSPARENT;
+                            match config.color_conflict_handling {
+                                ColorConflictHandling::PickFirst => (),
+                                ColorConflictHandling::PickLast => entry.color = item.color(),
+                                ColorConflictHandling::RemoveColor => {
+                                    // Multiple items with different colors
+                                    entry.color = Color32::TRANSPARENT;
+                                }
+                            }
                         }
                     })
                     .or_insert_with(|| {
@@ -219,7 +266,7 @@ impl LegendWidget {
             });
         (!entries.is_empty()).then_some(Self {
             rect,
-            entries,
+            entries: entries.into_iter().map(|((_, k), v)| (k, v)).collect(),
             config,
         })
     }
@@ -314,10 +361,7 @@ fn handle_interaction_on_legend_item(response: &Response, entry: &mut LegendEntr
 }
 
 /// Handle alt-click interaction (which may affect all entries).
-fn handle_focus_on_legend_item(
-    clicked_entry_name: &str,
-    entries: &mut BTreeMap<String, LegendEntry>,
-) {
+fn handle_focus_on_legend_item(clicked_entry_name: &str, entries: &mut [(String, LegendEntry)]) {
     // if all other items are already hidden, we show everything
     let is_focus_item_only_visible = entries
         .iter()
