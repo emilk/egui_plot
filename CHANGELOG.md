@@ -4,6 +4,17 @@ All notable changes to the `egui_plot` integration will be noted in this file.
 This file is updated upon each release.
 Changes since the last release can be found at <https://github.com/emilk/egui_plot/compare/latest...HEAD> or by running the `scripts/generate_changelog.py` script.
 
+## 0.31.0 - 2025-02-05
+
+Full diff at https://github.com/emilk/egui_plot/compare/0.30.0..HEAD
+
+#### PRs
+* Allow borrowing plot points via `PlotPoints::Borrowed` [#64](https://github.com/emilk/egui_plot/pull/64) by [@mo8it](https://github.com/mo8it) and [@bircni](https://github.com/bircni) 
+* Add `insertion_order` and `color_conflict_handling` to `Legend` [#65](https://github.com/emilk/egui_plot/pull/65) by [@Zoxc](https://github.com/Zoxc) and [@bircni](https://github.com/bircni)
+* Allow Plot::link_cursor to accept `impl Into<Vec2b>` [#66](https://github.com/emilk/egui_plot/pull/66) by [@jetuk](https://github.com/jetuk)
+* Axis: fix label thickness [#68](https://github.com/emilk/egui_plot/pull/68) by [@jordens](https://github.com/jordens)
+* Update to egui 0.31.0 [#72](https://github.com/emilk/egui_plot/pull/72) by [@Wumpf](https://github.com/Wumpf)
+* Update MSRV to Rust 1.81 [#69](https://github.com/emilk/egui_plot/pull/69) by [@emilk](https://github.com/emilk)
 
 ## 0.30.0 - 2024-12-17
 
