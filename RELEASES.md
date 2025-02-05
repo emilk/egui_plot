@@ -44,7 +44,7 @@ We don't update the MSRV in a patch release, unless we really, really need to.
 ## Preparation
 * [ ] optionally record gif or take a screenshot for `CHANGELOG.md` release note (and later twitter post)
 * [ ] update changelogs using `scripts/generate_changelog.py`
-  - For major releases, always diff to the latest MAJOR release, e.g. `--commit-range 0.27.0..HEAD`
+  - For major releases, always use the upcoming release, e.g. `--version 0.x.0`
 * [ ] bump version numbers in workspace `Cargo.toml`
 
 ## Actual release
