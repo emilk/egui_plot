@@ -103,6 +103,7 @@ impl Legend {
     /// Specifies if the legend item order should be the inserted order.
     /// Default: `false`.
     /// If `true`, the order of the legend items will be the same as the order as they were added.
+    /// By default it will be sorted alphabetically.
     #[inline]
     pub fn follow_insertion_order(mut self, follow: bool) -> Self {
         self.follow_insertion_order = follow;
