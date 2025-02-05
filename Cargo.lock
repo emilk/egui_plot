@@ -747,7 +747,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "117725a109d387c937a1533ce01b450cbde6b88abceea8473c4d7a85853cda3c"
 dependencies = [
  "lazy_static",
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -1103,8 +1103,9 @@ dependencies = [
 
 [[package]]
 name = "egui_kittest"
-version = "0.30.0"
-source = "git+https://github.com/emilk/egui?branch=master#99369666eea587f98dc458347e0b9daa6ac99c99"
+version = "0.31.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e4a9133e9f6601f7c74edc78dd46b24034bbcf1b99f1bf268ef7b65cf09560ab"
 dependencies = [
  "dify",
  "eframe",
