@@ -300,8 +300,8 @@ impl PlotTransform {
         } else if bounds.width() <= 0.0 {
             new_bounds.set_x_center_width(
                 bounds.center().x,
-                if bounds.is_valid_y() {
-                    bounds.height()
+                if bounds.is_valid_x() {
+                    bounds.width()
                 } else {
                     1.0
                 },
@@ -313,8 +313,8 @@ impl PlotTransform {
         } else if bounds.height() <= 0.0 {
             new_bounds.set_y_center_height(
                 bounds.center().y,
-                if bounds.is_valid_x() {
-                    bounds.width()
+                if bounds.is_valid_y() {
+                    bounds.height()
                 } else {
                     1.0
                 },
