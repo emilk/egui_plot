@@ -553,12 +553,12 @@ impl<'a> PlotItem for Line<'a> {
         // if we have a gradient color, we need to wrap the stroke callback to transpose the position to a value
         // the caller can reason about
         if let Some(gradient_callback) = self.gradient_color.clone() {
-            let local_transform = transform.clone();
+            let local_transform = *transform;
             let wrapped_callback = move |_rec: Rect, pos: Pos2| -> Color32 {
                 let point = local_transform.value_from_position(pos);
                 gradient_callback(point)
             };
-            final_stroke = PathStroke::new_uv(stroke.width.clone(), wrapped_callback.clone());
+            final_stroke = PathStroke::new_uv(stroke.width, wrapped_callback.clone());
         }
 
         let values_tf: Vec<_> = series
@@ -593,7 +593,7 @@ impl<'a> PlotItem for Line<'a> {
                     fill_color = Rgba::from(
                         self.gradient_color
                             .clone()
-                            .unwrap()
+                            .expect("Could not find gradient color callback")
                             (transform.value_from_position(w[1]))
                         )
                     .to_opaque()

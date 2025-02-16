@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 #![allow(rustdoc::missing_crate_level_docs)] // it's an example
 
-use std::sync::Arc;
+use std::{num::TryFromIntError, sync::Arc};
 
 use eframe::egui::{self, Color32, DragValue, Event, Vec2};
 use egui_plot::{Legend, Line, PlotPoints};
@@ -54,7 +54,6 @@ impl eframe::App for PlotExample {
             if self.gradient_color {
                 ui.checkbox(&mut self.gradient_fill, "Gradient fill").on_hover_text("Check to fill the plot to the 0 point on the y axis with the gradient color");
             }
-            
             ui.horizontal(|ui| {
                 ui.add(
                     DragValue::new(&mut self.zoom_speed)
@@ -138,19 +137,10 @@ impl eframe::App for PlotExample {
                     // set a gradient color if needed. Simply interpolate between RED and GREEN on the Y value
                     if self.gradient_color {
                         sine_line = sine_line.gradient_color(Arc::new(|point| {
-                            let y_point = point.y.abs().min(1.).max(0.);
-                            Color32::from_rgb(
-                                u8::try_from((Color32::GREEN.r() as f64 + y_point * (Color32::RED.r() as f64 - Color32::GREEN.r() as f64)) as u64)
-                                    .map_err(|e| println!("{}", e))
-                                    .unwrap(),
-                                u8::try_from((Color32::GREEN.g() as f64 + y_point * (Color32::RED.g() as f64 - Color32::GREEN.g() as f64)) as u64)
-                                    .map_err(|e| println!("{}", e))
-                                    .unwrap(),
-                                u8::try_from((Color32::GREEN.b() as f64 + y_point * (Color32::RED.b() as f64 - Color32::GREEN.b() as f64)) as u64)
-                                    .map_err(|e| println!("{}", e))
-                                    .unwrap()
-                            )
-                        }), self.gradient_fill)
+                            let y_point = point.y.abs().clamp(0., 1.);
+                            interpolate(Color32::GREEN, Color32::RED, y_point)
+                                .expect("Color interpolation failed becaue Y values are not between 0 and 1")
+                        }), self.gradient_fill);
                     }
                     if self.gradient_fill {
                         sine_line = sine_line.fill(0.);
@@ -159,4 +149,12 @@ impl eframe::App for PlotExample {
                 });
         });
     }
+}
+
+fn interpolate(start: Color32, end: Color32, y: f64) -> Result<Color32, TryFromIntError> {
+    Ok(Color32::from_rgb(
+        u8::try_from((start.r() as f64 + y * (end.r() as f64 - start.r() as f64)) as u64)?,
+        u8::try_from((start.g() as f64 + y * (end.g() as f64 - start.g() as f64)) as u64)?,
+        u8::try_from((start.b() as f64 + y * (end.b() as f64 - start.b() as f64)) as u64)?
+    ))
 }
