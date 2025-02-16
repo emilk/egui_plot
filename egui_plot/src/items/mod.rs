@@ -1,11 +1,11 @@
 //! Contains items that can be added to a plot.
 #![allow(clippy::type_complexity)] // TODO(emilk): simplify some of the callback types with type aliases
 
-use std::ops::RangeInclusive;
+use std::{ops::RangeInclusive, sync::Arc};
 
 use egui::{
     emath::Rot2,
-    epaint::{CircleShape, TextShape},
+    epaint::{CircleShape, PathStroke, TextShape},
     pos2, vec2, Align2, Color32, CornerRadius, Id, ImageOptions, Mesh, NumExt as _, Pos2, Rect,
     Rgba, Shape, Stroke, TextStyle, TextureId, Ui, Vec2, WidgetText,
 };
@@ -225,7 +225,7 @@ impl PlotItem for HLine {
             transform.position_from_point(&PlotPoint::new(transform.bounds().min[0], *y)),
             transform.position_from_point(&PlotPoint::new(transform.bounds().max[0], *y)),
         ];
-        style.style_line(points, *stroke, *highlight, shapes);
+        style.style_line(points, PathStroke::new(stroke.width, stroke.color), *highlight, shapes);
     }
 
     fn initialize(&mut self, _x_range: RangeInclusive<f64>) {}
@@ -368,7 +368,7 @@ impl PlotItem for VLine {
             transform.position_from_point(&PlotPoint::new(*x, transform.bounds().min[1])),
             transform.position_from_point(&PlotPoint::new(*x, transform.bounds().max[1])),
         ];
-        style.style_line(points, *stroke, *highlight, shapes);
+        style.style_line(points, PathStroke::new(stroke.width, stroke.color), *highlight, shapes);
     }
 
     fn initialize(&mut self, _x_range: RangeInclusive<f64>) {}
@@ -413,6 +413,8 @@ impl PlotItem for VLine {
 pub struct Line<'a> {
     pub(super) series: PlotPoints<'a>,
     pub(super) stroke: Stroke,
+    pub(super) gradient_color: Option<Arc<dyn Fn(PlotPoint) -> Color32 + Send + Sync>>,
+    pub(super) gradient_fill: bool,
     pub(super) name: String,
     pub(super) highlight: bool,
     pub(super) allow_hover: bool,
@@ -427,6 +429,8 @@ impl<'a> Line<'a> {
         Self {
             series: series.into(),
             stroke: Stroke::new(1.5, Color32::TRANSPARENT), // Note: a stroke of 1.0 (or less) can look bad on low-dpi-screens
+            gradient_color: None,
+            gradient_fill: false,
             name: Default::default(),
             highlight: false,
             allow_hover: true,
@@ -455,6 +459,19 @@ impl<'a> Line<'a> {
     #[inline]
     pub fn stroke(mut self, stroke: impl Into<Stroke>) -> Self {
         self.stroke = stroke.into();
+        self
+    }
+
+    /// Add an optional gradient color to the stroke using a callback. The callback
+    /// receives a `PlotPoint` as input with the current X and Y values and should
+    /// return a `Color32` to be used as the stroke color for that point.
+    /// 
+    /// Setting the `gradient_fill` parameter to `true` will use the gradient
+    /// color callback for the fill area as well when `fill()` is set.
+    #[inline]
+    pub fn gradient_color(mut self, callback: Arc<dyn Fn(PlotPoint) -> Color32 + Send + Sync>, gradient_fill: bool) -> Self {
+        self.gradient_color = Some(callback);
+        self.gradient_fill = gradient_fill;
         self
     }
 
@@ -526,11 +543,23 @@ impl<'a> PlotItem for Line<'a> {
         let Self {
             series,
             stroke,
+            gradient_fill,
             highlight,
             mut fill,
             style,
             ..
         } = self;
+        let mut final_stroke: PathStroke = (*stroke).into();
+        // if we have a gradient color, we need to wrap the stroke callback to transpose the position to a value
+        // the caller can reason about
+        if let Some(gradient_callback) = self.gradient_color.clone() {
+            let local_transform = transform.clone();
+            let wrapped_callback = move |_rec: Rect, pos: Pos2| -> Color32 {
+                let point = local_transform.value_from_position(pos);
+                gradient_callback(point)
+            };
+            final_stroke = PathStroke::new_uv(stroke.width.clone(), wrapped_callback.clone());
+        }
 
         let values_tf: Vec<_> = series
             .points()
@@ -551,7 +580,7 @@ impl<'a> PlotItem for Line<'a> {
             let y = transform
                 .position_from_point(&PlotPoint::new(0.0, y_reference))
                 .y;
-            let fill_color = Rgba::from(stroke.color)
+            let mut fill_color = Rgba::from(stroke.color)
                 .to_opaque()
                 .multiply(fill_alpha)
                 .into();
@@ -560,6 +589,16 @@ impl<'a> PlotItem for Line<'a> {
             mesh.reserve_triangles((n_values - 1) * 2);
             mesh.reserve_vertices(n_values * 2 + expected_intersections);
             values_tf.windows(2).for_each(|w| {
+                if *gradient_fill && self.gradient_color.is_some() {
+                    fill_color = Rgba::from(
+                        self.gradient_color
+                            .clone()
+                            .unwrap()
+                            (transform.value_from_position(w[1]))
+                        )
+                    .to_opaque()
+                    .multiply(fill_alpha).into();
+                }
                 let i = mesh.vertices.len() as u32;
                 mesh.colored_vertex(w[0], fill_color);
                 mesh.colored_vertex(pos2(w[0].x, y), fill_color);
@@ -578,7 +617,7 @@ impl<'a> PlotItem for Line<'a> {
             mesh.colored_vertex(pos2(last.x, y), fill_color);
             shapes.push(Shape::Mesh(std::sync::Arc::new(mesh)));
         }
-        style.style_line(values_tf, *stroke, *highlight, shapes);
+        style.style_line(values_tf, final_stroke, *highlight, shapes);
     }
 
     fn initialize(&mut self, x_range: RangeInclusive<f64>) {
@@ -734,7 +773,7 @@ impl<'a> PlotItem for Polygon<'a> {
             values_tf.push(*first); // close the polygon
         }
 
-        style.style_line(values_tf, *stroke, *highlight, shapes);
+        style.style_line(values_tf, PathStroke::new(stroke.width, stroke.color), *highlight, shapes);
     }
 
     fn initialize(&mut self, x_range: RangeInclusive<f64>) {
