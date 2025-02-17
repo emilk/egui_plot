@@ -1,4 +1,5 @@
-use std::f64::consts::TAU;
+use std::num::TryFromIntError;
+use std::{f64::consts::TAU, sync::Arc};
 use std::ops::RangeInclusive;
 
 use egui::{
@@ -135,6 +136,8 @@ struct LineDemo {
     show_axes: bool,
     show_grid: bool,
     line_style: LineStyle,
+    gradient: bool,
+    gradient_fill: bool,
 }
 
 impl Default for LineDemo {
@@ -150,6 +153,8 @@ impl Default for LineDemo {
             show_axes: true,
             show_grid: true,
             line_style: LineStyle::Solid,
+            gradient: false,
+            gradient_fill: false,
         }
     }
 }
@@ -167,6 +172,8 @@ impl LineDemo {
             show_axes,
             show_grid,
             line_style,
+            gradient,
+            gradient_fill,
         } = self;
 
         ui.horizontal(|ui| {
@@ -223,6 +230,11 @@ impl LineDemo {
                         }
                     });
             });
+
+            ui.vertical(|ui| {
+                ui.checkbox(gradient, "Gradient line");
+                ui.checkbox(gradient_fill, "Gradient fill");
+            });
         });
     }
 
@@ -258,14 +270,29 @@ impl LineDemo {
 
     fn thingy<'a>(&self) -> Line<'a> {
         let time = self.time;
-        Line::new(PlotPoints::from_parametric_callback(
-            move |t| ((2.0 * t + time).sin(), (3.0 * t).sin()),
-            0.0..=TAU,
-            256,
-        ))
-        .color(Color32::from_rgb(100, 150, 250))
-        .style(self.line_style)
-        .name("x = sin(2t), y = sin(3t)")
+        let mut thingy_line = Line::new(PlotPoints::from_parametric_callback(
+                move |t| ((2.0 * t + time).sin(), (3. * t).sin()),
+                0.0..=TAU,
+                256,
+            ))
+            .style(self.line_style)
+            .name("x = sin(2t), y = sin(3t)");
+        if self.gradient {
+            thingy_line = thingy_line.gradient_color(Arc::new(move |point|{
+                interpolate(
+                    Color32::BLUE, 
+                    Color32::ORANGE, 
+                    point.x.abs().clamp(0.,1.) // the interpolate function expected a value between 0 and 1
+                )
+                .expect("Could not interpolate colors")
+            }), self.gradient_fill);
+            if self.gradient_fill {
+                thingy_line = thingy_line.fill(0.);
+            }
+        } else {
+            thingy_line = thingy_line.color(Color32::from_rgb(100, 150, 250));
+        }
+        thingy_line
     }
 }
 
@@ -299,6 +326,14 @@ impl LineDemo {
         })
         .response
     }
+}
+
+fn interpolate(start: Color32, end: Color32, y: f64) -> Result<Color32, TryFromIntError> {
+    Ok(Color32::from_rgb(
+        u8::try_from((start.r() as f64 + y * (end.r() as f64 - start.r() as f64)) as u64)?,
+        u8::try_from((start.g() as f64 + y * (end.g() as f64 - start.g() as f64)) as u64)?,
+        u8::try_from((start.b() as f64 + y * (end.b() as f64 - start.b() as f64)) as u64)?
+    ))
 }
 
 // ----------------------------------------------------------------------------
