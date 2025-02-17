@@ -278,7 +278,7 @@ impl LineDemo {
             .style(self.line_style)
             .name("x = sin(2t), y = sin(3t)");
         if self.gradient {
-            thingy_line = thingy_line.gradient_color(Arc::new(move |point|{
+            thingy_line = thingy_line.gradient_color(Arc::new( |point|{
                 interpolate(
                     Color32::BLUE, 
                     Color32::ORANGE, 
