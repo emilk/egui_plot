@@ -20,7 +20,9 @@ pub struct PlotMemory {
     pub hovered_legend_item: Option<LegendItemReference>,
 
     /// Which items _not_ to show?
-    pub hidden_items: ahash::HashSet<String>,
+    ///
+    /// Display string plus, if available, the id of the hidden item.
+    pub hidden_items: ahash::HashSet<(String, Option<Id>)>,
 
     /// The transform from last frame.
     pub(crate) transform: PlotTransform,

@@ -51,7 +51,7 @@ pub struct Legend {
     color_conflict_handling: ColorConflictHandling,
 
     /// Used for overriding the `hidden_items` set in [`LegendWidget`].
-    hidden_items: Option<ahash::HashSet<String>>,
+    hidden_items: Option<ahash::HashSet<(String, Option<Id>)>>,
 }
 
 impl Default for Legend {
@@ -94,7 +94,7 @@ impl Legend {
     #[inline]
     pub fn hidden_items<I>(mut self, hidden_items: I) -> Self
     where
-        I: IntoIterator<Item = String>,
+        I: IntoIterator<Item = (String, Option<Id>)>,
     {
         self.hidden_items = Some(hidden_items.into_iter().collect());
         self
@@ -237,7 +237,7 @@ impl LegendWidget {
         rect: Rect,
         config: Legend,
         items: &[Box<dyn PlotItem + 'a>],
-        hidden_items: &ahash::HashSet<String>, // Existing hidden items in the plot memory.
+        hidden_items: &ahash::HashSet<(String, Option<Id>)>, // Existing hidden items in the plot memory.
     ) -> Option<Self> {
         // If `config.hidden_items` is not `None`, it is used.
         let hidden_items = config.hidden_items.as_ref().unwrap_or(hidden_items);
@@ -273,7 +273,7 @@ impl LegendWidget {
                     })
                     .or_insert_with(|| {
                         let color = item.color();
-                        let checked = !hidden_items.contains(item.name());
+                        let checked = !hidden_items.contains(&(item.name().to_owned(), item.id()));
                         LegendEntry::new(item.id(), color, checked)
                     });
             });
@@ -285,11 +285,11 @@ impl LegendWidget {
     }
 
     // Get the names of the hidden items.
-    pub fn hidden_items(&self) -> ahash::HashSet<String> {
+    pub fn hidden_items(&self) -> ahash::HashSet<(String, Option<Id>)> {
         self.entries
             .iter()
             .filter(|(_, entry)| !entry.checked)
-            .map(|(name, _)| name.clone())
+            .map(|(name, entry)| (name.to_string(), entry.id))
             .collect()
     }
 
