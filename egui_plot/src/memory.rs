@@ -14,8 +14,10 @@ pub struct PlotMemory {
     /// the bounds, for example by moving or zooming.
     pub auto_bounds: Vec2b,
 
-    /// Display string of the hovered legend item if any.
-    pub hovered_legend_item: Option<String>,
+    /// Hovered legend item if any.
+    ///
+    /// Display string plus, if available, the id of the hovered item.
+    pub hovered_legend_item: Option<(String, Option<Id>)>,
 
     /// Which items _not_ to show?
     pub hidden_items: ahash::HashSet<String>,

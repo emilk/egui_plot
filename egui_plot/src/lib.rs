@@ -126,6 +126,8 @@ pub struct PlotResponse<R> {
     /// The id of a currently hovered item if any.
     ///
     /// This is `None` if either no item was hovered, or the hovered item didn't provide an id.
+    /// A plot item can be hovered either by hovering its representation in the plot (line, marker, etc.)
+    /// or by hovering the item in the legend.
     pub hovered_plot_item: Option<Id>,
 }
 
@@ -898,11 +900,19 @@ impl<'a> Plot<'a> {
         // Remove the deselected items.
         items.retain(|item| !mem.hidden_items.contains(item.name()));
         // Highlight the hovered items.
-        if let Some(hovered_name) = &mem.hovered_legend_item {
-            items
-                .iter_mut()
-                .filter(|entry| entry.name() == hovered_name)
-                .for_each(|entry| entry.highlight());
+        if let Some((hovered_name, hovered_id)) = &mem.hovered_legend_item {
+            // If available, identify by id, not name.
+            if let Some(hovered_id) = hovered_id {
+                items
+                    .iter_mut()
+                    .filter(|entry| entry.id() == Some(*hovered_id))
+                    .for_each(|entry| entry.highlight());
+            } else {
+                items
+                    .iter_mut()
+                    .filter(|entry| entry.name() == hovered_name)
+                    .for_each(|entry| entry.highlight());
+            }
         }
         // Move highlighted items to front.
         items.sort_by_key(|item| item.highlighted());
@@ -1198,7 +1208,7 @@ impl<'a> Plot<'a> {
             clamp_grid,
         };
 
-        let (plot_cursors, hovered_plot_item) = prepared.ui(ui, &response);
+        let (plot_cursors, mut hovered_plot_item) = prepared.ui(ui, &response);
 
         if let Some(boxed_zoom_rect) = boxed_zoom_rect {
             ui.painter()
@@ -1212,7 +1222,11 @@ impl<'a> Plot<'a> {
         if let Some(mut legend) = legend {
             ui.add(&mut legend);
             mem.hidden_items = legend.hidden_items();
-            mem.hovered_legend_item = legend.hovered_item_name();
+            mem.hovered_legend_item = legend.hovered_item();
+
+            if let Some((_, Some(hovered_id))) = &mem.hovered_legend_item {
+                hovered_plot_item.get_or_insert(*hovered_id);
+            }
         }
 
         if let Some((id, _)) = linked_cursors.as_ref() {
