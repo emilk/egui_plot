@@ -1,8 +1,8 @@
 use std::{collections::BTreeMap, string::String};
 
 use egui::{
-    epaint::CircleShape, pos2, vec2, Align, Color32, Direction, Frame, Layout, PointerButton, Rect,
-    Response, Sense, Shadow, Shape, TextStyle, Ui, Widget, WidgetInfo, WidgetType,
+    epaint::CircleShape, pos2, vec2, Align, Color32, Direction, Frame, Id, Layout, PointerButton,
+    Rect, Response, Sense, Shadow, Shape, TextStyle, Ui, Widget, WidgetInfo, WidgetType,
 };
 
 use super::items::PlotItem;
@@ -123,14 +123,16 @@ impl Legend {
 
 #[derive(Clone)]
 struct LegendEntry {
+    item_id: Option<Id>,
     color: Color32,
     checked: bool,
     hovered: bool,
 }
 
 impl LegendEntry {
-    fn new(color: Color32, checked: bool) -> Self {
+    fn new(item_id: Option<Id>, color: Color32, checked: bool) -> Self {
         Self {
+            item_id,
             color,
             checked,
             hovered: false,
@@ -139,6 +141,7 @@ impl LegendEntry {
 
     fn ui(&self, ui: &mut Ui, text: String, text_style: &TextStyle) -> Response {
         let Self {
+            item_id: _,
             color,
             checked,
             hovered: _,
@@ -217,6 +220,16 @@ pub(super) struct LegendWidget {
     config: Legend,
 }
 
+/// A reference to a legend item.
+///
+/// Since item ids are optional, we need to keep the name as well, using it for identification if needed.
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct LegendItemReference {
+    pub name: String,
+    pub item_id: Option<Id>,
+}
+
 impl LegendWidget {
     /// Create a new legend from items, the names of items that are hidden and the style of the
     /// text. Returns `None` if the legend has no entries.
@@ -261,7 +274,7 @@ impl LegendWidget {
                     .or_insert_with(|| {
                         let color = item.color();
                         let checked = !hidden_items.contains(item.name());
-                        LegendEntry::new(color, checked)
+                        LegendEntry::new(item.id(), color, checked)
                     });
             });
         (!entries.is_empty()).then_some(Self {
@@ -281,11 +294,14 @@ impl LegendWidget {
     }
 
     // Get the name of the hovered items.
-    pub fn hovered_item_name(&self) -> Option<String> {
+    pub fn hovered_item(&self) -> Option<LegendItemReference> {
         self.entries
             .iter()
             .find(|(_, entry)| entry.hovered)
-            .map(|(name, _)| name.to_string())
+            .map(|(name, entry)| LegendItemReference {
+                name: name.to_string(),
+                item_id: entry.item_id,
+            })
     }
 }
 
