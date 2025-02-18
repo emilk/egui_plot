@@ -38,8 +38,8 @@ pub use crate::{
 };
 
 use axis::AxisWidget;
-use items::{horizontal_line, rulers_color, vertical_line};
-use legend::{LegendItemReference, LegendWidget};
+use items::{horizontal_line, rulers_color, vertical_line, ItemReference};
+use legend::LegendWidget;
 
 type LabelFormatterFn<'a> = dyn Fn(&str, &PlotPoint) -> String + 'a;
 pub type LabelFormatter<'a> = Option<Box<LabelFormatterFn<'a>>>;
@@ -903,24 +903,13 @@ impl<'a> Plot<'a> {
             show_y = false;
         }
         // Remove the deselected items.
-        items.retain(|item| {
-            !mem.hidden_items
-                .contains(&(item.name().to_owned(), item.id()))
-        });
+        items.retain(|item| !mem.hidden_items.contains(&item.item_reference()));
         // Highlight the hovered items.
-        if let Some(LegendItemReference { name, item_id }) = &mem.hovered_legend_item {
-            // If available, identify by id, not name.
-            if let Some(item_id) = item_id {
-                items
-                    .iter_mut()
-                    .filter(|entry| entry.id() == Some(*item_id))
-                    .for_each(|entry| entry.highlight());
-            } else {
-                items
-                    .iter_mut()
-                    .filter(|entry| entry.name() == name)
-                    .for_each(|entry| entry.highlight());
-            }
+        if let Some(item_reference) = &mem.hovered_legend_item {
+            items
+                .iter_mut()
+                .filter(|entry| &entry.item_reference() == item_reference)
+                .for_each(|entry| entry.highlight());
         }
         // Move highlighted items to front.
         items.sort_by_key(|item| item.highlighted());
@@ -1232,7 +1221,7 @@ impl<'a> Plot<'a> {
             mem.hidden_items = legend.hidden_items();
             mem.hovered_legend_item = legend.hovered_item();
 
-            if let Some(LegendItemReference {
+            if let Some(ItemReference {
                 name: _,
                 item_id: Some(item_id),
             }) = &mem.hovered_legend_item
@@ -1271,7 +1260,7 @@ impl<'a> Plot<'a> {
         let hidden_items = mem
             .hidden_items
             .iter()
-            .filter_map(|(_name, id)| *id)
+            .filter_map(|item_reference| item_reference.item_id)
             .collect();
         mem.store(ui.ctx(), plot_id);
 

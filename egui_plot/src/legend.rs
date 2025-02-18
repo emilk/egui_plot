@@ -1,11 +1,11 @@
 use std::{collections::BTreeMap, string::String};
 
 use egui::{
-    epaint::CircleShape, pos2, vec2, Align, Color32, Direction, Frame, Id, Layout, PointerButton,
-    Rect, Response, Sense, Shadow, Shape, TextStyle, Ui, Widget, WidgetInfo, WidgetType,
+    epaint::CircleShape, pos2, vec2, Align, Color32, Direction, Frame, Layout, PointerButton, Rect,
+    Response, Sense, Shadow, Shape, TextStyle, Ui, Widget, WidgetInfo, WidgetType,
 };
 
-use super::items::PlotItem;
+use super::items::{ItemReference, PlotItem};
 
 /// Where to place the plot legend.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -51,7 +51,7 @@ pub struct Legend {
     color_conflict_handling: ColorConflictHandling,
 
     /// Used for overriding the `hidden_items` set in [`LegendWidget`].
-    hidden_items: Option<ahash::HashSet<(String, Option<Id>)>>,
+    hidden_items: Option<ahash::HashSet<ItemReference>>,
 }
 
 impl Default for Legend {
@@ -94,7 +94,7 @@ impl Legend {
     #[inline]
     pub fn hidden_items<I>(mut self, hidden_items: I) -> Self
     where
-        I: IntoIterator<Item = (String, Option<Id>)>,
+        I: IntoIterator<Item = ItemReference>,
     {
         self.hidden_items = Some(hidden_items.into_iter().collect());
         self
@@ -123,16 +123,14 @@ impl Legend {
 
 #[derive(Clone)]
 struct LegendEntry {
-    item_id: Option<Id>,
     color: Color32,
     checked: bool,
     hovered: bool,
 }
 
 impl LegendEntry {
-    fn new(item_id: Option<Id>, color: Color32, checked: bool) -> Self {
+    fn new(color: Color32, checked: bool) -> Self {
         Self {
-            item_id,
             color,
             checked,
             hovered: false,
@@ -141,7 +139,6 @@ impl LegendEntry {
 
     fn ui(&self, ui: &mut Ui, text: String, text_style: &TextStyle) -> Response {
         let Self {
-            item_id: _,
             color,
             checked,
             hovered: _,
@@ -216,18 +213,8 @@ impl LegendEntry {
 #[derive(Clone)]
 pub(super) struct LegendWidget {
     rect: Rect,
-    entries: Vec<(String, LegendEntry)>,
+    entries: Vec<(ItemReference, LegendEntry)>,
     config: Legend,
-}
-
-/// A reference to a legend item.
-///
-/// Since item ids are optional, we need to keep the name as well, using it for identification if needed.
-#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct LegendItemReference {
-    pub name: String,
-    pub item_id: Option<Id>,
 }
 
 impl LegendWidget {
@@ -237,7 +224,7 @@ impl LegendWidget {
         rect: Rect,
         config: Legend,
         items: &[Box<dyn PlotItem + 'a>],
-        hidden_items: &ahash::HashSet<(String, Option<Id>)>, // Existing hidden items in the plot memory.
+        hidden_items: &ahash::HashSet<ItemReference>, // Existing hidden items in the plot memory.
     ) -> Option<Self> {
         // If `config.hidden_items` is not `None`, it is used.
         let hidden_items = config.hidden_items.as_ref().unwrap_or(hidden_items);
@@ -245,7 +232,7 @@ impl LegendWidget {
         // Collect the legend entries. If multiple items have the same name, they share a
         // checkbox. If their colors don't match, we pick a neutral color for the checkbox.
         let mut keys: BTreeMap<String, usize> = BTreeMap::new();
-        let mut entries: BTreeMap<(usize, String), LegendEntry> = BTreeMap::new();
+        let mut entries: BTreeMap<(usize, ItemReference), LegendEntry> = BTreeMap::new();
         items
             .iter()
             .filter(|item| !item.name().is_empty())
@@ -257,8 +244,14 @@ impl LegendWidget {
                     // Use the same key if we don't want insertion order
                     0
                 };
+
+                let legend_item_reference = ItemReference {
+                    name: item.name().to_owned(),
+                    item_id: item.id(),
+                };
+
                 entries
-                    .entry((key, item.name().to_owned()))
+                    .entry((key, legend_item_reference.clone()))
                     .and_modify(|entry| {
                         if entry.color != item.color() {
                             match config.color_conflict_handling {
@@ -273,8 +266,8 @@ impl LegendWidget {
                     })
                     .or_insert_with(|| {
                         let color = item.color();
-                        let checked = !hidden_items.contains(&(item.name().to_owned(), item.id()));
-                        LegendEntry::new(item.id(), color, checked)
+                        let checked = !hidden_items.contains(&legend_item_reference);
+                        LegendEntry::new(color, checked)
                     });
             });
         (!entries.is_empty()).then_some(Self {
@@ -285,23 +278,20 @@ impl LegendWidget {
     }
 
     // Get the names of the hidden items.
-    pub fn hidden_items(&self) -> ahash::HashSet<(String, Option<Id>)> {
+    pub fn hidden_items(&self) -> ahash::HashSet<ItemReference> {
         self.entries
             .iter()
             .filter(|(_, entry)| !entry.checked)
-            .map(|(name, entry)| (name.to_string(), entry.id))
+            .map(|(key, _entry)| key.clone())
             .collect()
     }
 
     // Get the name of the hovered items.
-    pub fn hovered_item(&self) -> Option<LegendItemReference> {
+    pub fn hovered_item(&self) -> Option<ItemReference> {
         self.entries
             .iter()
             .find(|(_, entry)| entry.hovered)
-            .map(|(name, entry)| LegendItemReference {
-                name: name.to_string(),
-                item_id: entry.item_id,
-            })
+            .map(|(key, _entry)| key.clone())
     }
 }
 
@@ -343,14 +333,15 @@ impl Widget for &mut LegendWidget {
 
                         let response_union = entries
                             .iter_mut()
-                            .map(|(name, entry)| {
-                                let response = entry.ui(ui, name.clone(), &config.text_style);
+                            .map(|(legend_reference, entry)| {
+                                let response =
+                                    entry.ui(ui, legend_reference.name.clone(), &config.text_style);
 
                                 // Handle interactions. Alt-clicking must be deferred to end of loop
                                 // since it may affect all entries.
                                 handle_interaction_on_legend_item(&response, entry);
                                 if response.clicked() && ui.input(|r| r.modifiers.alt) {
-                                    focus_on_item = Some(name.clone());
+                                    focus_on_item = Some(legend_reference.clone());
                                 }
 
                                 response
@@ -377,14 +368,17 @@ fn handle_interaction_on_legend_item(response: &Response, entry: &mut LegendEntr
 }
 
 /// Handle alt-click interaction (which may affect all entries).
-fn handle_focus_on_legend_item(clicked_entry_name: &str, entries: &mut [(String, LegendEntry)]) {
+fn handle_focus_on_legend_item(
+    clicked_entry: &ItemReference,
+    entries: &mut [(ItemReference, LegendEntry)],
+) {
     // if all other items are already hidden, we show everything
     let is_focus_item_only_visible = entries
         .iter()
-        .all(|(name, entry)| !entry.checked || (clicked_entry_name == name));
+        .all(|(key, entry)| !entry.checked || (clicked_entry == key));
 
     // either show everything or show only the focus item
-    for (name, entry) in entries.iter_mut() {
-        entry.checked = is_focus_item_only_visible || clicked_entry_name == name;
+    for (key, entry) in entries.iter_mut() {
+        entry.checked = is_focus_item_only_visible || clicked_entry == key;
     }
 }

@@ -17,12 +17,14 @@ use super::{Cursor, LabelFormatter, PlotBounds, PlotTransform};
 
 pub use bar::Bar;
 pub use box_elem::{BoxElem, BoxSpread};
+pub use item_reference::ItemReference;
 pub use values::{
     ClosestElem, LineStyle, MarkerShape, Orientation, PlotGeometry, PlotPoint, PlotPoints,
 };
 
 mod bar;
 mod box_elem;
+mod item_reference;
 mod rect_elem;
 mod values;
 
@@ -59,6 +61,13 @@ pub trait PlotItem {
     fn bounds(&self) -> PlotBounds;
 
     fn id(&self) -> Option<Id>;
+
+    fn item_reference(&self) -> ItemReference {
+        ItemReference {
+            name: self.name().to_string(),
+            item_id: self.id(),
+        }
+    }
 
     fn find_closest(&self, point: Pos2, transform: &PlotTransform) -> Option<ClosestElem> {
         match self.geometry() {
