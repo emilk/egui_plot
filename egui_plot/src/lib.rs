@@ -145,7 +145,7 @@ pub struct PlotResponse<R> {
 ///     let x = i as f64 * 0.01;
 ///     [x, x.sin()]
 /// }).collect();
-/// let line = Line::new(sin);
+/// let line = Line::new("sin", sin);
 /// Plot::new("my_plot").view_aspect(2.0).show(ui, |plot_ui| plot_ui.line(line));
 /// # });
 /// ```
@@ -397,7 +397,7 @@ impl<'a> Plot<'a> {
     ///     let x = i as f64 * 0.01;
     ///     [x, x.sin()]
     /// }).collect();
-    /// let line = Line::new(sin);
+    /// let line = Line::new("sin", sin);
     /// Plot::new("my_plot").view_aspect(2.0)
     /// .label_formatter(|name, value| {
     ///     if !name.is_empty() {
