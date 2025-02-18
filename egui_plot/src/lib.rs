@@ -38,7 +38,7 @@ pub use crate::{
 };
 
 use axis::AxisWidget;
-use items::{horizontal_line, rulers_color, vertical_line, ItemReference};
+use items::{horizontal_line, rulers_color, vertical_line};
 use legend::LegendWidget;
 
 type LabelFormatterFn<'a> = dyn Fn(&str, &PlotPoint) -> String + 'a;
@@ -903,12 +903,12 @@ impl<'a> Plot<'a> {
             show_y = false;
         }
         // Remove the deselected items.
-        items.retain(|item| !mem.hidden_items.contains(&item.item_reference()));
+        items.retain(|item| !mem.hidden_items.contains(&item.id()));
         // Highlight the hovered items.
-        if let Some(item_reference) = &mem.hovered_legend_item {
+        if let Some(item_id) = &mem.hovered_legend_item {
             items
                 .iter_mut()
-                .filter(|entry| &entry.item_reference() == item_reference)
+                .filter(|entry| &entry.id() == item_id)
                 .for_each(|entry| entry.highlight());
         }
         // Move highlighted items to front.
@@ -1221,11 +1221,7 @@ impl<'a> Plot<'a> {
             mem.hidden_items = legend.hidden_items();
             mem.hovered_legend_item = legend.hovered_item();
 
-            if let Some(ItemReference {
-                name: _,
-                item_id: Some(item_id),
-            }) = &mem.hovered_legend_item
-            {
+            if let Some(item_id) = &mem.hovered_legend_item {
                 hovered_plot_item.get_or_insert(*item_id);
             }
         }
@@ -1257,11 +1253,7 @@ impl<'a> Plot<'a> {
         }
 
         let transform = mem.transform;
-        let hidden_items = mem
-            .hidden_items
-            .iter()
-            .filter_map(|item_reference| item_reference.item_id)
-            .collect();
+        let hidden_items = mem.hidden_items.iter().copied().collect();
         mem.store(ui.ctx(), plot_id);
 
         let response = if show_x || show_y {
@@ -1731,7 +1723,7 @@ impl<'a> PreparedPlot<'a> {
 
         let hovered_plot_item_id = if let Some((item, elem)) = closest {
             item.on_hover(elem, shapes, &mut cursors, &plot, label_formatter);
-            item.id()
+            Some(item.id())
         } else {
             let value = transform.value_from_position(pointer);
             items::rulers_at_value(

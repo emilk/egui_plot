@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use egui::{Context, Id, Pos2, Vec2b};
 
-use crate::{ItemReference, PlotBounds, PlotTransform};
+use crate::{PlotBounds, PlotTransform};
 
 /// Information about the plot that has to persist between frames.
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
@@ -15,10 +15,10 @@ pub struct PlotMemory {
     pub auto_bounds: Vec2b,
 
     /// Hovered legend item if any.
-    pub hovered_legend_item: Option<ItemReference>,
+    pub hovered_legend_item: Option<Id>,
 
     /// Which items _not_ to show?
-    pub hidden_items: ahash::HashSet<ItemReference>,
+    pub hidden_items: ahash::HashSet<Id>,
 
     /// The transform from last frame.
     pub(crate) transform: PlotTransform,

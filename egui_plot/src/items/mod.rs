@@ -17,14 +17,12 @@ use super::{Cursor, LabelFormatter, PlotBounds, PlotTransform};
 
 pub use bar::Bar;
 pub use box_elem::{BoxElem, BoxSpread};
-pub use item_reference::ItemReference;
 pub use values::{
     ClosestElem, LineStyle, MarkerShape, Orientation, PlotGeometry, PlotPoint, PlotPoints,
 };
 
 mod bar;
 mod box_elem;
-mod item_reference;
 mod rect_elem;
 mod values;
 
@@ -33,18 +31,20 @@ const DEFAULT_FILL_ALPHA: f32 = 0.05;
 #[derive(Clone, Debug, PartialEq)]
 pub struct PlotItemBase {
     name: String,
-    id: Option<Id>,
+    id: Id,
     highlight: bool,
     allow_hover: bool,
 }
 
-impl Default for PlotItemBase {
-    fn default() -> Self {
+impl PlotItemBase {
+    pub fn new(name: impl ToString) -> Self {
+        let name = name.to_string();
+        let id = Id::new(&name);
         Self {
-            name: String::default(),
-            allow_hover: true,
-            id: None,
+            name,
+            id,
             highlight: false,
+            allow_hover: true,
         }
     }
 }
@@ -54,20 +54,10 @@ macro_rules! builder_methods_for_base {
         /// Name of this plot item.
         ///
         /// This name will show up in the plot legend, if legends are turned on.
-        ///
-        /// Multiple plot items may share the same name, in which case they will also share an entry in
-        /// the legend.
         #[allow(clippy::needless_pass_by_value)]
         #[inline]
         pub fn name(mut self, name: impl ToString) -> Self {
             self.base_mut().name = name.to_string();
-            self
-        }
-
-        /// Set the line's id which is used to identify it in the plot's response.
-        #[inline]
-        pub fn id(mut self, id: Id) -> Self {
-            self.base_mut().id = Some(id);
             self
         }
 
@@ -84,6 +74,15 @@ macro_rules! builder_methods_for_base {
         #[inline]
         pub fn allow_hover(mut self, hovering: bool) -> Self {
             self.base_mut().allow_hover = hovering;
+            self
+        }
+
+        /// Sets the id of this plot item.
+        ///
+        /// By default the id is determined from the name, but it can be explicitely set to a different value.
+        #[inline]
+        pub fn id(mut self, id: impl Into<Id>) -> Self {
+            self.base_mut().id = id.into();
             self
         }
     };
@@ -131,15 +130,8 @@ pub trait PlotItem {
 
     fn base_mut(&mut self) -> &mut PlotItemBase;
 
-    fn id(&self) -> Option<Id> {
+    fn id(&self) -> Id {
         self.base().id
-    }
-
-    fn item_reference(&self) -> ItemReference {
-        ItemReference {
-            name: self.name().to_string(),
-            item_id: self.id(),
-        }
     }
 
     fn find_closest(&self, point: Pos2, transform: &PlotTransform) -> Option<ClosestElem> {
@@ -215,9 +207,9 @@ pub struct HLine {
 }
 
 impl HLine {
-    pub fn new(y: impl Into<f64>) -> Self {
+    pub fn new(name: impl Into<String>, y: impl Into<f64>) -> Self {
         Self {
-            base: PlotItemBase::default(),
+            base: PlotItemBase::new(name.into()),
             y: y.into(),
             stroke: Stroke::new(1.0, Color32::TRANSPARENT),
             style: LineStyle::Solid,
@@ -308,9 +300,9 @@ pub struct VLine {
 }
 
 impl VLine {
-    pub fn new(x: impl Into<f64>) -> Self {
+    pub fn new(name: impl Into<String>, x: impl Into<f64>) -> Self {
         Self {
-            base: PlotItemBase::default(),
+            base: PlotItemBase::new(name.into()),
             x: x.into(),
             stroke: Stroke::new(1.0, Color32::TRANSPARENT),
             style: LineStyle::Solid,
@@ -402,9 +394,9 @@ pub struct Line<'a> {
 }
 
 impl<'a> Line<'a> {
-    pub fn new(series: impl Into<PlotPoints<'a>>) -> Self {
+    pub fn new(name: impl Into<String>, series: impl Into<PlotPoints<'a>>) -> Self {
         Self {
-            base: PlotItemBase::default(),
+            base: PlotItemBase::new(name.into()),
             series: series.into(),
             stroke: Stroke::new(1.5, Color32::TRANSPARENT), // Note: a stroke of 1.0 (or less) can look bad on low-dpi-screens
             fill: None,
@@ -560,9 +552,9 @@ pub struct Polygon<'a> {
 }
 
 impl<'a> Polygon<'a> {
-    pub fn new(series: impl Into<PlotPoints<'a>>) -> Self {
+    pub fn new(name: impl Into<String>, series: impl Into<PlotPoints<'a>>) -> Self {
         Self {
-            base: PlotItemBase::default(),
+            base: PlotItemBase::new(name.into()),
             series: series.into(),
             stroke: Stroke::new(1.0, Color32::TRANSPARENT),
             fill_color: None,
@@ -666,11 +658,11 @@ pub struct Text {
 }
 
 impl Text {
-    pub fn new(position: PlotPoint, text: impl Into<WidgetText>) -> Self {
+    pub fn new(name: impl Into<String>, position: PlotPoint, text: impl Into<WidgetText>) -> Self {
         Self {
+            base: PlotItemBase::new(name.into()),
             text: text.into(),
             position,
-            base: PlotItemBase::default(),
             color: Color32::TRANSPARENT,
             anchor: Align2::CENTER_CENTER,
         }
@@ -769,9 +761,9 @@ pub struct Points<'a> {
 }
 
 impl<'a> Points<'a> {
-    pub fn new(series: impl Into<PlotPoints<'a>>) -> Self {
+    pub fn new(name: impl Into<String>, series: impl Into<PlotPoints<'a>>) -> Self {
         Self {
-            base: PlotItemBase::default(),
+            base: PlotItemBase::new(name.into()),
             series: series.into(),
             shape: MarkerShape::Circle,
             color: Color32::TRANSPARENT,
@@ -983,13 +975,17 @@ pub struct Arrows<'a> {
 }
 
 impl<'a> Arrows<'a> {
-    pub fn new(origins: impl Into<PlotPoints<'a>>, tips: impl Into<PlotPoints<'a>>) -> Self {
+    pub fn new(
+        name: impl Into<String>,
+        origins: impl Into<PlotPoints<'a>>,
+        tips: impl Into<PlotPoints<'a>>,
+    ) -> Self {
         Self {
+            base: PlotItemBase::new(name.into()),
             origins: origins.into(),
             tips: tips.into(),
             tip_length: None,
             color: Color32::TRANSPARENT,
-            base: PlotItemBase::default(),
         }
     }
 
@@ -1096,12 +1092,13 @@ pub struct PlotImage {
 impl PlotImage {
     /// Create a new image with position and size in plot coordinates.
     pub fn new(
+        name: impl Into<String>,
         texture_id: impl Into<TextureId>,
         center_position: PlotPoint,
         size: impl Into<Vec2>,
     ) -> Self {
         Self {
-            base: PlotItemBase::default(),
+            base: PlotItemBase::new(name.into()),
             position: center_position,
             texture_id: texture_id.into(),
             uv: Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
@@ -1251,12 +1248,12 @@ pub struct BarChart {
 
 impl BarChart {
     /// Create a bar chart. It defaults to vertically oriented elements.
-    pub fn new(bars: Vec<Bar>) -> Self {
+    pub fn new(name: impl Into<String>, bars: Vec<Bar>) -> Self {
         Self {
+            base: PlotItemBase::new(name.into()),
             bars,
             default_color: Color32::TRANSPARENT,
             element_formatter: None,
-            base: PlotItemBase::default(),
         }
     }
 
@@ -1410,9 +1407,9 @@ pub struct BoxPlot {
 
 impl BoxPlot {
     /// Create a plot containing multiple `boxes`. It defaults to vertically oriented elements.
-    pub fn new(boxes: Vec<BoxElem>) -> Self {
+    pub fn new(name: impl Into<String>, boxes: Vec<BoxElem>) -> Self {
         Self {
-            base: PlotItemBase::default(),
+            base: PlotItemBase::new(name.into()),
             boxes,
             default_color: Color32::TRANSPARENT,
             name: String::new(),

@@ -34,7 +34,7 @@ impl eframe::App for MyApp {
             // let's create a dummy line in the plot
             let graph: Vec<[f64; 2]> = vec![[0.0, 1.0], [2.0, 3.0], [3.0, 2.0]];
             let inner = my_plot.show(ui, |plot_ui| {
-                plot_ui.line(Line::new(PlotPoints::from(graph)).name("curve"));
+                plot_ui.line(Line::new("curve", PlotPoints::from(graph)));
             });
             // Remember the position of the plot
             plot_rect = Some(inner.response.rect);
