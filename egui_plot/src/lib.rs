@@ -125,15 +125,10 @@ pub struct PlotResponse<R> {
 
     /// The id of a currently hovered item if any.
     ///
-    /// This is `None` if either no item was hovered, or the hovered item didn't provide an id.
+    /// This is `None` if either no item was hovered.
     /// A plot item can be hovered either by hovering its representation in the plot (line, marker, etc.)
     /// or by hovering the item in the legend.
     pub hovered_plot_item: Option<Id>,
-
-    /// The ids of hidden items if any.
-    ///
-    /// This is empty if either no item was hidden, or the hidden item didn't provide an id.
-    pub hidden_items: Vec<Id>,
 }
 
 // ----------------------------------------------------------------------------
@@ -1253,7 +1248,6 @@ impl<'a> Plot<'a> {
         }
 
         let transform = mem.transform;
-        let hidden_items = mem.hidden_items.iter().copied().collect();
         mem.store(ui.ctx(), plot_id);
 
         let response = if show_x || show_y {
@@ -1269,7 +1263,6 @@ impl<'a> Plot<'a> {
             response,
             transform,
             hovered_plot_item,
-            hidden_items,
         }
     }
 }
