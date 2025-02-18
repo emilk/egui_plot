@@ -238,7 +238,7 @@ impl LineDemo {
                 ]
             })
             .collect();
-        Line::new("circle", PlotPoints::from(circle_points))
+        Line::new("circle", circle_points)
             .color(Color32::from_rgb(100, 200, 100))
             .style(self.line_style)
     }

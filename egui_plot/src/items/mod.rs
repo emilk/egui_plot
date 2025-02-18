@@ -28,7 +28,7 @@ mod values;
 
 const DEFAULT_FILL_ALPHA: f32 = 0.05;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PlotItemBase {
     name: String,
     id: Id,
@@ -37,8 +37,7 @@ pub struct PlotItemBase {
 }
 
 impl PlotItemBase {
-    pub fn new(name: impl ToString) -> Self {
-        let name = name.to_string();
+    pub fn new(name: String) -> Self {
         let id = Id::new(&name);
         Self {
             name,
@@ -79,7 +78,7 @@ macro_rules! builder_methods_for_base {
 
         /// Sets the id of this plot item.
         ///
-        /// By default the id is determined from the name, but it can be explicitely set to a different value.
+        /// By default the id is determined from the name, but it can be explicitly set to a different value.
         #[inline]
         pub fn id(mut self, id: impl Into<Id>) -> Self {
             self.base_mut().id = id.into();

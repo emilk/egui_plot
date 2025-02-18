@@ -273,7 +273,7 @@ impl LegendWidget {
             });
         (!entries.is_empty()).then_some(Self {
             rect,
-            entries: entries.into_iter().map(|(_, v)| v).collect(),
+            entries: entries.into_values().collect(),
             config,
         })
     }
