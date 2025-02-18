@@ -39,7 +39,7 @@ pub use crate::{
 
 use axis::AxisWidget;
 use items::{horizontal_line, rulers_color, vertical_line};
-use legend::LegendWidget;
+use legend::{LegendItemReference, LegendWidget};
 
 type LabelFormatterFn<'a> = dyn Fn(&str, &PlotPoint) -> String + 'a;
 pub type LabelFormatter<'a> = Option<Box<LabelFormatterFn<'a>>>;
@@ -900,17 +900,17 @@ impl<'a> Plot<'a> {
         // Remove the deselected items.
         items.retain(|item| !mem.hidden_items.contains(item.name()));
         // Highlight the hovered items.
-        if let Some((hovered_name, hovered_id)) = &mem.hovered_legend_item {
+        if let Some(LegendItemReference { name, item_id }) = &mem.hovered_legend_item {
             // If available, identify by id, not name.
-            if let Some(hovered_id) = hovered_id {
+            if let Some(item_id) = item_id {
                 items
                     .iter_mut()
-                    .filter(|entry| entry.id() == Some(*hovered_id))
+                    .filter(|entry| entry.id() == Some(*item_id))
                     .for_each(|entry| entry.highlight());
             } else {
                 items
                     .iter_mut()
-                    .filter(|entry| entry.name() == hovered_name)
+                    .filter(|entry| entry.name() == name)
                     .for_each(|entry| entry.highlight());
             }
         }
@@ -1224,8 +1224,12 @@ impl<'a> Plot<'a> {
             mem.hidden_items = legend.hidden_items();
             mem.hovered_legend_item = legend.hovered_item();
 
-            if let Some((_, Some(hovered_id))) = &mem.hovered_legend_item {
-                hovered_plot_item.get_or_insert(*hovered_id);
+            if let Some(LegendItemReference {
+                name: _,
+                item_id: Some(item_id),
+            }) = &mem.hovered_legend_item
+            {
+                hovered_plot_item.get_or_insert(*item_id);
             }
         }
 
