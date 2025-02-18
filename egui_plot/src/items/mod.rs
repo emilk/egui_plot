@@ -30,6 +30,65 @@ mod values;
 
 const DEFAULT_FILL_ALPHA: f32 = 0.05;
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct PlotItemBase {
+    name: String,
+    id: Option<Id>,
+    highlight: bool,
+    allow_hover: bool,
+}
+
+impl Default for PlotItemBase {
+    fn default() -> Self {
+        Self {
+            name: String::default(),
+            allow_hover: true,
+            id: None,
+            highlight: false,
+        }
+    }
+}
+
+macro_rules! builder_methods_for_base {
+    () => {
+        /// Name of this plot item.
+        ///
+        /// This name will show up in the plot legend, if legends are turned on.
+        ///
+        /// Multiple plot items may share the same name, in which case they will also share an entry in
+        /// the legend.
+        #[allow(clippy::needless_pass_by_value)]
+        #[inline]
+        pub fn name(mut self, name: impl ToString) -> Self {
+            self.base_mut().name = name.to_string();
+            self
+        }
+
+        /// Set the line's id which is used to identify it in the plot's response.
+        #[inline]
+        pub fn id(mut self, id: Id) -> Self {
+            self.base_mut().id = Some(id);
+            self
+        }
+
+        /// Highlight this plot item, typically by scaling it up.
+        ///
+        /// If false, the item may still be highlighted via user interaction.
+        #[inline]
+        pub fn highlight(mut self, highlight: bool) -> Self {
+            self.base_mut().highlight = highlight;
+            self
+        }
+
+        /// Allowed hovering this item in the plot. Default: `true`.
+        #[inline]
+        pub fn allow_hover(mut self, hovering: bool) -> Self {
+            self.base_mut().allow_hover = hovering;
+            self
+        }
+    };
+}
+
 /// Container to pass-through several parameters related to plot visualization
 pub struct PlotConfig<'a> {
     pub ui: &'a Ui,
@@ -45,22 +104,36 @@ pub trait PlotItem {
     /// For plot-items which are generated based on x values (plotting functions).
     fn initialize(&mut self, x_range: RangeInclusive<f64>);
 
-    fn name(&self) -> &str;
+    fn name(&self) -> &str {
+        &self.base().name
+    }
 
     fn color(&self) -> Color32;
 
-    fn highlight(&mut self);
+    fn highlight(&mut self) {
+        self.base_mut().highlight = true;
+    }
 
-    fn highlighted(&self) -> bool;
+    fn highlighted(&self) -> bool {
+        self.base().highlight
+    }
 
     /// Can the user hover this item?
-    fn allow_hover(&self) -> bool;
+    fn allow_hover(&self) -> bool {
+        self.base().allow_hover
+    }
 
     fn geometry(&self) -> PlotGeometry<'_>;
 
     fn bounds(&self) -> PlotBounds;
 
-    fn id(&self) -> Option<Id>;
+    fn base(&self) -> &PlotItemBase;
+
+    fn base_mut(&mut self) -> &mut PlotItemBase;
+
+    fn id(&self) -> Option<Id> {
+        self.base().id
+    }
 
     fn item_reference(&self) -> ItemReference {
         ItemReference {
@@ -135,40 +208,20 @@ pub trait PlotItem {
 /// A horizontal line in a plot, filling the full width
 #[derive(Clone, Debug, PartialEq)]
 pub struct HLine {
+    base: PlotItemBase,
     pub(super) y: f64,
     pub(super) stroke: Stroke,
-    pub(super) name: String,
-    pub(super) highlight: bool,
-    pub(super) allow_hover: bool,
     pub(super) style: LineStyle,
-    id: Option<Id>,
 }
 
 impl HLine {
     pub fn new(y: impl Into<f64>) -> Self {
         Self {
+            base: PlotItemBase::default(),
             y: y.into(),
             stroke: Stroke::new(1.0, Color32::TRANSPARENT),
-            name: String::default(),
-            highlight: false,
-            allow_hover: true,
             style: LineStyle::Solid,
-            id: None,
         }
-    }
-
-    /// Highlight this line in the plot by scaling up the line.
-    #[inline]
-    pub fn highlight(mut self, highlight: bool) -> Self {
-        self.highlight = highlight;
-        self
-    }
-
-    /// Allowed hovering this item in the plot. Default: `true`.
-    #[inline]
-    pub fn allow_hover(mut self, hovering: bool) -> Self {
-        self.allow_hover = hovering;
-        self
     }
 
     /// Add a stroke.
@@ -199,33 +252,15 @@ impl HLine {
         self
     }
 
-    /// Name of this horizontal line.
-    ///
-    /// This name will show up in the plot legend, if legends are turned on.
-    ///
-    /// Multiple plot items may share the same name, in which case they will also share an entry in
-    /// the legend.
-    #[allow(clippy::needless_pass_by_value)]
-    #[inline]
-    pub fn name(mut self, name: impl ToString) -> Self {
-        self.name = name.to_string();
-        self
-    }
-
-    /// Set the line's id which is used to identify it in the plot's response.
-    #[inline]
-    pub fn id(mut self, id: Id) -> Self {
-        self.id = Some(id);
-        self
-    }
+    builder_methods_for_base!();
 }
 
 impl PlotItem for HLine {
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
+            base,
             y,
             stroke,
-            highlight,
             style,
             ..
         } = self;
@@ -234,29 +269,21 @@ impl PlotItem for HLine {
             transform.position_from_point(&PlotPoint::new(transform.bounds().min[0], *y)),
             transform.position_from_point(&PlotPoint::new(transform.bounds().max[0], *y)),
         ];
-        style.style_line(points, *stroke, *highlight, shapes);
+        style.style_line(points, *stroke, base.highlight, shapes);
     }
 
     fn initialize(&mut self, _x_range: RangeInclusive<f64>) {}
-
-    fn name(&self) -> &str {
-        &self.name
-    }
 
     fn color(&self) -> Color32 {
         self.stroke.color
     }
 
-    fn highlight(&mut self) {
-        self.highlight = true;
+    fn base(&self) -> &PlotItemBase {
+        &self.base
     }
 
-    fn highlighted(&self) -> bool {
-        self.highlight
-    }
-
-    fn allow_hover(&self) -> bool {
-        self.allow_hover
+    fn base_mut(&mut self) -> &mut PlotItemBase {
+        &mut self.base
     }
 
     fn geometry(&self) -> PlotGeometry<'_> {
@@ -269,49 +296,25 @@ impl PlotItem for HLine {
         bounds.max[1] = self.y;
         bounds
     }
-
-    fn id(&self) -> Option<Id> {
-        self.id
-    }
 }
 
 /// A vertical line in a plot, filling the full width
 #[derive(Clone, Debug, PartialEq)]
 pub struct VLine {
+    base: PlotItemBase,
     pub(super) x: f64,
     pub(super) stroke: Stroke,
-    pub(super) name: String,
-    pub(super) highlight: bool,
-    pub(super) allow_hover: bool,
     pub(super) style: LineStyle,
-    id: Option<Id>,
 }
 
 impl VLine {
     pub fn new(x: impl Into<f64>) -> Self {
         Self {
+            base: PlotItemBase::default(),
             x: x.into(),
             stroke: Stroke::new(1.0, Color32::TRANSPARENT),
-            name: String::default(),
-            highlight: false,
-            allow_hover: true,
             style: LineStyle::Solid,
-            id: None,
         }
-    }
-
-    /// Highlight this line in the plot by scaling up the line.
-    #[inline]
-    pub fn highlight(mut self, highlight: bool) -> Self {
-        self.highlight = highlight;
-        self
-    }
-
-    /// Allowed hovering this item in the plot. Default: `true`.
-    #[inline]
-    pub fn allow_hover(mut self, hovering: bool) -> Self {
-        self.allow_hover = hovering;
-        self
     }
 
     /// Add a stroke.
@@ -342,33 +345,15 @@ impl VLine {
         self
     }
 
-    /// Name of this vertical line.
-    ///
-    /// This name will show up in the plot legend, if legends are turned on.
-    ///
-    /// Multiple plot items may share the same name, in which case they will also share an entry in
-    /// the legend.
-    #[allow(clippy::needless_pass_by_value)]
-    #[inline]
-    pub fn name(mut self, name: impl ToString) -> Self {
-        self.name = name.to_string();
-        self
-    }
-
-    /// Set the line's id which is used to identify it in the plot's response.
-    #[inline]
-    pub fn id(mut self, id: Id) -> Self {
-        self.id = Some(id);
-        self
-    }
+    builder_methods_for_base!();
 }
 
 impl PlotItem for VLine {
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
+            base,
             x,
             stroke,
-            highlight,
             style,
             ..
         } = self;
@@ -377,29 +362,21 @@ impl PlotItem for VLine {
             transform.position_from_point(&PlotPoint::new(*x, transform.bounds().min[1])),
             transform.position_from_point(&PlotPoint::new(*x, transform.bounds().max[1])),
         ];
-        style.style_line(points, *stroke, *highlight, shapes);
+        style.style_line(points, *stroke, base.highlight, shapes);
     }
 
     fn initialize(&mut self, _x_range: RangeInclusive<f64>) {}
-
-    fn name(&self) -> &str {
-        &self.name
-    }
 
     fn color(&self) -> Color32 {
         self.stroke.color
     }
 
-    fn highlight(&mut self) {
-        self.highlight = true;
+    fn base(&self) -> &PlotItemBase {
+        &self.base
     }
 
-    fn highlighted(&self) -> bool {
-        self.highlight
-    }
-
-    fn allow_hover(&self) -> bool {
-        self.allow_hover
+    fn base_mut(&mut self) -> &mut PlotItemBase {
+        &mut self.base
     }
 
     fn geometry(&self) -> PlotGeometry<'_> {
@@ -412,52 +389,28 @@ impl PlotItem for VLine {
         bounds.max[0] = self.x;
         bounds
     }
-
-    fn id(&self) -> Option<Id> {
-        self.id
-    }
 }
 
 /// A series of values forming a path.
 pub struct Line<'a> {
+    base: PlotItemBase,
     pub(super) series: PlotPoints<'a>,
     pub(super) stroke: Stroke,
-    pub(super) name: String,
-    pub(super) highlight: bool,
-    pub(super) allow_hover: bool,
     pub(super) fill: Option<f32>,
     pub(super) fill_alpha: f32,
     pub(super) style: LineStyle,
-    id: Option<Id>,
 }
 
 impl<'a> Line<'a> {
     pub fn new(series: impl Into<PlotPoints<'a>>) -> Self {
         Self {
+            base: PlotItemBase::default(),
             series: series.into(),
             stroke: Stroke::new(1.5, Color32::TRANSPARENT), // Note: a stroke of 1.0 (or less) can look bad on low-dpi-screens
-            name: Default::default(),
-            highlight: false,
-            allow_hover: true,
             fill: None,
             fill_alpha: DEFAULT_FILL_ALPHA,
             style: LineStyle::Solid,
-            id: None,
         }
-    }
-
-    /// Highlight this line in the plot by scaling up the line.
-    #[inline]
-    pub fn highlight(mut self, highlight: bool) -> Self {
-        self.highlight = highlight;
-        self
-    }
-
-    /// Allowed hovering this item in the plot. Default: `true`.
-    #[inline]
-    pub fn allow_hover(mut self, hovering: bool) -> Self {
-        self.allow_hover = hovering;
-        self
     }
 
     /// Add a stroke.
@@ -502,25 +455,7 @@ impl<'a> Line<'a> {
         self
     }
 
-    /// Name of this line.
-    ///
-    /// This name will show up in the plot legend, if legends are turned on.
-    ///
-    /// Multiple plot items may share the same name, in which case they will also share an entry in
-    /// the legend.
-    #[allow(clippy::needless_pass_by_value)]
-    #[inline]
-    pub fn name(mut self, name: impl ToString) -> Self {
-        self.name = name.to_string();
-        self
-    }
-
-    /// Set the line's id which is used to identify it in the plot's response.
-    #[inline]
-    pub fn id(mut self, id: Id) -> Self {
-        self.id = Some(id);
-        self
-    }
+    builder_methods_for_base!();
 }
 
 /// Returns the x-coordinate of a possible intersection between a line segment from `p1` to `p2` and
@@ -533,9 +468,9 @@ fn y_intersection(p1: &Pos2, p2: &Pos2, y: f32) -> Option<f32> {
 impl<'a> PlotItem for Line<'a> {
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
+            base,
             series,
             stroke,
-            highlight,
             mut fill,
             style,
             ..
@@ -554,7 +489,7 @@ impl<'a> PlotItem for Line<'a> {
         }
         if let Some(y_reference) = fill {
             let mut fill_alpha = self.fill_alpha;
-            if *highlight {
+            if base.highlight {
                 fill_alpha = (2.0 * fill_alpha).at_most(1.0);
             }
             let y = transform
@@ -587,31 +522,23 @@ impl<'a> PlotItem for Line<'a> {
             mesh.colored_vertex(pos2(last.x, y), fill_color);
             shapes.push(Shape::Mesh(std::sync::Arc::new(mesh)));
         }
-        style.style_line(values_tf, *stroke, *highlight, shapes);
+        style.style_line(values_tf, *stroke, base.highlight, shapes);
     }
 
     fn initialize(&mut self, x_range: RangeInclusive<f64>) {
         self.series.generate_points(x_range);
     }
 
-    fn name(&self) -> &str {
-        self.name.as_str()
-    }
-
     fn color(&self) -> Color32 {
         self.stroke.color
     }
 
-    fn highlight(&mut self) {
-        self.highlight = true;
+    fn base(&self) -> &PlotItemBase {
+        &self.base
     }
 
-    fn highlighted(&self) -> bool {
-        self.highlight
-    }
-
-    fn allow_hover(&self) -> bool {
-        self.allow_hover
+    fn base_mut(&mut self) -> &mut PlotItemBase {
+        &mut self.base
     }
 
     fn geometry(&self) -> PlotGeometry<'_> {
@@ -621,51 +548,26 @@ impl<'a> PlotItem for Line<'a> {
     fn bounds(&self) -> PlotBounds {
         self.series.bounds()
     }
-
-    fn id(&self) -> Option<Id> {
-        self.id
-    }
 }
 
 /// A convex polygon.
 pub struct Polygon<'a> {
+    base: PlotItemBase,
     pub(super) series: PlotPoints<'a>,
     pub(super) stroke: Stroke,
-    pub(super) name: String,
-    pub(super) highlight: bool,
-    pub(super) allow_hover: bool,
     pub(super) fill_color: Option<Color32>,
     pub(super) style: LineStyle,
-    id: Option<Id>,
 }
 
 impl<'a> Polygon<'a> {
     pub fn new(series: impl Into<PlotPoints<'a>>) -> Self {
         Self {
+            base: PlotItemBase::default(),
             series: series.into(),
             stroke: Stroke::new(1.0, Color32::TRANSPARENT),
-            name: Default::default(),
-            highlight: false,
-            allow_hover: true,
             fill_color: None,
             style: LineStyle::Solid,
-            id: None,
         }
-    }
-
-    /// Highlight this polygon in the plot by scaling up the stroke and reducing the fill
-    /// transparency.
-    #[inline]
-    pub fn highlight(mut self, highlight: bool) -> Self {
-        self.highlight = highlight;
-        self
-    }
-
-    /// Allowed hovering this item in the plot. Default: `true`.
-    #[inline]
-    pub fn allow_hover(mut self, hovering: bool) -> Self {
-        self.allow_hover = hovering;
-        self
     }
 
     /// Add a custom stroke.
@@ -696,33 +598,15 @@ impl<'a> Polygon<'a> {
         self
     }
 
-    /// Name of this polygon.
-    ///
-    /// This name will show up in the plot legend, if legends are turned on.
-    ///
-    /// Multiple plot items may share the same name, in which case they will also share an entry in
-    /// the legend.
-    #[allow(clippy::needless_pass_by_value)]
-    #[inline]
-    pub fn name(mut self, name: impl ToString) -> Self {
-        self.name = name.to_string();
-        self
-    }
-
-    /// Set the polygon's id which is used to identify it in the plot's response.
-    #[inline]
-    pub fn id(mut self, id: Id) -> Self {
-        self.id = Some(id);
-        self
-    }
+    builder_methods_for_base!();
 }
 
 impl<'a> PlotItem for Polygon<'a> {
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
+            base,
             series,
             stroke,
-            highlight,
             fill_color,
             style,
             ..
@@ -743,31 +627,15 @@ impl<'a> PlotItem for Polygon<'a> {
             values_tf.push(*first); // close the polygon
         }
 
-        style.style_line(values_tf, *stroke, *highlight, shapes);
+        style.style_line(values_tf, *stroke, base.highlight, shapes);
     }
 
     fn initialize(&mut self, x_range: RangeInclusive<f64>) {
         self.series.generate_points(x_range);
     }
 
-    fn name(&self) -> &str {
-        self.name.as_str()
-    }
-
     fn color(&self) -> Color32 {
         self.stroke.color
-    }
-
-    fn highlight(&mut self) {
-        self.highlight = true;
-    }
-
-    fn highlighted(&self) -> bool {
-        self.highlight
-    }
-
-    fn allow_hover(&self) -> bool {
-        self.allow_hover
     }
 
     fn geometry(&self) -> PlotGeometry<'_> {
@@ -778,22 +646,23 @@ impl<'a> PlotItem for Polygon<'a> {
         self.series.bounds()
     }
 
-    fn id(&self) -> Option<Id> {
-        self.id
+    fn base(&self) -> &PlotItemBase {
+        &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut PlotItemBase {
+        &mut self.base
     }
 }
 
 /// Text inside the plot.
 #[derive(Clone)]
 pub struct Text {
+    base: PlotItemBase,
     pub(super) text: WidgetText,
     pub(super) position: PlotPoint,
-    pub(super) name: String,
-    pub(super) highlight: bool,
-    pub(super) allow_hover: bool,
     pub(super) color: Color32,
     pub(super) anchor: Align2,
-    id: Option<Id>,
 }
 
 impl Text {
@@ -801,27 +670,10 @@ impl Text {
         Self {
             text: text.into(),
             position,
-            name: Default::default(),
-            highlight: false,
-            allow_hover: true,
+            base: PlotItemBase::default(),
             color: Color32::TRANSPARENT,
             anchor: Align2::CENTER_CENTER,
-            id: None,
         }
-    }
-
-    /// Highlight this text in the plot by drawing a rectangle around it.
-    #[inline]
-    pub fn highlight(mut self, highlight: bool) -> Self {
-        self.highlight = highlight;
-        self
-    }
-
-    /// Allowed hovering this item in the plot. Default: `true`.
-    #[inline]
-    pub fn allow_hover(mut self, hovering: bool) -> Self {
-        self.allow_hover = hovering;
-        self
     }
 
     /// Text color.
@@ -838,25 +690,7 @@ impl Text {
         self
     }
 
-    /// Name of this text.
-    ///
-    /// This name will show up in the plot legend, if legends are turned on.
-    ///
-    /// Multiple plot items may share the same name, in which case they will also share an entry in
-    /// the legend.
-    #[allow(clippy::needless_pass_by_value)]
-    #[inline]
-    pub fn name(mut self, name: impl ToString) -> Self {
-        self.name = name.to_string();
-        self
-    }
-
-    /// Set the text's id which is used to identify it in the plot's response.
-    #[inline]
-    pub fn id(mut self, id: Id) -> Self {
-        self.id = Some(id);
-        self
-    }
+    builder_methods_for_base!();
 }
 
 impl PlotItem for Text {
@@ -879,7 +713,7 @@ impl PlotItem for Text {
 
         shapes.push(TextShape::new(rect.min, galley, color).into());
 
-        if self.highlight {
+        if self.base.highlight {
             shapes.push(Shape::rect_stroke(
                 rect.expand(1.0),
                 1.0,
@@ -891,24 +725,8 @@ impl PlotItem for Text {
 
     fn initialize(&mut self, _x_range: RangeInclusive<f64>) {}
 
-    fn name(&self) -> &str {
-        self.name.as_str()
-    }
-
     fn color(&self) -> Color32 {
         self.color
-    }
-
-    fn highlight(&mut self) {
-        self.highlight = true;
-    }
-
-    fn highlighted(&self) -> bool {
-        self.highlight
-    }
-
-    fn allow_hover(&self) -> bool {
-        self.allow_hover
     }
 
     fn geometry(&self) -> PlotGeometry<'_> {
@@ -921,13 +739,19 @@ impl PlotItem for Text {
         bounds
     }
 
-    fn id(&self) -> Option<Id> {
-        self.id
+    fn base(&self) -> &PlotItemBase {
+        &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut PlotItemBase {
+        &mut self.base
     }
 }
 
 /// A set of points.
 pub struct Points<'a> {
+    base: PlotItemBase,
+
     pub(super) series: PlotPoints<'a>,
 
     pub(super) shape: MarkerShape,
@@ -941,29 +765,19 @@ pub struct Points<'a> {
     /// The maximum extent of the marker from its center.
     pub(super) radius: f32,
 
-    pub(super) name: String,
-
-    pub(super) highlight: bool,
-
-    pub(super) allow_hover: bool,
-
     pub(super) stems: Option<f32>,
-    id: Option<Id>,
 }
 
 impl<'a> Points<'a> {
     pub fn new(series: impl Into<PlotPoints<'a>>) -> Self {
         Self {
+            base: PlotItemBase::default(),
             series: series.into(),
             shape: MarkerShape::Circle,
             color: Color32::TRANSPARENT,
             filled: true,
             radius: 1.0,
-            name: Default::default(),
-            highlight: false,
-            allow_hover: true,
             stems: None,
-            id: None,
         }
     }
 
@@ -971,20 +785,6 @@ impl<'a> Points<'a> {
     #[inline]
     pub fn shape(mut self, shape: MarkerShape) -> Self {
         self.shape = shape;
-        self
-    }
-
-    /// Highlight these points in the plot by scaling up their markers.
-    #[inline]
-    pub fn highlight(mut self, highlight: bool) -> Self {
-        self.highlight = highlight;
-        self
-    }
-
-    /// Allowed hovering this item in the plot. Default: `true`.
-    #[inline]
-    pub fn allow_hover(mut self, hovering: bool) -> Self {
-        self.allow_hover = hovering;
         self
     }
 
@@ -1016,25 +816,7 @@ impl<'a> Points<'a> {
         self
     }
 
-    /// Name of this set of points.
-    ///
-    /// This name will show up in the plot legend, if legends are turned on.
-    ///
-    /// Multiple plot items may share the same name, in which case they will also share an entry in
-    /// the legend.
-    #[allow(clippy::needless_pass_by_value)]
-    #[inline]
-    pub fn name(mut self, name: impl ToString) -> Self {
-        self.name = name.to_string();
-        self
-    }
-
-    /// Set the points' id which is used to identify them in the plot's response.
-    #[inline]
-    pub fn id(mut self, id: Id) -> Self {
-        self.id = Some(id);
-        self
-    }
+    builder_methods_for_base!();
 }
 
 impl<'a> PlotItem for Points<'a> {
@@ -1045,12 +827,12 @@ impl<'a> PlotItem for Points<'a> {
         let frac_1_sqrt_2 = 1.0 / 2_f32.sqrt();
 
         let Self {
+            base,
             series,
             shape,
             color,
             filled,
             mut radius,
-            highlight,
             stems,
             ..
         } = self;
@@ -1065,7 +847,7 @@ impl<'a> PlotItem for Points<'a> {
             (Color32::TRANSPARENT, default_stroke)
         };
 
-        if *highlight {
+        if base.highlight {
             radius *= 2f32.sqrt();
             stem_stroke.width *= 2.0;
         }
@@ -1171,26 +953,9 @@ impl<'a> PlotItem for Points<'a> {
         self.series.generate_points(x_range);
     }
 
-    fn name(&self) -> &str {
-        self.name.as_str()
-    }
-
     fn color(&self) -> Color32 {
         self.color
     }
-
-    fn highlight(&mut self) {
-        self.highlight = true;
-    }
-
-    fn highlighted(&self) -> bool {
-        self.highlight
-    }
-
-    fn allow_hover(&self) -> bool {
-        self.allow_hover
-    }
-
     fn geometry(&self) -> PlotGeometry<'_> {
         PlotGeometry::Points(self.series.points())
     }
@@ -1199,21 +964,22 @@ impl<'a> PlotItem for Points<'a> {
         self.series.bounds()
     }
 
-    fn id(&self) -> Option<Id> {
-        self.id
+    fn base(&self) -> &PlotItemBase {
+        &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut PlotItemBase {
+        &mut self.base
     }
 }
 
 /// A set of arrows.
 pub struct Arrows<'a> {
+    base: PlotItemBase,
     pub(super) origins: PlotPoints<'a>,
     pub(super) tips: PlotPoints<'a>,
     pub(super) tip_length: Option<f32>,
     pub(super) color: Color32,
-    pub(super) name: String,
-    pub(super) highlight: bool,
-    pub(super) allow_hover: bool,
-    id: Option<Id>,
 }
 
 impl<'a> Arrows<'a> {
@@ -1223,25 +989,8 @@ impl<'a> Arrows<'a> {
             tips: tips.into(),
             tip_length: None,
             color: Color32::TRANSPARENT,
-            name: Default::default(),
-            highlight: false,
-            allow_hover: true,
-            id: None,
+            base: PlotItemBase::default(),
         }
-    }
-
-    /// Highlight these arrows in the plot.
-    #[inline]
-    pub fn highlight(mut self, highlight: bool) -> Self {
-        self.highlight = highlight;
-        self
-    }
-
-    /// Allowed hovering this item in the plot. Default: `true`.
-    #[inline]
-    pub fn allow_hover(mut self, hovering: bool) -> Self {
-        self.allow_hover = hovering;
-        self
     }
 
     /// Set the length of the arrow tips
@@ -1258,25 +1007,7 @@ impl<'a> Arrows<'a> {
         self
     }
 
-    /// Name of this set of arrows.
-    ///
-    /// This name will show up in the plot legend, if legends are turned on.
-    ///
-    /// Multiple plot items may share the same name, in which case they will also share an entry in
-    /// the legend.
-    #[allow(clippy::needless_pass_by_value)]
-    #[inline]
-    pub fn name(mut self, name: impl ToString) -> Self {
-        self.name = name.to_string();
-        self
-    }
-
-    /// Set the arrows' id which is used to identify them in the plot's response.
-    #[inline]
-    pub fn id(mut self, id: Id) -> Self {
-        self.id = Some(id);
-        self
-    }
+    builder_methods_for_base!();
 }
 
 impl<'a> PlotItem for Arrows<'a> {
@@ -1286,10 +1017,10 @@ impl<'a> PlotItem for Arrows<'a> {
             tips,
             tip_length,
             color,
-            highlight,
+            base,
             ..
         } = self;
-        let stroke = Stroke::new(if *highlight { 2.0 } else { 1.0 }, *color);
+        let stroke = Stroke::new(if base.highlight { 2.0 } else { 1.0 }, *color);
         origins
             .points()
             .iter()
@@ -1328,24 +1059,8 @@ impl<'a> PlotItem for Arrows<'a> {
         self.tips.generate_points(f64::NEG_INFINITY..=f64::INFINITY);
     }
 
-    fn name(&self) -> &str {
-        self.name.as_str()
-    }
-
     fn color(&self) -> Color32 {
         self.color
-    }
-
-    fn highlight(&mut self) {
-        self.highlight = true;
-    }
-
-    fn highlighted(&self) -> bool {
-        self.highlight
-    }
-
-    fn allow_hover(&self) -> bool {
-        self.allow_hover
     }
 
     fn geometry(&self) -> PlotGeometry<'_> {
@@ -1356,14 +1071,19 @@ impl<'a> PlotItem for Arrows<'a> {
         self.origins.bounds()
     }
 
-    fn id(&self) -> Option<Id> {
-        self.id
+    fn base(&self) -> &PlotItemBase {
+        &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut PlotItemBase {
+        &mut self.base
     }
 }
 
 /// An image in the plot.
 #[derive(Clone)]
 pub struct PlotImage {
+    base: PlotItemBase,
     pub(super) position: PlotPoint,
     pub(super) texture_id: TextureId,
     pub(super) uv: Rect,
@@ -1371,10 +1091,6 @@ pub struct PlotImage {
     pub(crate) rotation: f64,
     pub(super) bg_fill: Color32,
     pub(super) tint: Color32,
-    pub(super) highlight: bool,
-    pub(super) allow_hover: bool,
-    pub(super) name: String,
-    id: Option<Id>,
 }
 
 impl PlotImage {
@@ -1385,32 +1101,15 @@ impl PlotImage {
         size: impl Into<Vec2>,
     ) -> Self {
         Self {
+            base: PlotItemBase::default(),
             position: center_position,
-            name: Default::default(),
-            highlight: false,
-            allow_hover: true,
             texture_id: texture_id.into(),
             uv: Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
             size: size.into(),
             rotation: 0.0,
             bg_fill: Default::default(),
             tint: Color32::WHITE,
-            id: None,
         }
-    }
-
-    /// Highlight this image in the plot.
-    #[inline]
-    pub fn highlight(mut self, highlight: bool) -> Self {
-        self.highlight = highlight;
-        self
-    }
-
-    /// Allowed hovering this item in the plot. Default: `true`.
-    #[inline]
-    pub fn allow_hover(mut self, hovering: bool) -> Self {
-        self.allow_hover = hovering;
-        self
     }
 
     /// Select UV range. Default is (0,0) in top-left, (1,1) bottom right.
@@ -1434,25 +1133,14 @@ impl PlotImage {
         self
     }
 
-    /// Name of this image.
-    ///
-    /// This name will show up in the plot legend, if legends are turned on.
-    ///
-    /// Multiple plot items may share the same name, in which case they will also share an entry in
-    /// the legend.
-    #[allow(clippy::needless_pass_by_value)]
-    #[inline]
-    pub fn name(mut self, name: impl ToString) -> Self {
-        self.name = name.to_string();
-        self
-    }
-
     /// Rotate the image counter-clockwise around its center by an angle in radians.
     #[inline]
     pub fn rotate(mut self, angle: f64) -> Self {
         self.rotation = angle;
         self
     }
+
+    builder_methods_for_base!();
 }
 
 impl PlotItem for PlotImage {
@@ -1465,7 +1153,7 @@ impl PlotItem for PlotImage {
             size,
             bg_fill,
             tint,
-            highlight,
+            base,
             ..
         } = self;
         let image_screen_rect = {
@@ -1495,7 +1183,7 @@ impl PlotItem for PlotImage {
             },
             &(*texture_id, image_screen_rect.size()).into(),
         );
-        if *highlight {
+        if base.highlight {
             let center = image_screen_rect.center();
             let rotation = Rot2::from_angle(screen_rotation);
             let outline = [
@@ -1516,24 +1204,8 @@ impl PlotItem for PlotImage {
 
     fn initialize(&mut self, _x_range: RangeInclusive<f64>) {}
 
-    fn name(&self) -> &str {
-        self.name.as_str()
-    }
-
     fn color(&self) -> Color32 {
         Color32::TRANSPARENT
-    }
-
-    fn highlight(&mut self) {
-        self.highlight = true;
-    }
-
-    fn highlighted(&self) -> bool {
-        self.highlight
-    }
-
-    fn allow_hover(&self) -> bool {
-        self.allow_hover
     }
 
     fn geometry(&self) -> PlotGeometry<'_> {
@@ -1555,8 +1227,12 @@ impl PlotItem for PlotImage {
         bounds
     }
 
-    fn id(&self) -> Option<Id> {
-        self.id
+    fn base(&self) -> &PlotItemBase {
+        &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut PlotItemBase {
+        &mut self.base
     }
 }
 
@@ -1564,16 +1240,13 @@ impl PlotItem for PlotImage {
 
 /// A bar chart.
 pub struct BarChart {
+    base: PlotItemBase,
+
     pub(super) bars: Vec<Bar>,
     pub(super) default_color: Color32,
-    pub(super) name: String,
 
     /// A custom element formatter
     pub(super) element_formatter: Option<Box<dyn Fn(&Bar, &BarChart) -> String>>,
-
-    highlight: bool,
-    allow_hover: bool,
-    id: Option<Id>,
 }
 
 impl BarChart {
@@ -1582,11 +1255,8 @@ impl BarChart {
         Self {
             bars,
             default_color: Color32::TRANSPARENT,
-            name: String::new(),
             element_formatter: None,
-            highlight: false,
-            allow_hover: true,
-            id: None,
+            base: PlotItemBase::default(),
         }
     }
 
@@ -1604,17 +1274,6 @@ impl BarChart {
                 b.stroke.color = plot_color;
             }
         }
-        self
-    }
-
-    /// Name of this chart.
-    ///
-    /// This name will show up in the plot legend, if legends are turned on. Multiple charts may
-    /// share the same name, in which case they will also share an entry in the legend.
-    #[allow(clippy::needless_pass_by_value)]
-    #[inline]
-    pub fn name(mut self, name: impl ToString) -> Self {
-        self.name = name.to_string();
         self
     }
 
@@ -1644,20 +1303,6 @@ impl BarChart {
         for b in &mut self.bars {
             b.bar_width = width;
         }
-        self
-    }
-
-    /// Highlight all plot elements.
-    #[inline]
-    pub fn highlight(mut self, highlight: bool) -> Self {
-        self.highlight = highlight;
-        self
-    }
-
-    /// Allowed hovering this item in the plot. Default: `true`.
-    #[inline]
-    pub fn allow_hover(mut self, hovering: bool) -> Self {
-        self.allow_hover = hovering;
         self
     }
 
@@ -1694,18 +1339,13 @@ impl BarChart {
         self
     }
 
-    /// Set the bar chart's id which is used to identify it in the plot's response.
-    #[inline]
-    pub fn id(mut self, id: Id) -> Self {
-        self.id = Some(id);
-        self
-    }
+    builder_methods_for_base!();
 }
 
 impl PlotItem for BarChart {
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         for b in &self.bars {
-            b.add_shapes(transform, self.highlight, shapes);
+            b.add_shapes(transform, self.base.highlight, shapes);
         }
     }
 
@@ -1713,24 +1353,8 @@ impl PlotItem for BarChart {
         // nothing to do
     }
 
-    fn name(&self) -> &str {
-        self.name.as_str()
-    }
-
     fn color(&self) -> Color32 {
         self.default_color
-    }
-
-    fn highlight(&mut self) {
-        self.highlight = true;
-    }
-
-    fn highlighted(&self) -> bool {
-        self.highlight
-    }
-
-    fn allow_hover(&self) -> bool {
-        self.allow_hover
     }
 
     fn geometry(&self) -> PlotGeometry<'_> {
@@ -1763,36 +1387,36 @@ impl PlotItem for BarChart {
         bar.add_rulers_and_text(self, plot, shapes, cursors);
     }
 
-    fn id(&self) -> Option<Id> {
-        self.id
+    fn base(&self) -> &PlotItemBase {
+        &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut PlotItemBase {
+        &mut self.base
     }
 }
 
 /// A diagram containing a series of [`BoxElem`] elements.
 pub struct BoxPlot {
+    base: PlotItemBase,
+
     pub(super) boxes: Vec<BoxElem>,
     pub(super) default_color: Color32,
     pub(super) name: String,
 
     /// A custom element formatter
     pub(super) element_formatter: Option<Box<dyn Fn(&BoxElem, &BoxPlot) -> String>>,
-
-    highlight: bool,
-    allow_hover: bool,
-    id: Option<Id>,
 }
 
 impl BoxPlot {
     /// Create a plot containing multiple `boxes`. It defaults to vertically oriented elements.
     pub fn new(boxes: Vec<BoxElem>) -> Self {
         Self {
+            base: PlotItemBase::default(),
             boxes,
             default_color: Color32::TRANSPARENT,
             name: String::new(),
             element_formatter: None,
-            highlight: false,
-            allow_hover: true,
-            id: None,
         }
     }
 
@@ -1812,17 +1436,6 @@ impl BoxPlot {
                 box_elem.stroke.color = plot_color;
             }
         }
-        self
-    }
-
-    /// Name of this box plot diagram.
-    ///
-    /// This name will show up in the plot legend, if legends are turned on. Multiple series may
-    /// share the same name, in which case they will also share an entry in the legend.
-    #[allow(clippy::needless_pass_by_value)]
-    #[inline]
-    pub fn name(mut self, name: impl ToString) -> Self {
-        self.name = name.to_string();
         self
     }
 
@@ -1846,20 +1459,6 @@ impl BoxPlot {
         self
     }
 
-    /// Highlight all plot elements.
-    #[inline]
-    pub fn highlight(mut self, highlight: bool) -> Self {
-        self.highlight = highlight;
-        self
-    }
-
-    /// Allowed hovering this item in the plot. Default: `true`.
-    #[inline]
-    pub fn allow_hover(mut self, hovering: bool) -> Self {
-        self.allow_hover = hovering;
-        self
-    }
-
     /// Add a custom way to format an element.
     /// Can be used to display a set number of decimals or custom labels.
     #[inline]
@@ -1868,18 +1467,13 @@ impl BoxPlot {
         self
     }
 
-    /// Set the box plot's id which is used to identify it in the plot's response.
-    #[inline]
-    pub fn id(mut self, id: Id) -> Self {
-        self.id = Some(id);
-        self
-    }
+    builder_methods_for_base!();
 }
 
 impl PlotItem for BoxPlot {
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         for b in &self.boxes {
-            b.add_shapes(transform, self.highlight, shapes);
+            b.add_shapes(transform, self.base.highlight, shapes);
         }
     }
 
@@ -1893,18 +1487,6 @@ impl PlotItem for BoxPlot {
 
     fn color(&self) -> Color32 {
         self.default_color
-    }
-
-    fn highlight(&mut self) {
-        self.highlight = true;
-    }
-
-    fn highlighted(&self) -> bool {
-        self.highlight
-    }
-
-    fn allow_hover(&self) -> bool {
-        self.allow_hover
     }
 
     fn geometry(&self) -> PlotGeometry<'_> {
@@ -1937,8 +1519,12 @@ impl PlotItem for BoxPlot {
         box_plot.add_rulers_and_text(self, plot, shapes, cursors);
     }
 
-    fn id(&self) -> Option<Id> {
-        self.id
+    fn base(&self) -> &PlotItemBase {
+        &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut PlotItemBase {
+        &mut self.base
     }
 }
 
