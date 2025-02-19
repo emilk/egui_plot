@@ -947,6 +947,7 @@ impl<'a> PlotItem for Points<'a> {
     fn color(&self) -> Color32 {
         self.color
     }
+
     fn geometry(&self) -> PlotGeometry<'_> {
         PlotGeometry::Points(self.series.points())
     }
