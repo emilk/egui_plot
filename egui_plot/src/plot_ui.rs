@@ -101,9 +101,14 @@ impl<'a> PlotUi<'a> {
 
     /// The pointer drag delta in plot coordinates.
     pub fn pointer_coordinate_drag_delta(&self) -> Vec2 {
+        let cursor = self
+            .ctx()
+            .input(|i| i.pointer.latest_pos().unwrap_or(Pos2::new(0.0, 0.0)));
         let delta = self.response.drag_delta();
-        let dp_dv = self.last_plot_transform.dpos_dvalue();
-        Vec2::new(delta.x / dp_dv[0] as f32, delta.y / dp_dv[1] as f32)
+        let drag_start = cursor - delta;
+        let pos_start = self.last_plot_transform.value_from_position(drag_start);
+        let pos_end = self.last_plot_transform.value_from_position(cursor);
+        pos_end.to_vec2() - pos_start.to_vec2()
     }
 
     /// Read the transform between plot coordinates and screen coordinates.

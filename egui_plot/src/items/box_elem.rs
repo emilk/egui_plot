@@ -277,7 +277,7 @@ impl RectElement for BoxElem {
     }
 
     fn default_values_format(&self, transform: &PlotTransform) -> String {
-        let scale = transform.dvalue_dpos();
+        let scale = transform.smallest_distance_per_point();
         let scale = match self.orientation {
             Orientation::Horizontal => scale[0],
             Orientation::Vertical => scale[1],

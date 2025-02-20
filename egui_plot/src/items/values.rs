@@ -288,15 +288,28 @@ impl<'a> PlotPoints<'a> {
 
     /// If initialized with a generator function, this will generate `n` evenly spaced points in the
     /// given range.
-    pub(super) fn generate_points(&mut self, x_range: RangeInclusive<f64>) {
+    pub(super) fn generate_points(&mut self, x_range: RangeInclusive<f64>, log_base: Option<f64>) {
         if let Self::Generator(generator) = self {
             *self = Self::range_intersection(&x_range, &generator.x_range)
                 .map(|intersection| {
-                    let increment =
-                        (intersection.end() - intersection.start()) / (generator.points - 1) as f64;
+                    let increment = match log_base {
+                        Some(base) => {
+                            (intersection.end().log(base) - intersection.start().log(base))
+                                / (generator.points - 1) as f64
+                        }
+                        None => {
+                            (intersection.end() - intersection.start())
+                                / (generator.points - 1) as f64
+                        }
+                    };
                     (0..generator.points)
                         .map(|i| {
-                            let x = intersection.start() + i as f64 * increment;
+                            let x = match log_base {
+                                Some(base) => {
+                                    base.powf(intersection.start().log(base) + i as f64 * increment)
+                                }
+                                None => intersection.start() + i as f64 * increment,
+                            };
                             let y = (generator.function)(x);
                             [x, y]
                         })
