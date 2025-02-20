@@ -122,7 +122,7 @@ impl eframe::App for PlotExample {
                     }
 
                     let sine_points = PlotPoints::from_explicit_callback(|x| x.sin(), .., 5000);
-                    plot_ui.line(Line::new(sine_points).name("Sine"));
+                    plot_ui.line(Line::new("Sine", sine_points));
                 });
         });
     }

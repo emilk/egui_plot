@@ -46,11 +46,15 @@ impl eframe::App for MyApp {
             Plot::new("My Plot")
                 .legend(Legend::default().follow_insertion_order(self.insert_order))
                 .show(ui, |plot_ui| {
-                    plot_ui
-                        .line(Line::new(PlotPoints::from(self.graph3.clone())).name("3rd Curve"));
-                    plot_ui.line(Line::new(PlotPoints::from(self.graph.clone())).name("1st Curve"));
-                    plot_ui
-                        .line(Line::new(PlotPoints::from(self.graph2.clone())).name("2nd Curve"));
+                    plot_ui.line(Line::new(
+                        "3rd Curve",
+                        PlotPoints::from(self.graph3.clone()),
+                    ));
+                    plot_ui.line(Line::new("1st Curve", PlotPoints::from(self.graph.clone())));
+                    plot_ui.line(Line::new(
+                        "2nd Curve",
+                        PlotPoints::from(self.graph2.clone()),
+                    ));
                 });
             // Remember the position of the plot
         });
