@@ -132,7 +132,7 @@ impl eframe::App for PlotExample {
                     }
 
                     let sine_points = PlotPoints::from_explicit_callback(|x| x.sin(), .., 5000);
-                    let mut sine_line = Line::new(sine_points).name("Sine");
+                    let mut sine_line = Line::new("Sine", sine_points).name("Sine");
 
                     // set a gradient color if needed. Simply interpolate between RED and GREEN on the Y value
                     if self.gradient_color {
@@ -155,6 +155,6 @@ fn interpolate(start: Color32, end: Color32, y: f64) -> Result<Color32, TryFromI
     Ok(Color32::from_rgb(
         u8::try_from((start.r() as f64 + y * (end.r() as f64 - start.r() as f64)) as u64)?,
         u8::try_from((start.g() as f64 + y * (end.g() as f64 - start.g() as f64)) as u64)?,
-        u8::try_from((start.b() as f64 + y * (end.b() as f64 - start.b() as f64)) as u64)?
+        u8::try_from((start.b() as f64 + y * (end.b() as f64 - start.b() as f64)) as u64)?,
     ))
 }

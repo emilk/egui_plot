@@ -125,7 +125,9 @@ pub struct PlotResponse<R> {
 
     /// The id of a currently hovered item if any.
     ///
-    /// This is `None` if either no item was hovered, or the hovered item didn't provide an id.
+    /// This is `None` if either no item was hovered.
+    /// A plot item can be hovered either by hovering its representation in the plot (line, marker, etc.)
+    /// or by hovering the item in the legend.
     pub hovered_plot_item: Option<Id>,
 }
 
@@ -143,7 +145,7 @@ pub struct PlotResponse<R> {
 ///     let x = i as f64 * 0.01;
 ///     [x, x.sin()]
 /// }).collect();
-/// let line = Line::new(sin);
+/// let line = Line::new("sin", sin);
 /// Plot::new("my_plot").view_aspect(2.0).show(ui, |plot_ui| plot_ui.line(line));
 /// # });
 /// ```
@@ -395,7 +397,7 @@ impl<'a> Plot<'a> {
     ///     let x = i as f64 * 0.01;
     ///     [x, x.sin()]
     /// }).collect();
-    /// let line = Line::new(sin);
+    /// let line = Line::new("sin", sin);
     /// Plot::new("my_plot").view_aspect(2.0)
     /// .label_formatter(|name, value| {
     ///     if !name.is_empty() {
@@ -896,12 +898,12 @@ impl<'a> Plot<'a> {
             show_y = false;
         }
         // Remove the deselected items.
-        items.retain(|item| !mem.hidden_items.contains(item.name()));
+        items.retain(|item| !mem.hidden_items.contains(&item.id()));
         // Highlight the hovered items.
-        if let Some(hovered_name) = &mem.hovered_legend_item {
+        if let Some(item_id) = &mem.hovered_legend_item {
             items
                 .iter_mut()
-                .filter(|entry| entry.name() == hovered_name)
+                .filter(|entry| &entry.id() == item_id)
                 .for_each(|entry| entry.highlight());
         }
         // Move highlighted items to front.
@@ -1198,7 +1200,7 @@ impl<'a> Plot<'a> {
             clamp_grid,
         };
 
-        let (plot_cursors, hovered_plot_item) = prepared.ui(ui, &response);
+        let (plot_cursors, mut hovered_plot_item) = prepared.ui(ui, &response);
 
         if let Some(boxed_zoom_rect) = boxed_zoom_rect {
             ui.painter()
@@ -1212,7 +1214,11 @@ impl<'a> Plot<'a> {
         if let Some(mut legend) = legend {
             ui.add(&mut legend);
             mem.hidden_items = legend.hidden_items();
-            mem.hovered_legend_item = legend.hovered_item_name();
+            mem.hovered_legend_item = legend.hovered_item();
+
+            if let Some(item_id) = &mem.hovered_legend_item {
+                hovered_plot_item.get_or_insert(*item_id);
+            }
         }
 
         if let Some((id, _)) = linked_cursors.as_ref() {
@@ -1710,7 +1716,7 @@ impl<'a> PreparedPlot<'a> {
 
         let hovered_plot_item_id = if let Some((item, elem)) = closest {
             item.on_hover(elem, shapes, &mut cursors, &plot, label_formatter);
-            item.id()
+            Some(item.id())
         } else {
             let value = transform.value_from_position(pointer);
             items::rulers_at_value(

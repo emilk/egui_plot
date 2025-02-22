@@ -1,6 +1,9 @@
 use std::ops::{Bound, RangeBounds, RangeInclusive};
 
-use egui::{epaint::{ColorMode, PathStroke}, lerp, pos2, Pos2, Rect, Shape, Stroke, Vec2};
+use egui::{
+    epaint::{ColorMode, PathStroke},
+    lerp, pos2, Pos2, Rect, Shape, Stroke, Vec2,
+};
 
 use crate::transform::PlotBounds;
 
@@ -110,7 +113,12 @@ impl LineStyle {
                         if highlight {
                             radius *= 2f32.sqrt();
                         }
-                        shapes.extend(Shape::dotted_line(&line, path_stroke_color, *spacing, radius));
+                        shapes.extend(Shape::dotted_line(
+                            &line,
+                            path_stroke_color,
+                            *spacing,
+                            radius,
+                        ));
                     }
                     Self::Dashed { length } => {
                         if highlight {
