@@ -139,7 +139,7 @@ impl eframe::App for PlotExample {
                         sine_line = sine_line.gradient_color(Arc::new(|point| {
                             let y_point = point.y.abs().clamp(0., 1.);
                             interpolate(Color32::GREEN, Color32::RED, y_point)
-                                .expect("Color interpolation failed becaue Y values are not between 0 and 1")
+                                .expect("Color interpolation failed because Y values are not between 0 and 1")
                         }), self.gradient_fill);
                     }
                     if self.gradient_fill {
