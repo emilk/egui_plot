@@ -9,26 +9,15 @@ on:
 name: Link checker
 
 jobs:
-  link-checker:
-    name: Check links
+  linkinator:
+    name: linkinator
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Restore link checker cache
-        uses: actions/cache@v3
+      - uses: jprochazk/linkinator-action@main
         with:
-          path: .lycheecache
-          key: cache-lychee-${{ github.sha }}
-          restore-keys: cache-lychee-
-
-      # Check https://github.com/lycheeverse/lychee on how to run locally.
-      - name: Link Checker
-        id: lychee
-        uses: lycheeverse/lychee-action@v1.9.0
-        with:
-          fail: true
-          lycheeVersion: "0.14.3"
-          # When given a directory, lychee checks only markdown, html and text files, everything else we have to glob in manually.
-          args: |
-            --base . --cache --max-cache-age 1d . "**/*.rs" "**/*.toml" "**/*.hpp" "**/*.cpp" "**/CMakeLists.txt" "**/*.py" "**/*.yml"
+          linksToSkip: "https://crates.io/crates/.*, http://localhost:.*" # Avoid crates.io rate-limiting
+          retry: true
+          retryErrors: true
+          retryErrorsCount: 5
+          retryErrorsJitter: 2000

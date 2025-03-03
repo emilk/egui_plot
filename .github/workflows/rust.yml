@@ -89,15 +89,33 @@ jobs:
   # ---------------------------------------------------------------------------
 
   cargo-deny:
-    name: Check Rust dependencies (cargo-deny)
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+          - target: aarch64-linux-android
+          - target: i686-pc-windows-gnu
+          - target: i686-pc-windows-msvc
+          - target: i686-unknown-linux-gnu
+          - target: wasm32-unknown-unknown
+          - target: x86_64-apple-darwin
+          - target: x86_64-pc-windows-gnu
+          - target: x86_64-pc-windows-msvc
+          - target: x86_64-unknown-linux-gnu
+          - target: x86_64-unknown-linux-musl
+          - target: x86_64-unknown-redox
+
+    name: cargo-deny ${{ matrix.target }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: EmbarkStudios/cargo-deny-action@v2
         with:
           rust-version: "1.81.0"
           log-level: warn
           command: check
+          arguments: --target  ${{ matrix.target }}
 
   # ---------------------------------------------------------------------------
 
