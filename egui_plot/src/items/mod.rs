@@ -38,6 +38,8 @@ pub struct PlotItemBase {
 }
 
 impl PlotItemBase {
+    /// The given name will show up in the legend and serves to track the visibility of items.
+    /// Multiple items may share the same name, in which case they also share a legend entry.
     pub fn new(name: String) -> Self {
         let id = Id::new(&name);
         Self {
