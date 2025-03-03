@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
           profile: minimal
           toolchain: 1.81.0
@@ -92,7 +92,9 @@ jobs:
     name: Check Rust dependencies (cargo-deny)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - name: Install 1.81
+        run: rustup toolchain install 1.81-x86_64-unknown-linux-musl
       - uses: EmbarkStudios/cargo-deny-action@v2
         with:
           rust-version: "1.81.0"
@@ -106,7 +108,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
           profile: minimal
           toolchain: 1.81.0
