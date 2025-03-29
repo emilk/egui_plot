@@ -501,6 +501,38 @@ impl<'a> Plot<'a> {
         self
     }
 
+    /// Overwrite the starting and reset bounds used for the x axis.
+    /// Set the `default_auto_bounds` of the x axis to `false`.
+    ///
+    /// Panic if the `min` is superior to the `max`.
+    #[inline]
+    pub fn default_x_bounds(mut self, min: f64, max: f64) -> Self {
+        assert!(
+            min < max,
+            "`min` must be inferior to `max` in `default_x_bounds`"
+        );
+        self.default_auto_bounds.x = false;
+        self.min_auto_bounds.min[0] = min;
+        self.min_auto_bounds.max[0] = max;
+        self
+    }
+
+    /// Overwrite the starting and reset bounds used for the y axis.
+    /// Set the `default_auto_bounds` of the y axis to `false`.
+    ///
+    /// Panic if the `min` is superior to the `max`.
+    #[inline]
+    pub fn default_y_bounds(mut self, min: f64, max: f64) -> Self {
+        assert!(
+            min < max,
+            "`min` must be inferior to `max` in `default_y_bounds`"
+        );
+        self.default_auto_bounds.y = false;
+        self.min_auto_bounds.min[1] = min;
+        self.min_auto_bounds.max[1] = max;
+        self
+    }
+
     /// Expand bounds to include the given x value.
     /// For instance, to always show the y axis, call `plot.include_x(0.0)`.
     #[inline]
