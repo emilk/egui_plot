@@ -31,7 +31,7 @@ We don't update the MSRV in a patch release, unless we really, really need to.
 * [ ] improve the demo a bit
 * [ ] `cargo update`
 * [ ] `cargo outdated` (or manually look for outdated crates in each `Cargo.toml`)
-* [ ] `cargo machete`
+* [ ] `cargo shear`
 
 ## Release testing
 * [ ] test the demo app
