@@ -71,6 +71,9 @@ exclude = [
 
   # Avoid rate limiting.
   'https://crates.io/crates/.*',                   # Avoid crates.io rate-limiting
+  'https://github.com/Bromeon',
+  'https://github.com/EmbersArc',
+  'https://github.com/emilk',
   'https://github.com/emilk/egui_plot/commit/\.*', # Ignore links to our own commits (typically in changelog).
   'https://github.com/emilk/egui_plot/pull/\.*',   # Ignore links to our own pull requests (typically in changelog).
 ]
