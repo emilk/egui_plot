@@ -504,12 +504,12 @@ impl<'a> Plot<'a> {
     /// Overwrite the starting and reset bounds used for the x axis.
     /// Set the `default_auto_bounds` of the x axis to `false`.
     ///
-    /// Panic if the `min` is superior to the `max`.
+    /// Panics in debug builds if `min >= max`.
     #[inline]
     pub fn default_x_bounds(mut self, min: f64, max: f64) -> Self {
-        assert!(
+        debug_assert!(
             min < max,
-            "`min` must be inferior to `max` in `default_x_bounds`"
+            "`min` must be less than `max` in `default_x_bounds`"
         );
         self.default_auto_bounds.x = false;
         self.min_auto_bounds.min[0] = min;
