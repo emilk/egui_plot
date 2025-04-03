@@ -34,9 +34,12 @@ pub struct PlotItemBase {
     id: Id,
     highlight: bool,
     allow_hover: bool,
+    pub(crate) show_in_legend: bool,
 }
 
 impl PlotItemBase {
+    /// The given name will show up in the legend and serves to track the visibility of items.
+    /// Multiple items may share the same name, in which case they also share a legend entry.
     pub fn new(name: String) -> Self {
         let id = Id::new(&name);
         Self {
@@ -44,6 +47,7 @@ impl PlotItemBase {
             id,
             highlight: false,
             allow_hover: true,
+            show_in_legend: true,
         }
     }
 }
@@ -82,6 +86,13 @@ macro_rules! builder_methods_for_base {
         #[inline]
         pub fn id(mut self, id: impl Into<Id>) -> Self {
             self.base_mut().id = id.into();
+            self
+        }
+
+        /// Whether to show the item in the legend. Default: `true`.
+        #[inline]
+        pub fn show_in_legend(mut self, show: bool) -> Self {
+            self.base_mut().show_in_legend = show;
             self
         }
     };
