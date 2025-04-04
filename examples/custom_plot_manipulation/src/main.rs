@@ -2,9 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 #![allow(rustdoc::missing_crate_level_docs)] // it's an example
 
-use std::{num::TryFromIntError, sync::Arc};
-
-use eframe::egui::{self, Color32, DragValue, Event, Vec2};
+use eframe::egui::{self, DragValue, Event, Vec2};
 use egui_plot::{Legend, Line, PlotPoints};
 
 fn main() -> eframe::Result {
@@ -24,8 +22,6 @@ struct PlotExample {
     shift_to_horizontal: bool,
     zoom_speed: f32,
     scroll_speed: f32,
-    gradient_color: bool,
-    gradient_fill: bool,
 }
 
 impl Default for PlotExample {
@@ -37,8 +33,6 @@ impl Default for PlotExample {
             shift_to_horizontal: false,
             zoom_speed: 1.0,
             scroll_speed: 1.0,
-            gradient_color: false,
-            gradient_fill: false,
         }
     }
 }
@@ -50,10 +44,7 @@ impl eframe::App for PlotExample {
             ui.checkbox(&mut self.lock_y, "Lock y axis").on_hover_text("Check to keep the Y axis fixed, i.e., pan and zoom will only affect the X axis");
             ui.checkbox(&mut self.ctrl_to_zoom, "Ctrl to zoom").on_hover_text("If unchecked, the behavior of the Ctrl key is inverted compared to the default controls\ni.e., scrolling the mouse without pressing any keys zooms the plot");
             ui.checkbox(&mut self.shift_to_horizontal, "Shift for horizontal scroll").on_hover_text("If unchecked, the behavior of the shift key is inverted compared to the default controls\ni.e., hold to scroll vertically, release to scroll horizontally");
-            ui.checkbox(&mut self.gradient_color, "Gradient color").on_hover_text("Check to use gradient color based on the value of the point");
-            if self.gradient_color {
-                ui.checkbox(&mut self.gradient_fill, "Gradient fill").on_hover_text("Check to fill the plot to the 0 point on the y axis with the gradient color");
-            }
+            
             ui.horizontal(|ui| {
                 ui.add(
                     DragValue::new(&mut self.zoom_speed)
@@ -132,29 +123,10 @@ impl eframe::App for PlotExample {
                     }
 
                     let sine_points = PlotPoints::from_explicit_callback(|x| x.sin(), .., 5000);
-                    let mut sine_line = Line::new("Sine", sine_points).name("Sine");
+                    let sine_line = Line::new("Sine", sine_points).name("Sine");
 
-                    // set a gradient color if needed. Simply interpolate between RED and GREEN on the Y value
-                    if self.gradient_color {
-                        sine_line = sine_line.gradient_color(Arc::new(|point| {
-                            let y_point = point.y.abs().clamp(0., 1.);
-                            interpolate(Color32::GREEN, Color32::RED, y_point)
-                                .expect("Color interpolation failed because Y values are not between 0 and 1")
-                        }), self.gradient_fill);
-                    }
-                    if self.gradient_fill {
-                        sine_line = sine_line.fill(0.);
-                    }
                     plot_ui.line(sine_line);
                 });
         });
     }
-}
-
-fn interpolate(start: Color32, end: Color32, y: f64) -> Result<Color32, TryFromIntError> {
-    Ok(Color32::from_rgb(
-        u8::try_from((start.r() as f64 + y * (end.r() as f64 - start.r() as f64)) as u64)?,
-        u8::try_from((start.g() as f64 + y * (end.g() as f64 - start.g() as f64)) as u64)?,
-        u8::try_from((start.b() as f64 + y * (end.b() as f64 - start.b() as f64)) as u64)?,
-    ))
 }
