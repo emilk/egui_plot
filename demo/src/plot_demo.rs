@@ -1,10 +1,9 @@
-use std::num::TryFromIntError;
 use std::ops::RangeInclusive;
 use std::{f64::consts::TAU, sync::Arc};
 
 use egui::{
-    remap, vec2, Color32, ComboBox, NumExt, Pos2, Response, ScrollArea, Stroke, TextWrapMode,
-    Vec2b, WidgetInfo, WidgetType,
+    remap, vec2, Checkbox, Color32, ComboBox, NumExt, Pos2, Response, ScrollArea, Stroke,
+    TextWrapMode, Vec2b, WidgetInfo, WidgetType,
 };
 
 use egui_plot::{
@@ -233,7 +232,7 @@ impl LineDemo {
 
             ui.vertical(|ui| {
                 ui.checkbox(gradient, "Gradient line");
-                ui.checkbox(gradient_fill, "Gradient fill");
+                ui.add_enabled(*gradient, Checkbox::new(gradient_fill, "Gradient fill"));
             });
         });
     }
@@ -283,12 +282,7 @@ impl LineDemo {
         if self.gradient {
             thingy_line = thingy_line.gradient_color(
                 Arc::new(|point| {
-                    interpolate(
-                        Color32::BLUE,
-                        Color32::ORANGE,
-                        point.x.abs().clamp(0., 1.), // the interpolate function expected a value between 0 and 1
-                    )
-                    .expect("Could not interpolate colors")
+                    Color32::BLUE.lerp_to_gamma(Color32::ORANGE, point.x.abs().clamp(0., 1.) as f32)
                 }),
                 self.gradient_fill,
             );
@@ -332,14 +326,6 @@ impl LineDemo {
         })
         .response
     }
-}
-
-fn interpolate(start: Color32, end: Color32, y: f64) -> Result<Color32, TryFromIntError> {
-    Ok(Color32::from_rgb(
-        u8::try_from((start.r() as f64 + y * (end.r() as f64 - start.r() as f64)) as u64)?,
-        u8::try_from((start.g() as f64 + y * (end.g() as f64 - start.g() as f64)) as u64)?,
-        u8::try_from((start.b() as f64 + y * (end.b() as f64 - start.b() as f64)) as u64)?,
-    ))
 }
 
 // ----------------------------------------------------------------------------
