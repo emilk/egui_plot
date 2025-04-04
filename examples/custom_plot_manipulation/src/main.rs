@@ -44,6 +44,7 @@ impl eframe::App for PlotExample {
             ui.checkbox(&mut self.lock_y, "Lock y axis").on_hover_text("Check to keep the Y axis fixed, i.e., pan and zoom will only affect the X axis");
             ui.checkbox(&mut self.ctrl_to_zoom, "Ctrl to zoom").on_hover_text("If unchecked, the behavior of the Ctrl key is inverted compared to the default controls\ni.e., scrolling the mouse without pressing any keys zooms the plot");
             ui.checkbox(&mut self.shift_to_horizontal, "Shift for horizontal scroll").on_hover_text("If unchecked, the behavior of the shift key is inverted compared to the default controls\ni.e., hold to scroll vertically, release to scroll horizontally");
+
             ui.horizontal(|ui| {
                 ui.add(
                     DragValue::new(&mut self.zoom_speed)
@@ -122,7 +123,9 @@ impl eframe::App for PlotExample {
                     }
 
                     let sine_points = PlotPoints::from_explicit_callback(|x| x.sin(), .., 5000);
-                    plot_ui.line(Line::new("Sine", sine_points));
+                    let sine_line = Line::new("Sine", sine_points).name("Sine");
+
+                    plot_ui.line(sine_line);
                 });
         });
     }
