@@ -886,7 +886,7 @@ dependencies = [
 
 [[package]]
 name = "demo"
-version = "0.31.0"
+version = "0.32.0"
 dependencies = [
  "eframe",
  "egui",
@@ -1128,7 +1128,7 @@ dependencies = [
 
 [[package]]
 name = "egui_plot"
-version = "0.31.0"
+version = "0.32.0"
 dependencies = [
  "ahash",
  "document-features",
