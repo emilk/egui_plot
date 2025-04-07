@@ -30,6 +30,7 @@ We don't update the MSRV in a patch release, unless we really, really need to.
 * [ ] `cargo outdated` (or manually look for outdated crates in each `Cargo.toml`)
 
 ## Release testing
+* [ ] IMPORTANT: test with [Rerun](https://github.com/rerun-io/rerun/)
 * [ ] test the demo app
 * [ ] test the web demo
   - test on mobile
