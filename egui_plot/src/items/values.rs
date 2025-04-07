@@ -1,6 +1,6 @@
 use std::ops::{Bound, RangeBounds, RangeInclusive};
 
-use egui::{lerp, Pos2, Shape, Stroke, Vec2};
+use egui::{lerp, Id, Pos2, Shape, Stroke, Vec2};
 
 use crate::transform::PlotBounds;
 
@@ -382,7 +382,7 @@ pub enum PlotGeometry<'a> {
     None,
 
     /// Point values (X-Y graphs)
-    Points(&'a [PlotPoint]),
+    Points(&'a [PlotPoint], Option<Id>),
 
     /// Rectangles (examples: boxes or bars)
     // Has currently no data, as it would require copying rects or iterating a list of pointers.
