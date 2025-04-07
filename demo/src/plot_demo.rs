@@ -2,14 +2,13 @@ use std::f64::consts::TAU;
 use std::ops::RangeInclusive;
 
 use egui::{
-    remap, vec2, Color32, ComboBox, NumExt, Pos2, Response, ScrollArea, Stroke, TextWrapMode,
-    Vec2b, WidgetInfo, WidgetType,
+    remap, vec2, Color32, ComboBox, DragValue, NumExt, Pos2, Response, ScrollArea, Stroke,
+    TextWrapMode, Vec2b, WidgetInfo, WidgetType,
 };
-
 use egui_plot::{
-    Arrows, AxisHints, Bar, BarChart, BoxElem, BoxPlot, BoxSpread, CoordinatesFormatter, Corner,
-    GridInput, GridMark, HLine, Legend, Line, LineStyle, MarkerShape, Plot, PlotImage, PlotPoint,
-    PlotPoints, PlotResponse, Points, Polygon, Text, VLine,
+    Arrows, AxisHints, AxisTransform, AxisTransforms, Bar, BarChart, BoxElem, BoxPlot, BoxSpread,
+    CoordinatesFormatter, Corner, GridInput, GridMark, HLine, Legend, Line, LineStyle, MarkerShape,
+    Plot, PlotBounds, PlotImage, PlotPoint, PlotPoints, PlotResponse, Points, Polygon, Text, VLine,
 };
 
 // ----------------------------------------------------------------------------
@@ -24,6 +23,7 @@ enum Panel {
     Interaction,
     CustomAxes,
     LinkedAxes,
+    LogAxes,
 }
 
 impl Default for Panel {
@@ -44,6 +44,7 @@ pub struct PlotDemo {
     interaction_demo: InteractionDemo,
     custom_axes_demo: CustomAxesDemo,
     linked_axes_demo: LinkedAxesDemo,
+    log_axes_demo: LogAxesDemo,
     open_panel: Panel,
 }
 
@@ -88,6 +89,7 @@ impl PlotDemo {
                     ui.selectable_value(&mut self.open_panel, Panel::Interaction, "Interaction");
                     ui.selectable_value(&mut self.open_panel, Panel::CustomAxes, "Custom Axes");
                     ui.selectable_value(&mut self.open_panel, Panel::LinkedAxes, "Linked Axes");
+                    ui.selectable_value(&mut self.open_panel, Panel::LogAxes, "Log Axes");
                 });
         });
         ui.separator();
@@ -116,6 +118,9 @@ impl PlotDemo {
             }
             Panel::LinkedAxes => {
                 self.linked_axes_demo.ui(ui);
+            }
+            Panel::LogAxes => {
+                self.log_axes_demo.ui(ui);
             }
         }
     }
@@ -702,6 +707,111 @@ impl LinkedAxesDemo {
             .link_axis(link_group_id, self.link_axis)
             .link_cursor(link_group_id, self.link_cursor)
             .show(ui, Self::configure_plot)
+            .response
+    }
+}
+
+// ----------------------------------------------------------------------------
+#[derive(PartialEq, serde::Deserialize, serde::Serialize, Default)]
+struct LogAxesDemo {
+    axis_transforms: AxisTransforms,
+}
+
+/// Helper function showing how to do arbitrary transform picking
+fn transform_edit(id: &str, old_transform: AxisTransform, ui: &mut egui::Ui) -> AxisTransform {
+    ui.horizontal(|ui| {
+        ui.label(format!("Transform for {id}"));
+        if ui
+            .radio(matches!(old_transform, AxisTransform::Linear), "Linear")
+            .clicked()
+        {
+            return AxisTransform::Linear;
+        }
+        if ui
+            .radio(
+                matches!(old_transform, AxisTransform::Logarithmic(_)),
+                "Logarithmic",
+            )
+            .clicked()
+        {
+            let reuse_base = if let AxisTransform::Logarithmic(base) = old_transform {
+                base
+            } else {
+                10.0
+            };
+            return AxisTransform::Logarithmic(reuse_base);
+        }
+
+        // no change, but perhaps additional things?
+        match old_transform {
+            // Nah?
+            AxisTransform::Logarithmic(mut base) => {
+                ui.label("Base:");
+                ui.add(DragValue::new(&mut base).range(2.0..=100.0));
+                AxisTransform::Logarithmic(base)
+            }
+            AxisTransform::Linear => old_transform,
+        }
+    })
+    .inner
+}
+
+impl LogAxesDemo {
+    fn line_exp<'a>() -> Line<'a> {
+        Line::new(PlotPoints::from_explicit_callback(
+            move |x| 10.0_f64.powf(x / 200.0),
+            0.1..=1000.0,
+            1000,
+        ))
+        .name("y = 10^(x/200)")
+        .color(Color32::RED)
+    }
+
+    fn line_lin<'a>() -> Line<'a> {
+        Line::new(PlotPoints::from_explicit_callback(
+            move |x| -5.0 + x,
+            0.1..=1000.0,
+            1000,
+        ))
+        .name("y = -5 + x")
+        .color(Color32::GREEN)
+    }
+
+    fn line_log<'a>() -> Line<'a> {
+        Line::new(PlotPoints::from_explicit_callback(
+            move |x| x.log10(),
+            0.1..=1000.0,
+            1000,
+        ))
+        .name("y = log10(x)")
+        .color(Color32::BLUE)
+    }
+
+    fn ui(&mut self, ui: &mut egui::Ui) -> Response {
+        let old_transforms = self.axis_transforms;
+        self.axis_transforms.horizontal =
+            transform_edit("horizontal axis", self.axis_transforms.horizontal, ui);
+        self.axis_transforms.vertical =
+            transform_edit("vertical axis", self.axis_transforms.vertical, ui);
+        let just_changed = old_transforms != self.axis_transforms;
+        Plot::new("log_demo")
+            .axis_transforms(self.axis_transforms)
+            .x_axis_label("x")
+            .y_axis_label("y")
+            .show_axes(Vec2b::new(true, true))
+            .legend(Legend::default())
+            .show(ui, |ui| {
+                if just_changed {
+                    if let AxisTransform::Logarithmic(_) = self.axis_transforms.horizontal {
+                        ui.set_plot_bounds(PlotBounds::from_min_max([0.1, 0.1], [1e3, 1e4]));
+                    } else {
+                        ui.set_plot_bounds(PlotBounds::from_min_max([0.0, 0.0], [3.0, 1000.0]));
+                    }
+                }
+                ui.line(Self::line_exp());
+                ui.line(Self::line_lin());
+                ui.line(Self::line_log());
+            })
             .response
     }
 }

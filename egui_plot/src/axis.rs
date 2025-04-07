@@ -321,8 +321,11 @@ impl<'a> AxisWidget<'a> {
         for step in self.steps.iter() {
             let text = (self.hints.formatter)(*step, &self.range);
             if !text.is_empty() {
-                let spacing_in_points =
-                    (transform.dpos_dvalue()[usize::from(axis)] * step.step_size).abs() as f32;
+                let spacing_in_points = transform.points_at_pos_range(
+                    [step.value, step.value],
+                    [step.step_size, step.step_size],
+                )[usize::from(axis)]
+                .abs();
 
                 if spacing_in_points <= label_spacing.min {
                     // Labels are too close together - don't paint them.
