@@ -5,6 +5,14 @@ This file is updated upon each release.
 Changes since the last release can be found at <https://github.com/emilk/egui_plot/compare/latest...HEAD> or by running the `scripts/generate_changelog.py` script.
 
 
+## 0.32.1 - 2025-04-07
+
+Full diff at https://github.com/emilk/egui_plot/compare/0.32.0..HEAD
+
+#### PRs
+* Fix dynamic bounds modifications [#96](https://github.com/emilk/egui_plot/pull/96) by [@emilk](https://github.com/emilk)
+
+
 ## 0.32.0 - 2025-04-07
 
 Full diff at https://github.com/emilk/egui_plot/compare/0.31.0..HEAD
