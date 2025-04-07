@@ -1,12 +1,9 @@
 # Releases
 ## Cadence
-We release a new major `egui_plot` whenever there is a new major `egui` release.
+We usually release a new major `egui_plot` whenever there is a new major `egui` release, which is usually once every two months or so.
 
 
 ## Versioning
-For the moment the `egui_plot` version follows that of the `egui` crates.
-That may change in the future.
-
 The version in `main` is always the version of the last published crate.
 This is so that users can easily patch their `egui_plot` to the version on `main` if they want to.
 
@@ -16,7 +13,7 @@ Releases are generally done by [emilk](https://github.com/emilk/), but the [reru
 
 
 ## Rust version policy
-Our Minimum Supported Rust Version (MSRV) is always _at least_ two minor release behind the latest Rust version. This means users of egui aren't forced to update to the very latest Rust version.
+Our Minimum Supported Rust Version (MSRV) is always _at least_ two minor release behind the latest Rust version. This means users of `egui_plot` aren't forced to update to the very latest Rust version.
 
 We don't update the MSRV in a patch release, unless we really, really need to.
 
@@ -31,7 +28,6 @@ We don't update the MSRV in a patch release, unless we really, really need to.
 * [ ] improve the demo a bit
 * [ ] `cargo update`
 * [ ] `cargo outdated` (or manually look for outdated crates in each `Cargo.toml`)
-* [ ] `cargo shear`
 
 ## Release testing
 * [ ] test the demo app
