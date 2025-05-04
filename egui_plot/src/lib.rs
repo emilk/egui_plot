@@ -1225,8 +1225,8 @@ impl<'a> Plot<'a> {
             show_grid,
             grid_spacing,
             transform: mem.transform,
-            draw_cursor_x: linked_cursors.as_ref().map_or(false, |group| group.1.x),
-            draw_cursor_y: linked_cursors.as_ref().map_or(false, |group| group.1.y),
+            draw_cursor_x: linked_cursors.as_ref().is_some_and(|group| group.1.x),
+            draw_cursor_y: linked_cursors.as_ref().is_some_and(|group| group.1.y),
             draw_cursors,
             cursor_color,
             grid_spacers,
@@ -1528,7 +1528,7 @@ struct PreparedPlot<'a> {
     clamp_grid: bool,
 }
 
-impl<'a> PreparedPlot<'a> {
+impl PreparedPlot<'_> {
     fn ui(self, ui: &mut Ui, response: &Response) -> (Vec<Cursor>, Option<Id>) {
         let mut axes_shapes = Vec::new();
 
