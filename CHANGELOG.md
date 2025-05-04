@@ -4,12 +4,33 @@ All notable changes to the `egui_plot` integration will be noted in this file.
 This file is updated upon each release.
 Changes since the last release can be found at <https://github.com/emilk/egui_plot/compare/latest...HEAD> or by running the `scripts/generate_changelog.py` script.
 
+
+## 0.32.1 - 2025-04-07
+
+Full diff at https://github.com/emilk/egui_plot/compare/0.32.0..HEAD
+
+#### PRs
+* Fix dynamic bounds modifications [#96](https://github.com/emilk/egui_plot/pull/96) by [@emilk](https://github.com/emilk)
+
+
+## 0.32.0 - 2025-04-07
+
+Full diff at https://github.com/emilk/egui_plot/compare/0.31.0..HEAD
+
+#### PRs
+* `PlotResponse::hovered_plot_item` also set when hovering the legend [#81](https://github.com/emilk/egui_plot/pull/81) by [@Wumpf](https://github.com/Wumpf)
+* Plot items now require an id [#82](https://github.com/emilk/egui_plot/pull/82) by [@Wumpf](https://github.com/Wumpf)
+* Fix include_{xy} issue when auto bounds is off [#74](https://github.com/emilk/egui_plot/pull/74) by [@joaofl](https://github.com/joaofl)
+* Provide new functions to specify the default bounds [#90](https://github.com/emilk/egui_plot/pull/90) by [@irevoire](https://github.com/irevoire)
+
+
+
 ## 0.31.0 - 2025-02-05
 
 Full diff at https://github.com/emilk/egui_plot/compare/0.30.0..HEAD
 
 #### PRs
-* Allow borrowing plot points via `PlotPoints::Borrowed` [#64](https://github.com/emilk/egui_plot/pull/64) by [@mo8it](https://github.com/mo8it) and [@bircni](https://github.com/bircni) 
+* Allow borrowing plot points via `PlotPoints::Borrowed` [#64](https://github.com/emilk/egui_plot/pull/64) by [@mo8it](https://github.com/mo8it) and [@bircni](https://github.com/bircni)
 * Add `insertion_order` and `color_conflict_handling` to `Legend` [#65](https://github.com/emilk/egui_plot/pull/65) by [@Zoxc](https://github.com/Zoxc) and [@bircni](https://github.com/bircni)
 * Allow Plot::link_cursor to accept `impl Into<Vec2b>` [#66](https://github.com/emilk/egui_plot/pull/66) by [@jetuk](https://github.com/jetuk)
 * Axis: fix label thickness [#68](https://github.com/emilk/egui_plot/pull/68) by [@jordens](https://github.com/jordens)
