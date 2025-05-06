@@ -47,7 +47,7 @@ impl BoxSpread {
 }
 
 /// A box in a [`BoxPlot`] diagram.
-/// 
+///
 /// This is a low-level graphical element; it will not compute quartiles and whiskers, letting one
 /// use their preferred formula. Use [`Points`][`super::Points`] to draw the outliers.
 #[derive(Clone, Debug, PartialEq)]
