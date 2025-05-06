@@ -35,7 +35,7 @@ Full diff at https://github.com/emilk/egui_plot/compare/0.30.0..HEAD
 * Allow Plot::link_cursor to accept `impl Into<Vec2b>` [#66](https://github.com/emilk/egui_plot/pull/66) by [@jetuk](https://github.com/jetuk)
 * Axis: fix label thickness [#68](https://github.com/emilk/egui_plot/pull/68) by [@jordens](https://github.com/jordens)
 * Update to egui 0.31.0 [#72](https://github.com/emilk/egui_plot/pull/72) by [@Wumpf](https://github.com/Wumpf)
-* Update MSRV to Rust 1.85 [#69](https://github.com/emilk/egui_plot/pull/69) by [@emilk](https://github.com/emilk)
+* Update MSRV to Rust 1.81 [#69](https://github.com/emilk/egui_plot/pull/69) by [@emilk](https://github.com/emilk)
 
 ## 0.30.0 - 2024-12-17
 
