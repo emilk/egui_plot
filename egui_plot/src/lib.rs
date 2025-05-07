@@ -156,6 +156,7 @@ pub struct Plot<'a> {
     center_axis: Vec2b,
     allow_zoom: Vec2b,
     allow_drag: Vec2b,
+    allow_axis_zoom_drag: Vec2b,
     allow_scroll: Vec2b,
     allow_double_click_reset: bool,
     allow_boxed_zoom: bool,
@@ -203,6 +204,7 @@ impl<'a> Plot<'a> {
             center_axis: false.into(),
             allow_zoom: true.into(),
             allow_drag: true.into(),
+            allow_axis_zoom_drag: false.into(),
             allow_scroll: true.into(),
             allow_double_click_reset: true,
             allow_boxed_zoom: true,
@@ -385,6 +387,16 @@ impl<'a> Plot<'a> {
         T: Into<Vec2b>,
     {
         self.allow_drag = on.into();
+        self
+    }
+
+    /// Whether to allow dragging in the axis areas to automaticall zoom the plot. Default: `true`.
+    #[inline]
+    pub fn allow_axis_zoom_drag<T>(mut self, on: T) -> Self
+    where
+        T: Into<Vec2b>,
+    {
+        self.allow_axis_zoom_drag = on.into();
         self
     }
 
@@ -777,6 +789,7 @@ impl<'a> Plot<'a> {
             center_axis,
             allow_zoom,
             allow_drag,
+            allow_axis_zoom_drag,
             allow_scroll,
             allow_double_click_reset,
             allow_boxed_zoom,
@@ -862,6 +875,31 @@ impl<'a> Plot<'a> {
 
         // Allocate the plot window.
         let response = ui.allocate_rect(plot_rect, sense);
+
+        let x_axis_responses = x_axis_widgets
+            .iter()
+            .map(|widget| {
+                let axis_response = ui.allocate_rect(widget.rect, Sense::drag());
+                if allow_axis_zoom_drag.x {
+                    axis_response.on_hover_cursor(CursorIcon::ResizeHorizontal)
+                } else {
+                    axis_response
+                }
+            })
+            .collect::<Vec<_>>();
+
+        let y_axis_responses = y_axis_widgets
+            .iter()
+            .map(|widget| {
+                let axis_response = ui.allocate_rect(widget.rect, Sense::drag());
+
+                if allow_axis_zoom_drag.y {
+                    axis_response.on_hover_cursor(CursorIcon::ResizeVertical)
+                } else {
+                    axis_response
+                }
+            })
+            .collect::<Vec<_>>();
 
         // Load or initialize the memory.
         ui.ctx().check_for_id_clash(plot_id, plot_rect, "Plot");
@@ -1080,6 +1118,50 @@ impl<'a> Plot<'a> {
             mem.transform
                 .translate_bounds((delta.x as f64, delta.y as f64));
             mem.auto_bounds = mem.auto_bounds.and(!allow_drag);
+        }
+        // Axis zoom dragging
+        if allow_axis_zoom_drag.x
+            && x_axis_responses
+                .iter()
+                .any(|r| r.dragged_by(PointerButton::Primary))
+        {
+            let axis_response = x_axis_responses
+                .iter()
+                .find(|r| r.dragged_by(PointerButton::Primary))
+                .expect("One x-axis response should be dragged");
+
+            if let Some(_hover_pos) = axis_response.hover_pos() {
+                let delta = axis_response.drag_delta();
+                let mut zoom = delta.clamp(Vec2::splat(-10.0), Vec2::splat(10.0)) / 10.0;
+                zoom.x += 1.0;
+                zoom.y = 1.0;
+                if zoom.x != 1.0 {
+                    mem.transform.zoom(zoom, plot_rect.center());
+                    mem.auto_bounds = false.into();
+                }
+            }
+        }
+
+        if allow_axis_zoom_drag.y
+            && y_axis_responses
+                .iter()
+                .any(|r| r.dragged_by(PointerButton::Primary))
+        {
+            let axis_response = y_axis_responses
+                .iter()
+                .find(|r| r.dragged_by(PointerButton::Primary))
+                .expect("One y-axis response should be dragged");
+
+            if let Some(_hover_pos) = axis_response.hover_pos() {
+                let delta = axis_response.drag_delta();
+                let mut zoom = delta.clamp(Vec2::splat(-10.0), Vec2::splat(10.0)) / 10.0;
+                zoom.x = 1.0;
+                zoom.y += 1.0;
+                if zoom.y != 1.0 {
+                    mem.transform.zoom(zoom, plot_rect.center());
+                    mem.auto_bounds = false.into();
+                }
+            }
         }
 
         // Zooming
