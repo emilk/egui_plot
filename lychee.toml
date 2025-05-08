@@ -31,20 +31,19 @@ include_verbatim = true
 # Proceed for server connections considered insecure (invalid TLS).
 insecure = true
 
-# Exclude these filesystem paths from getting checked.
-exclude_path = [
-  # Unfortunately lychee doesn't yet read .gitignore https://github.com/lycheeverse/lychee/issues/1331
-  # The following entries are there because of that:
-  ".git",
-  "__pycache__",
-  "_deps/",
-  ".pixi",
-  "build",
-  "target_ra",
-  "target_wasm",
-  "target",
-  "venv",
+# Maximum number of allowed retries before a link is declared dead.
+max_retries = 4
+
+# Wait time between attempts in seconds.
+retry_wait_time = 2
+
+# Comma-separated list of accepted status codes for valid links.
+accept = [
+  "100..=103", # Informational codes.
+  "200..=299", # Success codes.
+  "429",       # Too many requests. This is practically never a sign of a broken link.
 ]
+
 
 # Exclude URLs and mail addresses from checking (supports regex).
 exclude = [
