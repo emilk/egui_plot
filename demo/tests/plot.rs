@@ -1,7 +1,7 @@
 use demo::TemplateApp;
 use egui::accesskit::Role;
 use egui::ThemePreference;
-use egui_kittest::kittest::Queryable;
+use egui_kittest::kittest::Queryable as _;
 
 #[test]
 fn test_demos() {

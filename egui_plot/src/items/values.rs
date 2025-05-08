@@ -162,19 +162,19 @@ pub enum PlotPoints<'a> {
     Borrowed(&'a [PlotPoint]),
 }
 
-impl<'a> Default for PlotPoints<'a> {
+impl Default for PlotPoints<'_> {
     fn default() -> Self {
         Self::Owned(Vec::new())
     }
 }
 
-impl<'a> From<[f64; 2]> for PlotPoints<'a> {
+impl From<[f64; 2]> for PlotPoints<'_> {
     fn from(coordinate: [f64; 2]) -> Self {
         Self::new(vec![coordinate])
     }
 }
 
-impl<'a> From<Vec<[f64; 2]>> for PlotPoints<'a> {
+impl From<Vec<[f64; 2]>> for PlotPoints<'_> {
     #[inline]
     fn from(coordinates: Vec<[f64; 2]>) -> Self {
         Self::new(coordinates)
@@ -188,7 +188,7 @@ impl<'a> From<&'a [PlotPoint]> for PlotPoints<'a> {
     }
 }
 
-impl<'a> FromIterator<[f64; 2]> for PlotPoints<'a> {
+impl FromIterator<[f64; 2]> for PlotPoints<'_> {
     fn from_iter<T: IntoIterator<Item = [f64; 2]>>(iter: T) -> Self {
         Self::Owned(iter.into_iter().map(|point| point.into()).collect())
     }
