@@ -2,7 +2,7 @@ use std::f64::consts::TAU;
 use std::ops::RangeInclusive;
 
 use egui::{
-    remap, vec2, Color32, ComboBox, NumExt, Pos2, Response, ScrollArea, Stroke, TextWrapMode,
+    remap, vec2, Color32, ComboBox, NumExt as _, Pos2, Response, ScrollArea, Stroke, TextWrapMode,
     Vec2b, WidgetInfo, WidgetType,
 };
 

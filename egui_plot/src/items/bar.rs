@@ -1,4 +1,4 @@
-use egui::emath::NumExt;
+use egui::emath::NumExt as _;
 use egui::epaint::{Color32, CornerRadius, RectShape, Shape, Stroke};
 
 use super::{add_rulers_and_text, highlighted_color, Orientation, PlotConfig, RectElement};
