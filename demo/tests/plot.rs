@@ -16,7 +16,7 @@ fn test_demos() {
     let mut errors = Vec::new();
 
     for name in demo_names {
-        harness.get_by_label(&name).click();
+        harness.get_by_role_and_label(Role::Button, &name).click();
         harness.run();
 
         if let Err(error) = harness.try_snapshot(&format!("demos/{name}")) {
