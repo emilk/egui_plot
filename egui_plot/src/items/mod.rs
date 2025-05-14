@@ -487,7 +487,7 @@ fn y_intersection(p1: &Pos2, p2: &Pos2, y: f32) -> Option<f32> {
         .then_some(((y * (p1.x - p2.x)) - (p1.x * p2.y - p1.y * p2.x)) / (p1.y - p2.y))
 }
 
-impl<'a> PlotItem for Line<'a> {
+impl PlotItem for Line<'_> {
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
             base,
@@ -646,7 +646,7 @@ impl<'a> Polygon<'a> {
     builder_methods_for_base!();
 }
 
-impl<'a> PlotItem for Polygon<'a> {
+impl PlotItem for Polygon<'_> {
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
             base,
@@ -869,7 +869,7 @@ impl<'a> Points<'a> {
     builder_methods_for_base!();
 }
 
-impl<'a> PlotItem for Points<'a> {
+impl PlotItem for Points<'_> {
     #[allow(clippy::too_many_lines)] // TODO(emilk): shorten this function
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let sqrt_3 = 3_f32.sqrt();
@@ -1065,7 +1065,7 @@ impl<'a> Arrows<'a> {
     builder_methods_for_base!();
 }
 
-impl<'a> PlotItem for Arrows<'a> {
+impl PlotItem for Arrows<'_> {
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
             origins,
