@@ -998,9 +998,15 @@ impl<'a> Plot<'a> {
         // Apply bounds modifications.
         for modification in bounds_modifications {
             match modification {
-                BoundsModification::Set(new_bounds) => {
-                    bounds = new_bounds;
-                    mem.auto_bounds = false.into();
+                BoundsModification::SetX(range) => {
+                    bounds.min[0] = *range.start();
+                    bounds.max[0] = *range.end();
+                    mem.auto_bounds.x = false;
+                }
+                BoundsModification::SetY(range) => {
+                    bounds.min[1] = *range.start();
+                    bounds.max[1] = *range.end();
+                    mem.auto_bounds.y = false;
                 }
                 BoundsModification::Translate(delta) => {
                     let delta = (delta.x as f64, delta.y as f64);
@@ -1421,7 +1427,8 @@ fn axis_widgets<'a>(
 /// User-requested modifications to the plot bounds. We collect them in the plot build function to later apply
 /// them at the right time, as other modifications need to happen first.
 enum BoundsModification {
-    Set(PlotBounds),
+    SetX(RangeInclusive<f64>),
+    SetY(RangeInclusive<f64>),
     Translate(Vec2),
     AutoBounds(Vec2b),
     Zoom(Vec2, PlotPoint),
