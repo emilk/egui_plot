@@ -32,7 +32,7 @@ impl eframe::App for TemplateApp {
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             // The top panel is often a good place for a menu bar:
 
-            egui::menu::bar(ui, |ui| {
+            egui::containers::menu::Bar::new().ui(ui, |ui| {
                 egui::widgets::global_theme_preference_buttons(ui);
 
                 ui.add_space(16.0);
