@@ -14,10 +14,11 @@ Immediate mode plotting for [`egui`](https://github.com/emilk/egui).
 
 [Try the web demo](https://emilk.github.io/egui_plot/)
 
-### Testing
-* Locally: `cargo run -p demo`
-* Web: `(cd demo && trunk serve)`
+## Testing
 
+- Locally: `cargo run -p demo`
+- Web: `(cd demo && trunk serve)`
 
-### History
-This crate was originally hosted at https://github.com/emilk/egui but was extracted into its own repository on 2024-07-15.
+## History
+
+This crate was originally hosted at <https://github.com/emilk/egui> but was extracted into its own repository on 2024-07-15.
