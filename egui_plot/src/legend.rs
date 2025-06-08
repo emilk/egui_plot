@@ -242,6 +242,7 @@ impl LegendWidget {
         items
             .iter()
             .filter(|item| !item.name().is_empty())
+            .filter(|item| item.base().show_in_legend)
             .for_each(|item| {
                 let next_entry = entries.len();
                 let key = if config.follow_insertion_order {
