@@ -52,16 +52,59 @@ impl PlotDemo {
         ui.horizontal(|ui| {
             egui::reset_button(ui, self, "Reset");
             ui.collapsing("Instructions", |ui| {
-                ui.label("Pan by dragging, or scroll (+ shift = horizontal).");
-                ui.label("Box zooming: Right click to zoom in and zoom out using a selection.");
-                if cfg!(target_arch = "wasm32") {
-                    ui.label("Zoom with ctrl / ⌘ + pointer wheel, or with pinch gesture.");
-                } else if cfg!(target_os = "macos") {
-                    ui.label("Zoom with ctrl / ⌘ + scroll.");
-                } else {
-                    ui.label("Zoom with ctrl + scroll.");
-                }
-                ui.label("Reset view with double-click.");
+                egui::Grid::new("instructions")
+                    .num_columns(2)
+                    .striped(true)
+                    .show(ui, |ui| {
+                        let egui::InputOptions {
+                            zoom_modifier,
+                            horizontal_scroll_modifier,
+                            vertical_scroll_modifier,
+                            ..
+                        } = egui::InputOptions::default();
+
+                        ui.label("Pan");
+                        ui.label("Left-drag");
+                        ui.end_row();
+
+                        ui.label("Horizontal pan");
+                        ui.label(format!(
+                            "{} + Scroll",
+                            ui.ctx().format_modifiers(horizontal_scroll_modifier)
+                        ));
+                        ui.end_row();
+
+                        ui.label("Zoom");
+                        ui.label(format!(
+                            "{} + Scroll",
+                            ui.ctx().format_modifiers(zoom_modifier)
+                        ));
+                        ui.end_row();
+
+                        ui.label("Horizontal zoom");
+                        ui.label(format!(
+                            "{} + Scroll",
+                            ui.ctx()
+                                .format_modifiers(zoom_modifier | horizontal_scroll_modifier)
+                        ));
+                        ui.end_row();
+
+                        ui.label("Vertical zoom");
+                        ui.label(format!(
+                            "{} + Scroll",
+                            ui.ctx()
+                                .format_modifiers(zoom_modifier | vertical_scroll_modifier)
+                        ));
+                        ui.end_row();
+
+                        ui.label("Box zoom");
+                        ui.label("Right-drag");
+                        ui.end_row();
+
+                        ui.label("Reset");
+                        ui.label("Double-click");
+                        ui.end_row();
+                    });
             });
             ui.add(crate::egui_github_link_file!());
         });
