@@ -390,7 +390,7 @@ impl<'a> Plot<'a> {
         self
     }
 
-    /// Whether to allow dragging in the axis areas to automaticall zoom the plot. Default: `true`.
+    /// Whether to allow dragging in the axis areas to zoom the plot. Default: `true`.
     #[inline]
     pub fn allow_axis_zoom_drag<T>(mut self, on: T) -> Self
     where
