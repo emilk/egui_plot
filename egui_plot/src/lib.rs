@@ -1678,6 +1678,7 @@ impl PreparedPlot<'_> {
         let painter = ui.painter().with_clip_rect(*transform.frame());
         painter.extend(shapes);
 
+        // Show coordinates in a corner of the plot:
         if let Some((corner, formatter)) = self.coordinates_formatter.as_ref() {
             let hover_pos = response.hover_pos();
             if let Some(pointer) = hover_pos {
@@ -1691,7 +1692,16 @@ impl PreparedPlot<'_> {
                     Corner::LeftBottom => (Align2::LEFT_BOTTOM, padded_frame.left_bottom()),
                     Corner::RightBottom => (Align2::RIGHT_BOTTOM, padded_frame.right_bottom()),
                 };
-                painter.text(position, anchor, text, font_id, ui.visuals().text_color());
+
+                let text_color = ui.visuals().text_color();
+                let galley = painter.layout_no_wrap(text, font_id, text_color);
+                let rect = anchor.anchor_size(position, galley.size());
+                painter.rect_filled(
+                    rect.expand(4.0),
+                    ui.style().visuals.window_corner_radius,
+                    ui.style().visuals.extreme_bg_color.gamma_multiply(0.75),
+                );
+                painter.galley(rect.min, galley, text_color);
             }
         }
 
