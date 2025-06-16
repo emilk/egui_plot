@@ -156,6 +156,7 @@ pub struct Plot<'a> {
     center_axis: Vec2b,
     allow_zoom: Vec2b,
     allow_drag: Vec2b,
+    allow_axis_zoom_drag: Vec2b,
     allow_scroll: Vec2b,
     allow_double_click_reset: bool,
     allow_boxed_zoom: bool,
@@ -203,6 +204,7 @@ impl<'a> Plot<'a> {
             center_axis: false.into(),
             allow_zoom: true.into(),
             allow_drag: true.into(),
+            allow_axis_zoom_drag: true.into(),
             allow_scroll: true.into(),
             allow_double_click_reset: true,
             allow_boxed_zoom: true,
@@ -385,6 +387,16 @@ impl<'a> Plot<'a> {
         T: Into<Vec2b>,
     {
         self.allow_drag = on.into();
+        self
+    }
+
+    /// Whether to allow dragging in the axis areas to zoom the plot. Default: `true`.
+    #[inline]
+    pub fn allow_axis_zoom_drag<T>(mut self, on: T) -> Self
+    where
+        T: Into<Vec2b>,
+    {
+        self.allow_axis_zoom_drag = on.into();
         self
     }
 
@@ -777,6 +789,7 @@ impl<'a> Plot<'a> {
             center_axis,
             allow_zoom,
             allow_drag,
+            allow_axis_zoom_drag,
             allow_scroll,
             allow_double_click_reset,
             allow_boxed_zoom,
@@ -862,6 +875,31 @@ impl<'a> Plot<'a> {
 
         // Allocate the plot window.
         let response = ui.allocate_rect(plot_rect, sense);
+
+        let x_axis_responses = x_axis_widgets
+            .iter()
+            .map(|widget| {
+                let axis_response = ui.allocate_rect(widget.rect, Sense::drag());
+                if allow_axis_zoom_drag.x {
+                    axis_response.on_hover_cursor(CursorIcon::ResizeHorizontal)
+                } else {
+                    axis_response
+                }
+            })
+            .collect::<Vec<_>>();
+
+        let y_axis_responses = y_axis_widgets
+            .iter()
+            .map(|widget| {
+                let axis_response = ui.allocate_rect(widget.rect, Sense::drag());
+
+                if allow_axis_zoom_drag.y {
+                    axis_response.on_hover_cursor(CursorIcon::ResizeVertical)
+                } else {
+                    axis_response
+                }
+            })
+            .collect::<Vec<_>>();
 
         // Load or initialize the memory.
         ui.ctx().check_for_id_clash(plot_id, plot_rect, "Plot");
@@ -1086,6 +1124,42 @@ impl<'a> Plot<'a> {
             mem.transform
                 .translate_bounds((delta.x as f64, delta.y as f64));
             mem.auto_bounds = mem.auto_bounds.and(!allow_drag);
+        }
+
+        // Drag axes to zoom:
+        for d in 0..2 {
+            if allow_axis_zoom_drag[d] {
+                if let Some(axis_response) = (if d == 0 {
+                    &x_axis_responses
+                } else {
+                    &y_axis_responses
+                })
+                .iter()
+                .find(|r| r.dragged_by(PointerButton::Primary))
+                {
+                    if let Some(hover_pos) = axis_response.hover_pos() {
+                        let delta = axis_response.drag_delta();
+
+                        let axis_zoom = 1.0 + (0.02 * delta[d]).clamp(-1.0, 1.0);
+
+                        let zoom = if data_aspect.is_some() {
+                            // Zoom both axes equally to maintain aspect ratio:
+                            Vec2::splat(axis_zoom)
+                        } else {
+                            let mut zoom = Vec2::splat(1.0);
+                            zoom[d] = axis_zoom;
+                            zoom
+                        };
+
+                        if zoom != Vec2::splat(1.0) {
+                            let mut zoom_center = plot_rect.center();
+                            zoom_center[d] = hover_pos[d];
+                            mem.transform.zoom(zoom, zoom_center);
+                            mem.auto_bounds = false.into();
+                        }
+                    }
+                }
+            }
         }
 
         // Zooming
