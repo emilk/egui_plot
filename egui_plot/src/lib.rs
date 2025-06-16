@@ -1126,34 +1126,25 @@ impl<'a> Plot<'a> {
             mem.auto_bounds = mem.auto_bounds.and(!allow_drag);
         }
 
-        // Drag axis to zoom:
-        if allow_axis_zoom_drag.x {
-            if let Some(axis_response) = x_axis_responses
+        // Drag axes to zoom:
+        for d in 0..2 {
+            if allow_axis_zoom_drag[d] {
+                if let Some(axis_response) = (if d == 0 {
+                    &x_axis_responses
+                } else {
+                    &y_axis_responses
+                })
                 .iter()
                 .find(|r| r.dragged_by(PointerButton::Primary))
-            {
-                if let Some(hover_pos) = axis_response.hover_pos() {
-                    let delta = axis_response.drag_delta();
-                    let zoom_x = 1.0 + (0.02 * delta.x).clamp(-1.0, 1.0);
-                    if zoom_x != 1.0 {
-                        mem.transform.zoom(vec2(zoom_x, 1.0), hover_pos);
-                        mem.auto_bounds = false.into();
-                    }
-                }
-            }
-        }
-
-        if allow_axis_zoom_drag.y {
-            if let Some(axis_response) = y_axis_responses
-                .iter()
-                .find(|r| r.dragged_by(PointerButton::Primary))
-            {
-                if let Some(hover_pos) = axis_response.hover_pos() {
-                    let delta = axis_response.drag_delta();
-                    let zoom_y = 1.0 + (0.02 * delta.y).clamp(-1.0, 1.0);
-                    if zoom_y != 1.0 {
-                        mem.transform.zoom(vec2(1.0, zoom_y), hover_pos);
-                        mem.auto_bounds = false.into();
+                {
+                    if let Some(hover_pos) = axis_response.hover_pos() {
+                        let delta = axis_response.drag_delta();
+                        let mut zoom = Vec2::splat(1.0);
+                        zoom[d] = 1.0 + (0.02 * delta[d]).clamp(-1.0, 1.0);
+                        if zoom != Vec2::splat(1.0) {
+                            mem.transform.zoom(zoom, hover_pos);
+                            mem.auto_bounds = false.into();
+                        }
                     }
                 }
             }
