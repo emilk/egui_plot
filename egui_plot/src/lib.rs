@@ -1422,7 +1422,7 @@ fn axis_widgets<'a>(
         let initial_x_range = complete_rect.x_range();
 
         for (i, cfg) in x_axes.iter().enumerate().rev() {
-            let mut height = cfg.thickness(Axis::X);
+            let mut height = cfg.min_thickness;
             if let Some(mem) = mem {
                 // If the labels took up too much space the previous frame, give them more space now:
                 height = height.max(mem.x_axis_thickness.get(&i).copied().unwrap_or_default());
@@ -1450,7 +1450,7 @@ fn axis_widgets<'a>(
         let plot_y_range = rect_left.y_range();
 
         for (i, cfg) in y_axes.iter().enumerate().rev() {
-            let mut width = cfg.thickness(Axis::Y);
+            let mut width = cfg.min_thickness;
             if let Some(mem) = mem {
                 // If the labels took up too much space the previous frame, give them more space now:
                 width = width.max(mem.y_axis_thickness.get(&i).copied().unwrap_or_default());

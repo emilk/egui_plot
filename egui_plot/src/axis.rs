@@ -109,9 +109,6 @@ pub struct AxisHints<'a> {
     pub(super) label_spacing: Rangef,
 }
 
-// TODO(JohannesProgrammiert): this just a guess. It might cease to work if a user changes font size.
-const LINE_HEIGHT: f32 = 12.0;
-
 impl<'a> AxisHints<'a> {
     /// Initializes a default axis configuration for the X axis.
     pub fn new_x() -> Self {
@@ -203,24 +200,6 @@ impl<'a> AxisHints<'a> {
         self.label_spacing = range.into();
         self
     }
-
-    pub(super) fn thickness(&self, axis: Axis) -> f32 {
-        match axis {
-            Axis::X => self.min_thickness.max(if self.label.is_empty() {
-                1.0 * LINE_HEIGHT
-            } else {
-                3.0 * LINE_HEIGHT
-            }),
-            Axis::Y => {
-                self.min_thickness
-                    + if self.label.is_empty() {
-                        0.0
-                    } else {
-                        LINE_HEIGHT
-                    }
-            }
-        }
-    }
 }
 
 #[derive(Clone)]
@@ -258,6 +237,10 @@ impl<'a> AxisWidget<'a> {
             return (response, 0.0);
         };
         let tick_labels_thickness = self.add_tick_labels(ui, transform, axis);
+
+        if self.hints.label.is_empty() {
+            return (response, tick_labels_thickness);
+        }
 
         let galley = self.hints.label.into_galley(
             ui,
