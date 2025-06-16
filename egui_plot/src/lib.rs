@@ -204,7 +204,7 @@ impl<'a> Plot<'a> {
             center_axis: false.into(),
             allow_zoom: true.into(),
             allow_drag: true.into(),
-            allow_axis_zoom_drag: false.into(),
+            allow_axis_zoom_drag: true.into(),
             allow_scroll: true.into(),
             allow_double_click_reset: true,
             allow_boxed_zoom: true,
