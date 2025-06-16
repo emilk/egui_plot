@@ -1679,10 +1679,10 @@ pub(super) fn rulers_and_tooltip_at_value(
 
     // We show the tooltip as soon as we're hovering the plot area:
     let mut tooltip = egui::Tooltip::new(
-        plot_area_response.ctx.clone(),
-        plot_area_response.layer_id,
         plot_area_response.id,
+        plot_area_response.ctx.clone(),
         PopupAnchor::Pointer,
+        plot_area_response.layer_id,
     );
 
     let tooltip_width = plot_area_response.ctx.style().spacing.tooltip_width;
