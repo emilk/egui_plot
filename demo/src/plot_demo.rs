@@ -326,7 +326,7 @@ impl LineDemo {
             self.time += ui.input(|i| i.unstable_dt).at_most(1.0 / 30.0) as f64;
         };
         let mut plot = Plot::new("lines_demo")
-            .legend(Legend::default())
+            .legend(Legend::default().title("Lines"))
             .show_axes(self.show_axes)
             .show_grid(self.show_grid);
         if self.square {
@@ -417,7 +417,7 @@ impl MarkerDemo {
 
         let markers_plot = Plot::new("markers_demo")
             .data_aspect(1.0)
-            .legend(Legend::default());
+            .legend(Legend::default().title("Markers"));
         markers_plot
             .show(ui, |plot_ui| {
                 for marker in self.markers() {
@@ -805,7 +805,11 @@ impl ItemsDemo {
         );
 
         let plot = Plot::new("items_demo")
-            .legend(Legend::default().position(Corner::RightBottom))
+            .legend(
+                Legend::default()
+                    .position(Corner::RightBottom)
+                    .title("Items"),
+            )
             .show_x(false)
             .show_y(false)
             .data_aspect(1.0);
