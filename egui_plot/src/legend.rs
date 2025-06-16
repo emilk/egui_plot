@@ -1,8 +1,8 @@
 use std::{collections::BTreeMap, string::String};
 
 use egui::{
-    epaint::CircleShape, pos2, vec2, Align, Color32, Direction, Frame, Id, Layout, PointerButton,
-    Rect, Response, Sense, Shadow, Shape, TextStyle, Ui, Widget, WidgetInfo, WidgetType,
+    Align, Color32, Direction, Frame, Id, Layout, PointerButton, Rect, Response, Sense, Shadow,
+    Shape, TextStyle, Ui, Widget, WidgetInfo, WidgetType, epaint::CircleShape, pos2, vec2,
 };
 
 use super::items::PlotItem;

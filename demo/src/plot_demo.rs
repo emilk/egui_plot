@@ -2,8 +2,8 @@ use std::f64::consts::TAU;
 use std::ops::RangeInclusive;
 
 use egui::{
-    remap, vec2, Color32, ComboBox, NumExt as _, Pos2, Response, ScrollArea, Stroke, TextWrapMode,
-    Vec2b, WidgetInfo, WidgetType,
+    Color32, ComboBox, NumExt as _, Pos2, Response, ScrollArea, Stroke, TextWrapMode, Vec2b,
+    WidgetInfo, WidgetType, remap, vec2,
 };
 
 use egui_plot::{
