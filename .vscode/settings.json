@@ -1,13 +1,15 @@
 {
-    "files.insertFinalNewline": true,
     "editor.formatOnSave": true,
-    "files.trimTrailingWhitespace": true,
     "editor.semanticTokenColorCustomizations": {
         "rules": {
             "*.unsafe:rust": "#eb5046"
         }
     },
-    // Tell Rust Analyzer to use its own target directory, so we don't need to wait for it to finish wen we want to `cargo run`
+    "files.autoGuessEncoding": true,
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    // don't share a cargo lock with rust-analyzer.
+    // see https://github.com/rerun-io/rerun/pull/519 for rationale
     "rust-analyzer.check.overrideCommand": [
         "cargo",
         "clippy",
