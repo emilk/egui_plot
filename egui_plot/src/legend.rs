@@ -183,9 +183,10 @@ impl LegendEntry {
 
         let painter = ui.painter();
 
+        // Gray background, for interaction effects, and to sow something if we're disabled:
         painter.add(CircleShape {
             center: icon_rect.center(),
-            radius: icon_size * 0.5,
+            radius: icon_size * 0.35,
             fill: visuals.bg_fill,
             stroke: visuals.bg_stroke,
         });
@@ -198,7 +199,7 @@ impl LegendEntry {
             };
             painter.add(Shape::circle_filled(
                 icon_rect.center(),
-                icon_size * 0.4,
+                icon_size * 0.25,
                 fill,
             ));
         }
