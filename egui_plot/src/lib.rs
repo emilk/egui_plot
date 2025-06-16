@@ -1134,11 +1134,9 @@ impl<'a> Plot<'a> {
             {
                 if let Some(_hover_pos) = axis_response.hover_pos() {
                     let delta = axis_response.drag_delta();
-                    let mut zoom = delta.clamp(Vec2::splat(-10.0), Vec2::splat(10.0)) / 10.0;
-                    zoom.x += 1.0;
-                    zoom.y = 1.0;
-                    if zoom.x != 1.0 {
-                        mem.transform.zoom(zoom, plot_rect.center());
+                    let zoom_x = 1.0 + (0.02 * delta.x).clamp(-1.0, 1.0);
+                    if zoom_x != 1.0 {
+                        mem.transform.zoom(vec2(zoom_x, 1.0), plot_rect.center());
                         mem.auto_bounds = false.into();
                     }
                 }
@@ -1152,11 +1150,9 @@ impl<'a> Plot<'a> {
             {
                 if let Some(_hover_pos) = axis_response.hover_pos() {
                     let delta = axis_response.drag_delta();
-                    let mut zoom = delta.clamp(Vec2::splat(-10.0), Vec2::splat(10.0)) / 10.0;
-                    zoom.x = 1.0;
-                    zoom.y += 1.0;
-                    if zoom.y != 1.0 {
-                        mem.transform.zoom(zoom, plot_rect.center());
+                    let zoom_y = 1.0 + (0.02 * delta.y).clamp(-1.0, 1.0);
+                    if zoom_y != 1.0 {
+                        mem.transform.zoom(vec2(1.0, zoom_y), plot_rect.center());
                         mem.auto_bounds = false.into();
                     }
                 }
