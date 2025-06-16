@@ -1626,7 +1626,9 @@ fn add_rulers_and_text(
     });
 }
 
-/// Draws a cross of horizontal and vertical ruler at the `pointer` position.
+/// Draws a cross of horizontal and vertical ruler at the `pointer` position,
+/// and a label describing the coordinate.
+///
 /// `value` is used to for text displaying X/Y coordinates.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn rulers_at_value(
@@ -1672,16 +1674,16 @@ pub(super) fn rulers_at_value(
     };
 
     let font_id = TextStyle::Body.resolve(plot.ui.style());
-    plot.ui.fonts(|f| {
-        shapes.push(Shape::text(
-            f,
-            pointer + vec2(3.0, -2.0),
-            Align2::LEFT_BOTTOM,
-            text,
-            font_id,
-            plot.ui.visuals().text_color(),
-        ));
-    });
+    let ui = plot.ui;
+    let text_color = ui.visuals().text_color();
+    let galley = ui.fonts(|f| f.layout_no_wrap(text, font_id, text_color));
+    let rect = Align2::LEFT_BOTTOM.anchor_size(pointer + vec2(3.0, -2.0), galley.size());
+    shapes.push(Shape::rect_filled(
+        rect.expand(4.0),
+        ui.style().visuals.window_corner_radius,
+        ui.style().visuals.extreme_bg_color.gamma_multiply(0.75),
+    ));
+    shapes.push(Shape::galley(rect.min, galley, text_color));
 }
 
 fn find_closest_rect<'a, T>(
