@@ -1125,47 +1125,40 @@ impl<'a> Plot<'a> {
                 .translate_bounds((delta.x as f64, delta.y as f64));
             mem.auto_bounds = mem.auto_bounds.and(!allow_drag);
         }
-        // Axis zoom dragging
-        if allow_axis_zoom_drag.x
-            && x_axis_responses
-                .iter()
-                .any(|r| r.dragged_by(PointerButton::Primary))
-        {
-            let axis_response = x_axis_responses
+
+        // Drag axis to zoom:
+        if allow_axis_zoom_drag.x {
+            if let Some(axis_response) = x_axis_responses
                 .iter()
                 .find(|r| r.dragged_by(PointerButton::Primary))
-                .expect("One x-axis response should be dragged");
-
-            if let Some(_hover_pos) = axis_response.hover_pos() {
-                let delta = axis_response.drag_delta();
-                let mut zoom = delta.clamp(Vec2::splat(-10.0), Vec2::splat(10.0)) / 10.0;
-                zoom.x += 1.0;
-                zoom.y = 1.0;
-                if zoom.x != 1.0 {
-                    mem.transform.zoom(zoom, plot_rect.center());
-                    mem.auto_bounds = false.into();
+            {
+                if let Some(_hover_pos) = axis_response.hover_pos() {
+                    let delta = axis_response.drag_delta();
+                    let mut zoom = delta.clamp(Vec2::splat(-10.0), Vec2::splat(10.0)) / 10.0;
+                    zoom.x += 1.0;
+                    zoom.y = 1.0;
+                    if zoom.x != 1.0 {
+                        mem.transform.zoom(zoom, plot_rect.center());
+                        mem.auto_bounds = false.into();
+                    }
                 }
             }
         }
 
-        if allow_axis_zoom_drag.y
-            && y_axis_responses
-                .iter()
-                .any(|r| r.dragged_by(PointerButton::Primary))
-        {
-            let axis_response = y_axis_responses
+        if allow_axis_zoom_drag.y {
+            if let Some(axis_response) = y_axis_responses
                 .iter()
                 .find(|r| r.dragged_by(PointerButton::Primary))
-                .expect("One y-axis response should be dragged");
-
-            if let Some(_hover_pos) = axis_response.hover_pos() {
-                let delta = axis_response.drag_delta();
-                let mut zoom = delta.clamp(Vec2::splat(-10.0), Vec2::splat(10.0)) / 10.0;
-                zoom.x = 1.0;
-                zoom.y += 1.0;
-                if zoom.y != 1.0 {
-                    mem.transform.zoom(zoom, plot_rect.center());
-                    mem.auto_bounds = false.into();
+            {
+                if let Some(_hover_pos) = axis_response.hover_pos() {
+                    let delta = axis_response.drag_delta();
+                    let mut zoom = delta.clamp(Vec2::splat(-10.0), Vec2::splat(10.0)) / 10.0;
+                    zoom.x = 1.0;
+                    zoom.y += 1.0;
+                    if zoom.y != 1.0 {
+                        mem.transform.zoom(zoom, plot_rect.center());
+                        mem.auto_bounds = false.into();
+                    }
                 }
             }
         }
