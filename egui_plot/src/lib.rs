@@ -1139,10 +1139,22 @@ impl<'a> Plot<'a> {
                 {
                     if let Some(hover_pos) = axis_response.hover_pos() {
                         let delta = axis_response.drag_delta();
-                        let mut zoom = Vec2::splat(1.0);
-                        zoom[d] = 1.0 + (0.02 * delta[d]).clamp(-1.0, 1.0);
+
+                        let axis_zoom = 1.0 + (0.02 * delta[d]).clamp(-1.0, 1.0);
+
+                        let zoom = if data_aspect.is_some() {
+                            // Zoom both axes equally to maintain aspect ratio:
+                            Vec2::splat(axis_zoom)
+                        } else {
+                            let mut zoom = Vec2::splat(1.0);
+                            zoom[d] = axis_zoom;
+                            zoom
+                        };
+
                         if zoom != Vec2::splat(1.0) {
-                            mem.transform.zoom(zoom, hover_pos);
+                            let mut zoom_center = plot_rect.center();
+                            zoom_center[d] = hover_pos[d];
+                            mem.transform.zoom(zoom, zoom_center);
                             mem.auto_bounds = false.into();
                         }
                     }
