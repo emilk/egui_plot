@@ -1648,19 +1648,18 @@ pub(super) fn rulers_and_tooltip_at_value(
         cursors.push(Cursor::Horizontal { y: value.y });
     }
 
-    let prefix = if name.is_empty() {
-        String::new()
+    let text = if let Some(custom_label) = label_formatter {
+        custom_label(name, &value)
     } else {
-        format!("{name}\n")
-    };
-
-    let text = {
+        let prefix = if name.is_empty() {
+            String::new()
+        } else {
+            format!("{name}\n")
+        };
         let scale = plot.transform.dvalue_dpos();
         let x_decimals = ((-scale[0].abs().log10()).ceil().at_least(0.0) as usize).clamp(1, 6);
         let y_decimals = ((-scale[1].abs().log10()).ceil().at_least(0.0) as usize).clamp(1, 6);
-        if let Some(custom_label) = label_formatter {
-            custom_label(name, &value)
-        } else if plot.show_x && plot.show_y {
+        if plot.show_x && plot.show_y {
             format!(
                 "{}x = {:.*}\ny = {:.*}",
                 prefix, x_decimals, value.x, y_decimals, value.y
