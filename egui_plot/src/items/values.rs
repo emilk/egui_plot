@@ -1,6 +1,6 @@
 use std::ops::{Bound, RangeBounds, RangeInclusive};
 
-use egui::{lerp, Pos2, Shape, Stroke, Vec2};
+use egui::{Pos2, Shape, Stroke, Vec2, lerp};
 
 use crate::transform::PlotBounds;
 

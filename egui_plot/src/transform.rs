@@ -1,6 +1,6 @@
 use std::ops::RangeInclusive;
 
-use egui::{pos2, remap, Pos2, Rect, Vec2, Vec2b};
+use egui::{Pos2, Rect, Vec2, Vec2b, pos2, remap};
 
 use crate::Axis;
 

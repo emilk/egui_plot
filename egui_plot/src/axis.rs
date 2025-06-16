@@ -1,12 +1,12 @@
 use std::{fmt::Debug, ops::RangeInclusive, sync::Arc};
 
 use egui::{
-    emath::{remap_clamp, Rot2},
-    epaint::TextShape,
     Pos2, Rangef, Rect, Response, Sense, TextStyle, TextWrapMode, Ui, Vec2, WidgetText,
+    emath::{Rot2, remap_clamp},
+    epaint::TextShape,
 };
 
-use super::{transform::PlotTransform, GridMark};
+use super::{GridMark, transform::PlotTransform};
 
 // Gap between tick labels and axis label in units of the axis label height
 const AXIS_LABEL_GAP: f32 = 0.25;

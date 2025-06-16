@@ -1,6 +1,6 @@
 use std::ops::RangeInclusive;
 
-use egui::{epaint::Hsva, Color32, Pos2, Response, Vec2, Vec2b};
+use egui::{Color32, Pos2, Response, Vec2, Vec2b, epaint::Hsva};
 
 use crate::{BoundsModification, PlotBounds, PlotItem, PlotPoint, PlotTransform};
 
