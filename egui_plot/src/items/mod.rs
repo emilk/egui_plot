@@ -6,8 +6,8 @@ use std::ops::RangeInclusive;
 use egui::{
     emath::Rot2,
     epaint::{CircleShape, TextShape},
-    pos2, vec2, Align2, Color32, CornerRadius, Id, ImageOptions, Mesh, NumExt as _, Pos2, Rect,
-    Rgba, Shape, Stroke, TextStyle, TextureId, Ui, Vec2, WidgetText,
+    pos2, vec2, Align2, Color32, CornerRadius, Id, ImageOptions, Mesh, NumExt as _, PopupAnchor,
+    Pos2, Rect, Rgba, Shape, Stroke, TextStyle, TextureId, Ui, Vec2, WidgetText,
 };
 
 use emath::Float as _;
@@ -155,6 +155,7 @@ pub trait PlotItem {
 
     fn on_hover(
         &self,
+        plot_area_response: &egui::Response,
         elem: ClosestElem,
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
@@ -182,12 +183,11 @@ pub trait PlotItem {
         let pointer = plot.transform.position_from_point(&value);
         shapes.push(Shape::circle_filled(pointer, 3.0, line_color));
 
-        rulers_at_value(
-            pointer,
+        rulers_and_tooltip_at_value(
+            plot_area_response,
             value,
             self.name(),
             plot,
-            shapes,
             cursors,
             label_formatter,
         );
@@ -1372,6 +1372,7 @@ impl PlotItem for BarChart {
 
     fn on_hover(
         &self,
+        _plot_area_response: &egui::Response,
         elem: ClosestElem,
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
@@ -1504,6 +1505,7 @@ impl PlotItem for BoxPlot {
 
     fn on_hover(
         &self,
+        _plot_area_response: &egui::Response,
         elem: ClosestElem,
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
@@ -1631,12 +1633,11 @@ fn add_rulers_and_text(
 ///
 /// `value` is used to for text displaying X/Y coordinates.
 #[allow(clippy::too_many_arguments)]
-pub(super) fn rulers_at_value(
-    pointer: Pos2,
+pub(super) fn rulers_and_tooltip_at_value(
+    plot_area_response: &egui::Response,
     value: PlotPoint,
     name: &str,
     plot: &PlotConfig<'_>,
-    shapes: &mut Vec<Shape>,
     cursors: &mut Vec<Cursor>,
     label_formatter: &LabelFormatter<'_>,
 ) {
@@ -1673,17 +1674,22 @@ pub(super) fn rulers_at_value(
         }
     };
 
-    let font_id = TextStyle::Body.resolve(plot.ui.style());
-    let ui = plot.ui;
-    let text_color = ui.visuals().text_color();
-    let galley = ui.fonts(|f| f.layout_no_wrap(text, font_id, text_color));
-    let rect = Align2::LEFT_BOTTOM.anchor_size(pointer + vec2(3.0, -2.0), galley.size());
-    shapes.push(Shape::rect_filled(
-        rect.expand(4.0),
-        ui.style().visuals.window_corner_radius,
-        ui.style().visuals.extreme_bg_color.gamma_multiply(0.75),
-    ));
-    shapes.push(Shape::galley(rect.min, galley, text_color));
+    // We show the tooltip as soon as we're hovering the plot area:
+    let mut tooltip = egui::Tooltip::new(
+        plot_area_response.id,
+        plot_area_response.ctx.clone(),
+        PopupAnchor::Pointer,
+        plot_area_response.layer_id,
+    );
+
+    let tooltip_width = plot_area_response.ctx.style().spacing.tooltip_width;
+
+    tooltip.popup = tooltip.popup.width(tooltip_width);
+
+    tooltip.gap(12.0).show(|ui| {
+        ui.set_max_width(tooltip_width);
+        ui.label(text);
+    });
 }
 
 fn find_closest_rect<'a, T>(
