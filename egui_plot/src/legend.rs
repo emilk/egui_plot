@@ -338,8 +338,11 @@ impl Widget for &mut LegendWidget {
                 .multiply_with_opacity(config.background_alpha);
                 background_frame
                     .show(ui, |ui| {
-                        if let Some(title) = &config.title {
-                            ui.heading(title);
+                        // always show on top of the legend - so we need to use a new scope
+                        if main_dir == Direction::TopDown {
+                            if let Some(title) = &config.title {
+                                ui.heading(title);
+                            }
                         }
                         let mut focus_on_item = None;
 
@@ -359,6 +362,12 @@ impl Widget for &mut LegendWidget {
                             })
                             .reduce(|r1, r2| r1.union(r2))
                             .expect("No entries in the legend");
+
+                        if main_dir == Direction::BottomUp {
+                            if let Some(title) = &config.title {
+                                ui.heading(title);
+                            }
+                        }
 
                         if let Some(focus_on_item) = focus_on_item {
                             handle_focus_on_legend_item(&focus_on_item, entries);
