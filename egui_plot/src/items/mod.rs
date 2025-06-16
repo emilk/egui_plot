@@ -4,14 +4,15 @@
 use std::ops::RangeInclusive;
 
 use egui::{
+    Align2, Color32, CornerRadius, Id, ImageOptions, Mesh, NumExt as _, PopupAnchor, Pos2, Rect,
+    Rgba, Shape, Stroke, TextStyle, TextureId, Ui, Vec2, WidgetText,
     emath::Rot2,
     epaint::{CircleShape, TextShape},
-    pos2, vec2, Align2, Color32, CornerRadius, Id, ImageOptions, Mesh, NumExt as _, PopupAnchor,
-    Pos2, Rect, Rgba, Shape, Stroke, TextStyle, TextureId, Ui, Vec2, WidgetText,
+    pos2, vec2,
 };
 
 use emath::Float as _;
-use rect_elem::{highlighted_color, RectElement};
+use rect_elem::{RectElement, highlighted_color};
 
 use super::{Cursor, LabelFormatter, PlotBounds, PlotTransform};
 
