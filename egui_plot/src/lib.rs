@@ -1297,6 +1297,7 @@ impl<'a> Plot<'a> {
         }
 
         let prepared = PreparedPlot {
+            plot_area_response: &response,
             items,
             show_x,
             show_y,
@@ -1591,6 +1592,8 @@ pub fn uniform_grid_spacer<'a>(spacer: impl Fn(GridInput) -> [f64; 3] + 'a) -> G
 // ----------------------------------------------------------------------------
 
 struct PreparedPlot<'a> {
+    /// The response of the whole plot area
+    plot_area_response: &'a Response,
     items: Vec<Box<dyn PlotItem + 'a>>,
     show_x: bool,
     show_y: bool,
@@ -1801,6 +1804,7 @@ impl PreparedPlot<'_> {
 
     fn hover(&self, ui: &Ui, pointer: Pos2, shapes: &mut Vec<Shape>) -> (Vec<Cursor>, Option<Id>) {
         let Self {
+            plot_area_response,
             transform,
             show_x,
             show_y,
@@ -1839,16 +1843,22 @@ impl PreparedPlot<'_> {
         let mut cursors = Vec::new();
 
         let hovered_plot_item_id = if let Some((item, elem)) = closest {
-            item.on_hover(elem, shapes, &mut cursors, &plot, label_formatter);
+            item.on_hover(
+                plot_area_response,
+                elem,
+                shapes,
+                &mut cursors,
+                &plot,
+                label_formatter,
+            );
             Some(item.id())
         } else {
             let value = transform.value_from_position(pointer);
-            items::rulers_at_value(
-                pointer,
+            items::rulers_and_tooltip_at_value(
+                plot_area_response,
                 value,
                 "",
                 &plot,
-                shapes,
                 &mut cursors,
                 label_formatter,
             );
