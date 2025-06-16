@@ -19,7 +19,7 @@ use std::{cmp::Ordering, ops::RangeInclusive, sync::Arc};
 
 use ahash::HashMap;
 use egui::{
-    epaint, remap_clamp, vec2, Align2, Color32, CursorIcon, Id, Layout, NumExt, PointerButton,
+    epaint, remap_clamp, vec2, Align2, Color32, CursorIcon, Id, Layout, NumExt as _, PointerButton,
     Pos2, Rangef, Rect, Response, Sense, Shape, Stroke, TextStyle, Ui, Vec2, Vec2b, WidgetText,
 };
 use emath::Float as _;
@@ -1036,9 +1036,15 @@ impl<'a> Plot<'a> {
         // Apply bounds modifications.
         for modification in bounds_modifications {
             match modification {
-                BoundsModification::Set(new_bounds) => {
-                    bounds = new_bounds;
-                    mem.auto_bounds = false.into();
+                BoundsModification::SetX(range) => {
+                    bounds.min[0] = *range.start();
+                    bounds.max[0] = *range.end();
+                    mem.auto_bounds.x = false;
+                }
+                BoundsModification::SetY(range) => {
+                    bounds.min[1] = *range.start();
+                    bounds.max[1] = *range.end();
+                    mem.auto_bounds.y = false;
                 }
                 BoundsModification::Translate(delta) => {
                     let delta = (delta.x as f64, delta.y as f64);
@@ -1307,8 +1313,8 @@ impl<'a> Plot<'a> {
             show_grid,
             grid_spacing,
             transform: mem.transform,
-            draw_cursor_x: linked_cursors.as_ref().map_or(false, |group| group.1.x),
-            draw_cursor_y: linked_cursors.as_ref().map_or(false, |group| group.1.y),
+            draw_cursor_x: linked_cursors.as_ref().is_some_and(|group| group.1.x),
+            draw_cursor_y: linked_cursors.as_ref().is_some_and(|group| group.1.y),
             draw_cursors,
             cursor_color,
             grid_spacers,
@@ -1503,7 +1509,8 @@ fn axis_widgets<'a>(
 /// User-requested modifications to the plot bounds. We collect them in the plot build function to later apply
 /// them at the right time, as other modifications need to happen first.
 enum BoundsModification {
-    Set(PlotBounds),
+    SetX(RangeInclusive<f64>),
+    SetY(RangeInclusive<f64>),
     Translate(Vec2),
     AutoBounds(Vec2b),
     Zoom(Vec2, PlotPoint),
@@ -1610,7 +1617,7 @@ struct PreparedPlot<'a> {
     clamp_grid: bool,
 }
 
-impl<'a> PreparedPlot<'a> {
+impl PreparedPlot<'_> {
     fn ui(self, ui: &mut Ui, response: &Response) -> (Vec<Cursor>, Option<Id>) {
         let mut axes_shapes = Vec::new();
 
