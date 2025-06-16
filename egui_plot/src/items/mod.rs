@@ -462,10 +462,11 @@ impl PlotItem for Line<'_> {
             base,
             series,
             stroke,
-            mut fill,
+            fill,
             style,
             ..
         } = self;
+        let mut fill = *fill;
 
         let values_tf: Vec<_> = series
             .points()
@@ -823,10 +824,12 @@ impl PlotItem for Points<'_> {
             shape,
             color,
             filled,
-            mut radius,
+            radius,
             stems,
             ..
         } = self;
+
+        let mut radius = *radius;
 
         let stroke_size = radius / 5.0;
 
