@@ -1138,7 +1138,7 @@ impl<'a> Plot<'a> {
                 .iter()
                 .find(|r| r.dragged_by(PointerButton::Primary))
                 {
-                    if let Some(hover_pos) = axis_response.hover_pos() {
+                    if let Some(drag_start_pos) = ui.input(|i| i.pointer.press_origin()) {
                         let delta = axis_response.drag_delta();
 
                         let axis_zoom = 1.0 + (0.02 * delta[d]).clamp(-1.0, 1.0);
@@ -1154,7 +1154,7 @@ impl<'a> Plot<'a> {
 
                         if zoom != Vec2::splat(1.0) {
                             let mut zoom_center = plot_rect.center();
-                            zoom_center[d] = hover_pos[d];
+                            zoom_center[d] = drag_start_pos[d];
                             mem.transform.zoom(zoom, zoom_center);
                             mem.auto_bounds = false.into();
                         }
