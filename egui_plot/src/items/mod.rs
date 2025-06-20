@@ -1244,7 +1244,7 @@ pub struct BarChart {
     base: PlotItemBase,
 
     pub(super) bars: Vec<Bar>,
-    pub(super) default_color: Color32,
+    default_color: Color32,
 
     /// A custom element formatter
     pub(super) element_formatter: Option<Box<dyn Fn(&Bar, &BarChart) -> String>>,
@@ -1266,7 +1266,7 @@ impl BarChart {
     /// It can be overridden at the bar level (see [[`Bar`]]).
     /// Default is `Color32::TRANSPARENT` which means a color will be auto-assigned.
     #[inline]
-    pub fn color(mut self, color: impl Into<Color32>) -> Self {
+    pub fn default_color(mut self, color: impl Into<Color32>) -> Self {
         let plot_color = color.into();
         self.default_color = plot_color;
         for b in &mut self.bars {
@@ -1403,8 +1403,7 @@ pub struct BoxPlot {
     base: PlotItemBase,
 
     pub(super) boxes: Vec<BoxElem>,
-    pub(super) default_color: Color32,
-    pub(super) name: String,
+    default_color: Color32,
 
     /// A custom element formatter
     pub(super) element_formatter: Option<Box<dyn Fn(&BoxElem, &BoxPlot) -> String>>,
@@ -1417,7 +1416,6 @@ impl BoxPlot {
             base: PlotItemBase::new(name.into()),
             boxes,
             default_color: Color32::TRANSPARENT,
-            name: String::new(),
             element_formatter: None,
         }
     }
@@ -1427,7 +1425,7 @@ impl BoxPlot {
     /// It can be overridden at the element level (see [`BoxElem`]).
     /// Default is `Color32::TRANSPARENT` which means a color will be auto-assigned.
     #[inline]
-    pub fn color(mut self, color: impl Into<Color32>) -> Self {
+    pub fn default_color(mut self, color: impl Into<Color32>) -> Self {
         let plot_color = color.into();
         self.default_color = plot_color;
         for box_elem in &mut self.boxes {
@@ -1481,10 +1479,6 @@ impl PlotItem for BoxPlot {
 
     fn initialize(&mut self, _x_range: RangeInclusive<f64>) {
         // nothing to do
-    }
-
-    fn name(&self) -> &str {
-        self.name.as_str()
     }
 
     fn color(&self) -> Color32 {
