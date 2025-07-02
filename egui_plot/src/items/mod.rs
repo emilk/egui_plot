@@ -656,6 +656,7 @@ pub struct Text {
     pub(super) position: PlotPoint,
     pub(super) color: Color32,
     pub(super) anchor: Align2,
+    pub(super) angle: f32,
 }
 
 impl Text {
@@ -666,6 +667,7 @@ impl Text {
             position,
             color: Color32::TRANSPARENT,
             anchor: Align2::CENTER_CENTER,
+            angle: 0.0,
         }
     }
 
@@ -673,6 +675,13 @@ impl Text {
     #[inline]
     pub fn color(mut self, color: impl Into<Color32>) -> Self {
         self.color = color.into();
+        self
+    }
+
+    /// Text rotation angle.
+    #[inline]
+    pub fn angle(mut self, angle: f32) -> Self {
+        self.angle = angle;
         self
     }
 
@@ -704,7 +713,7 @@ impl PlotItem for Text {
         let pos = transform.position_from_point(&self.position);
         let rect = self.anchor.anchor_size(pos, galley.size());
 
-        shapes.push(TextShape::new(rect.min, galley, color).into());
+        shapes.push(TextShape::new(rect.min, galley, color).with_angle(self.angle).into());
 
         if self.base.highlight {
             shapes.push(Shape::rect_stroke(
