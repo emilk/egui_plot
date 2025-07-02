@@ -1,6 +1,7 @@
 use std::ops::RangeInclusive;
 use std::{f64::consts::TAU, sync::Arc};
 
+use eframe::emath::Align2;
 use egui::{
     Checkbox, Color32, ComboBox, NumExt as _, Pos2, Response, ScrollArea, Stroke, TextWrapMode,
     Vec2b, WidgetInfo, WidgetType, remap, vec2,
@@ -852,7 +853,12 @@ impl ItemsDemo {
             plot_ui.polygon(polygon.name("Convex polygon").id("convex_polygon"));
             plot_ui.points(points.name("Points with stems").id("points_with_stems"));
             plot_ui.text(Text::new("Text", PlotPoint::new(-3.0, -3.0), "wow").id("text0"));
-            plot_ui.text(Text::new("Text", PlotPoint::new(-2.0, 2.5), "so graph").id("text1"));
+            plot_ui.text(
+                Text::new("Text", PlotPoint::new(-2.0, 2.5), "so graph")
+                    .angle(-std::f32::consts::FRAC_PI_4)
+                    .anchor(Align2::CENTER_TOP)
+                    .id("text1")
+            );
             plot_ui.text(Text::new("Text", PlotPoint::new(3.0, 3.0), "much color").id("text2"));
             plot_ui.text(Text::new("Text", PlotPoint::new(2.5, -2.0), "such plot").id("text3"));
             plot_ui.image(image.name("Image"));
