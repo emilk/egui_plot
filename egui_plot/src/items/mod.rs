@@ -786,7 +786,11 @@ impl PlotItem for Text {
         let pos = transform.position_from_point(&self.position);
         let rect = self.anchor.anchor_size(pos, galley.size());
 
-        shapes.push(TextShape::new(rect.min, galley, color).with_angle(self.angle).into());
+        shapes.push(
+            TextShape::new(rect.min, galley, color)
+                .with_angle(self.angle)
+                .into(),
+        );
 
         if self.base.highlight {
             shapes.push(Shape::rect_stroke(
