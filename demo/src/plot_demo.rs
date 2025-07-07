@@ -858,9 +858,9 @@ impl ItemsDemo {
             plot_ui.text(Text::new("Text", PlotPoint::new(-3.0, -3.0), "wow").id("text0"));
             plot_ui.text(Text::new("Text", PlotPoint::new(-2.0, 2.5), "so graph").id("text1"));
             plot_ui.text(
-                Text::new("Text", PlotPoint::new(-2.0, 2.5), "Very angle")
+                Text::new("Text", PlotPoint::new(-1.5, 2.0), "Very angle")
                     .angle(-std::f32::consts::FRAC_PI_4)
-                    .anchor(Align2::CENTER_TOP)
+                    .anchor(Align2::LEFT_TOP)
                     .name("Angled text")
                     .id("text_angled"),
             );
