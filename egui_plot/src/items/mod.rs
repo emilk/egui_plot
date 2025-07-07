@@ -751,7 +751,9 @@ impl Text {
         self
     }
 
-    /// Text rotation angle.
+    /// Sets the text rotation angle.  Angles are defined in radians, with positive values
+    /// resulting in a clockwise direction.  Rotations are performed about the center of the
+    /// bounding box.
     #[inline]
     pub fn angle(mut self, angle: f32) -> Self {
         self.angle = angle;
@@ -788,7 +790,7 @@ impl PlotItem for Text {
 
         shapes.push(
             TextShape::new(rect.min, galley, color)
-                .with_angle(self.angle)
+                .with_angle_and_anchor(self.angle, Align2::CENTER_CENTER)
                 .into(),
         );
 
