@@ -1,7 +1,7 @@
 use demo::TemplateApp;
 use egui::ThemePreference;
 use egui::accesskit::Role;
-use egui_kittest::kittest::Queryable as _;
+use egui_kittest::kittest::{NodeT as _, Queryable as _};
 
 #[test]
 fn test_demos() {
@@ -19,7 +19,7 @@ fn test_demos() {
         harness.get_by_label(&name).click();
         harness.run();
 
-        if let Err(error) = harness.try_snapshot(&format!("demos/{name}")) {
+        if let Err(error) = harness.try_snapshot(format!("demos/{name}")) {
             errors.push(error);
         }
     }
@@ -37,7 +37,7 @@ fn test_scales() {
 
         harness.run();
 
-        if let Err(error) = harness.try_snapshot(&format!("scale_{scale:.2}")) {
+        if let Err(error) = harness.try_snapshot(format!("scale_{scale:.2}")) {
             errors.push(error);
         }
     }
