@@ -7,10 +7,10 @@ use egui_kittest::kittest::Queryable as _;
 fn test_demos() {
     let mut harness = egui_kittest::Harness::new_eframe(|cc| TemplateApp::new(cc));
 
-    let demo_names: Vec<_> = harness
+    let demo_names: Vec<String> = harness
         .get_by_role_and_label(Role::RadioGroup, "Select Demo")
         .get_all_by_role(Role::Button)
-        .filter_map(|w| w.label())
+        .filter_map(|w| w.accesskit_node().label())
         .collect();
 
     let mut errors = Vec::new();
