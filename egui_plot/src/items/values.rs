@@ -1,8 +1,9 @@
 use std::ops::{Bound, RangeBounds, RangeInclusive};
 
 use egui::{
+    Pos2, Rect, Shape, Stroke, Vec2,
     epaint::{ColorMode, PathStroke},
-    lerp, pos2, Pos2, Rect, Shape, Stroke, Vec2,
+    lerp, pos2,
 };
 
 use crate::transform::PlotBounds;
