@@ -46,6 +46,7 @@ pub struct Legend {
     pub text_style: TextStyle,
     pub background_alpha: f32,
     pub position: Corner,
+    pub title: Option<String>,
 
     follow_insertion_order: bool,
     color_conflict_handling: ColorConflictHandling,
@@ -60,6 +61,7 @@ impl Default for Legend {
             text_style: TextStyle::Body,
             background_alpha: 0.75,
             position: Corner::RightTop,
+            title: None,
             follow_insertion_order: false,
             color_conflict_handling: ColorConflictHandling::RemoveColor,
             hidden_items: None,
@@ -86,6 +88,13 @@ impl Legend {
     #[inline]
     pub fn position(mut self, corner: Corner) -> Self {
         self.position = corner;
+        self
+    }
+
+    /// Set the title of the legend. Default: `None`.
+    #[inline]
+    pub fn title(mut self, title: &str) -> Self {
+        self.title = Some(title.to_owned());
         self
     }
 
@@ -329,6 +338,12 @@ impl Widget for &mut LegendWidget {
                 .multiply_with_opacity(config.background_alpha);
                 background_frame
                     .show(ui, |ui| {
+                        // always show on top of the legend - so we need to use a new scope
+                        if main_dir == Direction::TopDown {
+                            if let Some(title) = &config.title {
+                                ui.heading(title);
+                            }
+                        }
                         let mut focus_on_item = None;
 
                         let response_union = entries
@@ -347,6 +362,12 @@ impl Widget for &mut LegendWidget {
                             })
                             .reduce(|r1, r2| r1.union(r2))
                             .expect("No entries in the legend");
+
+                        if main_dir == Direction::BottomUp {
+                            if let Some(title) = &config.title {
+                                ui.heading(title);
+                            }
+                        }
 
                         if let Some(focus_on_item) = focus_on_item {
                             handle_focus_on_legend_item(&focus_on_item, entries);
