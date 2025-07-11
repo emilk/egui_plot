@@ -3,7 +3,7 @@ use egui::epaint::{Color32, CornerRadius, RectShape, Shape, Stroke};
 
 use crate::{BoxPlot, Cursor, PlotPoint, PlotTransform};
 
-use super::{add_rulers_and_text, highlighted_color, Orientation, PlotConfig, RectElement};
+use super::{Orientation, PlotConfig, RectElement, add_rulers_and_text, highlighted_color};
 
 /// Contains the values of a single box in a box plot.
 #[derive(Clone, Debug, PartialEq)]

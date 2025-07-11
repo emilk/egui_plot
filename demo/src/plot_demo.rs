@@ -409,6 +409,7 @@ impl MarkerDemo {
                         [6.0, 0.5 + y_offset],
                     ],
                 )
+                .id(format!("marker_{i}"))
                 .name(format!("{marker:?}"))
                 .filled(self.fill_markers)
                 .radius(self.marker_radius)

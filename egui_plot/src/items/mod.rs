@@ -4,14 +4,15 @@
 use std::{ops::RangeInclusive, sync::Arc};
 
 use egui::{
+    Align2, Color32, CornerRadius, Id, ImageOptions, Mesh, NumExt as _, PopupAnchor, Pos2, Rect,
+    Rgba, Shape, Stroke, TextStyle, TextureId, Ui, Vec2, WidgetText,
     emath::Rot2,
     epaint::{CircleShape, PathStroke, TextShape},
-    pos2, vec2, Align2, Color32, CornerRadius, Id, ImageOptions, Mesh, NumExt as _, Pos2, Rect,
-    Rgba, Shape, Stroke, TextStyle, TextureId, Ui, Vec2, WidgetText,
+    pos2, vec2,
 };
 
 use emath::Float as _;
-use rect_elem::{highlighted_color, RectElement};
+use rect_elem::{RectElement, highlighted_color};
 
 use super::{Cursor, LabelFormatter, PlotBounds, PlotTransform};
 
@@ -155,6 +156,7 @@ pub trait PlotItem {
 
     fn on_hover(
         &self,
+        plot_area_response: &egui::Response,
         elem: ClosestElem,
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
@@ -182,12 +184,11 @@ pub trait PlotItem {
         let pointer = plot.transform.position_from_point(&value);
         shapes.push(Shape::circle_filled(pointer, 3.0, line_color));
 
-        rulers_at_value(
-            pointer,
+        rulers_and_tooltip_at_value(
+            plot_area_response,
             value,
             self.name(),
             plot,
-            shapes,
             cursors,
             label_formatter,
         );
@@ -493,11 +494,13 @@ impl PlotItem for Line<'_> {
             base,
             series,
             stroke,
-            mut fill,
+            fill,
             gradient_fill,
             style,
             ..
         } = self;
+        let mut fill = *fill;
+
         let mut final_stroke: PathStroke = (*stroke).into();
         // if we have a gradient color, we need to wrap the stroke callback to transpose the position to a value
         // the caller can reason about
@@ -882,10 +885,12 @@ impl PlotItem for Points<'_> {
             shape,
             color,
             filled,
-            mut radius,
+            radius,
             stems,
             ..
         } = self;
+
+        let mut radius = *radius;
 
         let stroke_size = radius / 5.0;
 
@@ -1431,6 +1436,7 @@ impl PlotItem for BarChart {
 
     fn on_hover(
         &self,
+        _plot_area_response: &egui::Response,
         elem: ClosestElem,
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
@@ -1563,6 +1569,7 @@ impl PlotItem for BoxPlot {
 
     fn on_hover(
         &self,
+        _plot_area_response: &egui::Response,
         elem: ClosestElem,
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
@@ -1685,15 +1692,16 @@ fn add_rulers_and_text(
     });
 }
 
-/// Draws a cross of horizontal and vertical ruler at the `pointer` position.
+/// Draws a cross of horizontal and vertical ruler at the `pointer` position,
+/// and a label describing the coordinate.
+///
 /// `value` is used to for text displaying X/Y coordinates.
 #[allow(clippy::too_many_arguments)]
-pub(super) fn rulers_at_value(
-    pointer: Pos2,
+pub(super) fn rulers_and_tooltip_at_value(
+    plot_area_response: &egui::Response,
     value: PlotPoint,
     name: &str,
     plot: &PlotConfig<'_>,
-    shapes: &mut Vec<Shape>,
     cursors: &mut Vec<Cursor>,
     label_formatter: &LabelFormatter<'_>,
 ) {
@@ -1704,19 +1712,18 @@ pub(super) fn rulers_at_value(
         cursors.push(Cursor::Horizontal { y: value.y });
     }
 
-    let prefix = if name.is_empty() {
-        String::new()
+    let text = if let Some(custom_label) = label_formatter {
+        custom_label(name, &value)
     } else {
-        format!("{name}\n")
-    };
-
-    let text = {
+        let prefix = if name.is_empty() {
+            String::new()
+        } else {
+            format!("{name}\n")
+        };
         let scale = plot.transform.dvalue_dpos();
         let x_decimals = ((-scale[0].abs().log10()).ceil().at_least(0.0) as usize).clamp(1, 6);
         let y_decimals = ((-scale[1].abs().log10()).ceil().at_least(0.0) as usize).clamp(1, 6);
-        if let Some(custom_label) = label_formatter {
-            custom_label(name, &value)
-        } else if plot.show_x && plot.show_y {
+        if plot.show_x && plot.show_y {
             format!(
                 "{}x = {:.*}\ny = {:.*}",
                 prefix, x_decimals, value.x, y_decimals, value.y
@@ -1730,16 +1737,21 @@ pub(super) fn rulers_at_value(
         }
     };
 
-    let font_id = TextStyle::Body.resolve(plot.ui.style());
-    plot.ui.fonts(|f| {
-        shapes.push(Shape::text(
-            f,
-            pointer + vec2(3.0, -2.0),
-            Align2::LEFT_BOTTOM,
-            text,
-            font_id,
-            plot.ui.visuals().text_color(),
-        ));
+    // We show the tooltip as soon as we're hovering the plot area:
+    let mut tooltip = egui::Tooltip::always_open(
+        plot_area_response.ctx.clone(),
+        plot_area_response.layer_id,
+        plot_area_response.id,
+        PopupAnchor::Pointer,
+    );
+
+    let tooltip_width = plot_area_response.ctx.style().spacing.tooltip_width;
+
+    tooltip.popup = tooltip.popup.width(tooltip_width);
+
+    tooltip.gap(12.0).show(|ui| {
+        ui.set_max_width(tooltip_width);
+        ui.label(text);
     });
 }
 

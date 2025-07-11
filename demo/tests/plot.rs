@@ -1,16 +1,16 @@
 use demo::TemplateApp;
-use egui::accesskit::Role;
 use egui::ThemePreference;
-use egui_kittest::kittest::Queryable as _;
+use egui::accesskit::Role;
+use egui_kittest::kittest::{NodeT as _, Queryable as _};
 
 #[test]
 fn test_demos() {
     let mut harness = egui_kittest::Harness::new_eframe(|cc| TemplateApp::new(cc));
 
-    let demo_names: Vec<_> = harness
+    let demo_names: Vec<String> = harness
         .get_by_role_and_label(Role::RadioGroup, "Select Demo")
         .get_all_by_role(Role::Button)
-        .filter_map(|w| w.label())
+        .filter_map(|w| w.accesskit_node().label())
         .collect();
 
     let mut errors = Vec::new();
@@ -19,7 +19,7 @@ fn test_demos() {
         harness.get_by_label(&name).click();
         harness.run();
 
-        if let Err(error) = harness.try_snapshot(&format!("demos/{name}")) {
+        if let Err(error) = harness.try_snapshot(format!("demos/{name}")) {
             errors.push(error);
         }
     }
@@ -37,7 +37,7 @@ fn test_scales() {
 
         harness.run();
 
-        if let Err(error) = harness.try_snapshot(&format!("scale_{scale:.2}")) {
+        if let Err(error) = harness.try_snapshot(format!("scale_{scale:.2}")) {
             errors.push(error);
         }
     }

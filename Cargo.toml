@@ -4,9 +4,9 @@ members = ["egui_plot", "demo", "examples/*"]
 
 
 [workspace.package]
-edition = "2021"
+edition = "2024"
 license = "MIT OR Apache-2.0"
-rust-version = "1.84"
+rust-version = "1.85"
 version = "0.32.1"
 
 
@@ -53,6 +53,8 @@ emath = { git = "https://github.com/emilk/egui", branch = "main" }
 # egui = { path = "../egui/crates/egui" }
 # emath = { path = "../egui/crates/emath" }
 
+# ----------------------------------------------------------------------------------------
+# Lints:
 
 [workspace.lints.rust]
 unsafe_code = "deny"
@@ -93,7 +95,7 @@ disallowed_methods = "warn"                 # See clippy.toml
 disallowed_names = "warn"                   # See clippy.toml
 disallowed_script_idents = "warn"           # See clippy.toml
 disallowed_types = "warn"                   # See clippy.toml
-doc_include_without_cfg = "warn"
+doc_include_without_cfg  = "warn"
 doc_link_with_quotes = "warn"
 doc_markdown = "warn"
 empty_enum = "warn"
@@ -113,7 +115,6 @@ fn_params_excessive_bools = "warn"
 fn_to_numeric_cast_any = "warn"
 from_iter_instead_of_collect = "warn"
 get_unwrap = "warn"
-if_let_mutex = "warn"
 implicit_clone = "warn"
 imprecise_flops = "warn"
 index_refutable_slice = "warn"
@@ -190,7 +191,6 @@ same_functions_in_if_condition = "warn"
 semicolon_if_nothing_returned = "warn"
 set_contains_or_insert = "warn"
 should_panic_without_expect = "warn"
-significant_drop_tightening = "warn"
 single_char_pattern = "warn"
 single_match_else = "warn"
 str_split_at_newline = "warn"
@@ -230,9 +230,7 @@ verbose_file_reads = "warn"
 wildcard_dependencies = "warn"
 wildcard_imports = "warn"
 zero_sized_map_values = "warn"
-# Disabled waiting on https://github.com/rust-lang/rust-clippy/issues/9602
-#self_named_module_files = "warn"
 
-manual_range_contains = "allow" # this one is just worse imho
-map_unwrap_or = "allow"         # so is this one
-ref_patterns = "allow"          # It's nice to avoid ref pattern, but there are some situations that are hard (impossible?) to express without.
+manual_range_contains = "allow"       # this is better on 'allow'
+map_unwrap_or = "allow"               # this is better on 'allow'
+ref_patterns = "allow"                # It's nice to avoid ref pattern, but there are some situations that are hard (impossible?) to express without.
