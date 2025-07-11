@@ -1048,7 +1048,7 @@ impl ChartsDemo {
                 .map(|(x, f)| Bar::new(x, f * 10.0).width(0.1))
                 .collect(),
         )
-        .default_color(Color32::LIGHT_BLUE);
+        .color(Color32::LIGHT_BLUE);
 
         if !self.vertical {
             chart = chart.horizontal();

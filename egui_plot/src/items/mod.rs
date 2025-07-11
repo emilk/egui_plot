@@ -1326,7 +1326,7 @@ impl BarChart {
     /// It can be overridden at the bar level (see [[`Bar`]]).
     /// Default is `Color32::TRANSPARENT` which means a color will be auto-assigned.
     #[inline]
-    pub fn default_color(mut self, color: impl Into<Color32>) -> Self {
+    pub fn color(mut self, color: impl Into<Color32>) -> Self {
         let plot_color = color.into();
         self.default_color = plot_color;
         for b in &mut self.bars {
