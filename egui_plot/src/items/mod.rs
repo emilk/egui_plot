@@ -1485,7 +1485,7 @@ impl BoxPlot {
     /// It can be overridden at the element level (see [`BoxElem`]).
     /// Default is `Color32::TRANSPARENT` which means a color will be auto-assigned.
     #[inline]
-    pub fn default_color(mut self, color: impl Into<Color32>) -> Self {
+    pub fn color(mut self, color: impl Into<Color32>) -> Self {
         let plot_color = color.into();
         self.default_color = plot_color;
         for box_elem in &mut self.boxes {

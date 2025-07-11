@@ -238,8 +238,8 @@ impl<'a> PlotUi<'a> {
         }
 
         // Give the elements an automatic color if no color has been assigned.
-        if box_plot.color() == Color32::TRANSPARENT {
-            box_plot = box_plot.default_color(self.auto_color());
+        if PlotItem::color(&box_plot) == Color32::TRANSPARENT {
+            box_plot = box_plot.color(self.auto_color());
         }
         self.items.push(Box::new(box_plot));
     }
