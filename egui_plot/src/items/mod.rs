@@ -1304,7 +1304,7 @@ pub struct BarChart {
     base: PlotItemBase,
 
     pub(super) bars: Vec<Bar>,
-    pub(super) default_color: Color32,
+    default_color: Color32,
 
     /// A custom element formatter
     pub(super) element_formatter: Option<Box<dyn Fn(&Bar, &BarChart) -> String>>,
@@ -1463,8 +1463,7 @@ pub struct BoxPlot {
     base: PlotItemBase,
 
     pub(super) boxes: Vec<BoxElem>,
-    pub(super) default_color: Color32,
-    pub(super) name: String,
+    default_color: Color32,
 
     /// A custom element formatter
     pub(super) element_formatter: Option<Box<dyn Fn(&BoxElem, &BoxPlot) -> String>>,
@@ -1477,7 +1476,6 @@ impl BoxPlot {
             base: PlotItemBase::new(name.into()),
             boxes,
             default_color: Color32::TRANSPARENT,
-            name: String::new(),
             element_formatter: None,
         }
     }
@@ -1541,10 +1539,6 @@ impl PlotItem for BoxPlot {
 
     fn initialize(&mut self, _x_range: RangeInclusive<f64>) {
         // nothing to do
-    }
-
-    fn name(&self) -> &str {
-        self.name.as_str()
     }
 
     fn color(&self) -> Color32 {
