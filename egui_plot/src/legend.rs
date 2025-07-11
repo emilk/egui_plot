@@ -1,8 +1,8 @@
 use std::{collections::BTreeMap, string::String};
 
 use egui::{
-    epaint::CircleShape, pos2, vec2, Align, Color32, Direction, Frame, Id, Layout, PointerButton,
-    Rect, Response, Sense, Shadow, Shape, TextStyle, Ui, Widget, WidgetInfo, WidgetType,
+    Align, Color32, Direction, Frame, Id, Layout, PointerButton, Rect, Response, Sense, Shadow,
+    Shape, TextStyle, Ui, Widget, WidgetInfo, WidgetType, epaint::CircleShape, pos2, vec2,
 };
 
 use super::items::PlotItem;
@@ -46,6 +46,7 @@ pub struct Legend {
     pub text_style: TextStyle,
     pub background_alpha: f32,
     pub position: Corner,
+    pub title: Option<String>,
 
     follow_insertion_order: bool,
     color_conflict_handling: ColorConflictHandling,
@@ -60,6 +61,7 @@ impl Default for Legend {
             text_style: TextStyle::Body,
             background_alpha: 0.75,
             position: Corner::RightTop,
+            title: None,
             follow_insertion_order: false,
             color_conflict_handling: ColorConflictHandling::RemoveColor,
             hidden_items: None,
@@ -86,6 +88,13 @@ impl Legend {
     #[inline]
     pub fn position(mut self, corner: Corner) -> Self {
         self.position = corner;
+        self
+    }
+
+    /// Set the title of the legend. Default: `None`.
+    #[inline]
+    pub fn title(mut self, title: &str) -> Self {
+        self.title = Some(title.to_owned());
         self
     }
 
@@ -183,9 +192,10 @@ impl LegendEntry {
 
         let painter = ui.painter();
 
+        // Gray background, for interaction effects, and to sow something if we're disabled:
         painter.add(CircleShape {
             center: icon_rect.center(),
-            radius: icon_size * 0.5,
+            radius: icon_size * 0.35,
             fill: visuals.bg_fill,
             stroke: visuals.bg_stroke,
         });
@@ -198,7 +208,7 @@ impl LegendEntry {
             };
             painter.add(Shape::circle_filled(
                 icon_rect.center(),
-                icon_size * 0.4,
+                icon_size * 0.25,
                 fill,
             ));
         }
@@ -328,6 +338,12 @@ impl Widget for &mut LegendWidget {
                 .multiply_with_opacity(config.background_alpha);
                 background_frame
                     .show(ui, |ui| {
+                        // always show on top of the legend - so we need to use a new scope
+                        if main_dir == Direction::TopDown {
+                            if let Some(title) = &config.title {
+                                ui.heading(title);
+                            }
+                        }
                         let mut focus_on_item = None;
 
                         let response_union = entries
@@ -346,6 +362,12 @@ impl Widget for &mut LegendWidget {
                             })
                             .reduce(|r1, r2| r1.union(r2))
                             .expect("No entries in the legend");
+
+                        if main_dir == Direction::BottomUp {
+                            if let Some(title) = &config.title {
+                                ui.heading(title);
+                            }
+                        }
 
                         if let Some(focus_on_item) = focus_on_item {
                             handle_focus_on_legend_item(&focus_on_item, entries);

@@ -1,0 +1,36 @@
+{
+    "editor.formatOnSave": true,
+    "editor.semanticTokenColorCustomizations": {
+        "rules": {
+            "*.unsafe:rust": "#eb5046"
+        }
+    },
+    "files.autoGuessEncoding": true,
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    // don't share a cargo lock with rust-analyzer.
+    // see https://github.com/rerun-io/rerun/pull/519 for rationale
+    "rust-analyzer.check.overrideCommand": [
+        "cargo",
+        "clippy",
+        "--target-dir=target_ra",
+        "--workspace",
+        "--message-format=json",
+        "--all-targets",
+        "--all-features",
+    ],
+    "rust-analyzer.cargo.buildScripts.overrideCommand": [
+        "cargo",
+        "clippy",
+        "--quiet",
+        "--target-dir=target_ra",
+        "--workspace",
+        "--message-format=json",
+        "--all-targets",
+        "--all-features",
+    ],
+    "rust-analyzer.showUnlinkedFileNotification": false,
+    // Uncomment the following options and restart rust-analyzer to get it to check code behind `cfg(target_arch=wasm32)`.
+    // Don't forget to put it in a comment again before committing.
+    // "rust-analyzer.cargo.target": "wasm32-unknown-unknown",
+}

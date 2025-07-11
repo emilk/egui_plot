@@ -19,8 +19,9 @@ use std::{cmp::Ordering, ops::RangeInclusive, sync::Arc};
 
 use ahash::HashMap;
 use egui::{
-    epaint, remap_clamp, vec2, Align2, Color32, CursorIcon, Id, Layout, NumExt, PointerButton,
-    Pos2, Rangef, Rect, Response, Sense, Shape, Stroke, TextStyle, Ui, Vec2, Vec2b, WidgetText,
+    Align2, Color32, CursorIcon, Id, Layout, NumExt as _, PointerButton, Pos2, Rangef, Rect,
+    Response, Sense, Shape, Stroke, TextStyle, Ui, Vec2, Vec2b, WidgetText, epaint, remap_clamp,
+    vec2,
 };
 use emath::Float as _;
 
@@ -28,8 +29,8 @@ pub use crate::{
     axis::{Axis, AxisHints, HPlacement, Placement, VPlacement},
     items::{
         Arrows, Bar, BarChart, BoxElem, BoxPlot, BoxSpread, ClosestElem, HLine, Line, LineStyle,
-        MarkerShape, Orientation, PlotConfig, PlotGeometry, PlotImage, PlotItem, PlotPoint,
-        PlotPoints, Points, Polygon, Text, VLine,
+        MarkerShape, Orientation, PlotConfig, PlotGeometry, PlotImage, PlotItem, PlotItemBase,
+        PlotPoint, PlotPoints, Points, Polygon, Text, VLine,
     },
     legend::{ColorConflictHandling, Corner, Legend},
     memory::PlotMemory,
@@ -156,6 +157,7 @@ pub struct Plot<'a> {
     center_axis: Vec2b,
     allow_zoom: Vec2b,
     allow_drag: Vec2b,
+    allow_axis_zoom_drag: Vec2b,
     allow_scroll: Vec2b,
     allow_double_click_reset: bool,
     allow_boxed_zoom: bool,
@@ -203,6 +205,7 @@ impl<'a> Plot<'a> {
             center_axis: false.into(),
             allow_zoom: true.into(),
             allow_drag: true.into(),
+            allow_axis_zoom_drag: true.into(),
             allow_scroll: true.into(),
             allow_double_click_reset: true,
             allow_boxed_zoom: true,
@@ -385,6 +388,16 @@ impl<'a> Plot<'a> {
         T: Into<Vec2b>,
     {
         self.allow_drag = on.into();
+        self
+    }
+
+    /// Whether to allow dragging in the axis areas to zoom the plot. Default: `true`.
+    #[inline]
+    pub fn allow_axis_zoom_drag<T>(mut self, on: T) -> Self
+    where
+        T: Into<Vec2b>,
+    {
+        self.allow_axis_zoom_drag = on.into();
         self
     }
 
@@ -777,6 +790,7 @@ impl<'a> Plot<'a> {
             center_axis,
             allow_zoom,
             allow_drag,
+            allow_axis_zoom_drag,
             allow_scroll,
             allow_double_click_reset,
             allow_boxed_zoom,
@@ -862,6 +876,31 @@ impl<'a> Plot<'a> {
 
         // Allocate the plot window.
         let response = ui.allocate_rect(plot_rect, sense);
+
+        let x_axis_responses = x_axis_widgets
+            .iter()
+            .map(|widget| {
+                let axis_response = ui.allocate_rect(widget.rect, Sense::drag());
+                if allow_axis_zoom_drag.x {
+                    axis_response.on_hover_cursor(CursorIcon::ResizeHorizontal)
+                } else {
+                    axis_response
+                }
+            })
+            .collect::<Vec<_>>();
+
+        let y_axis_responses = y_axis_widgets
+            .iter()
+            .map(|widget| {
+                let axis_response = ui.allocate_rect(widget.rect, Sense::drag());
+
+                if allow_axis_zoom_drag.y {
+                    axis_response.on_hover_cursor(CursorIcon::ResizeVertical)
+                } else {
+                    axis_response
+                }
+            })
+            .collect::<Vec<_>>();
 
         // Load or initialize the memory.
         ui.ctx().check_for_id_clash(plot_id, plot_rect, "Plot");
@@ -998,9 +1037,15 @@ impl<'a> Plot<'a> {
         // Apply bounds modifications.
         for modification in bounds_modifications {
             match modification {
-                BoundsModification::Set(new_bounds) => {
-                    bounds = new_bounds;
-                    mem.auto_bounds = false.into();
+                BoundsModification::SetX(range) => {
+                    bounds.min[0] = *range.start();
+                    bounds.max[0] = *range.end();
+                    mem.auto_bounds.x = false;
+                }
+                BoundsModification::SetY(range) => {
+                    bounds.min[1] = *range.start();
+                    bounds.max[1] = *range.end();
+                    mem.auto_bounds.y = false;
                 }
                 BoundsModification::Translate(delta) => {
                     let delta = (delta.x as f64, delta.y as f64);
@@ -1080,6 +1125,42 @@ impl<'a> Plot<'a> {
             mem.transform
                 .translate_bounds((delta.x as f64, delta.y as f64));
             mem.auto_bounds = mem.auto_bounds.and(!allow_drag);
+        }
+
+        // Drag axes to zoom:
+        for d in 0..2 {
+            if allow_axis_zoom_drag[d] {
+                if let Some(axis_response) = (if d == 0 {
+                    &x_axis_responses
+                } else {
+                    &y_axis_responses
+                })
+                .iter()
+                .find(|r| r.dragged_by(PointerButton::Primary))
+                {
+                    if let Some(drag_start_pos) = ui.input(|i| i.pointer.press_origin()) {
+                        let delta = axis_response.drag_delta();
+
+                        let axis_zoom = 1.0 + (0.02 * delta[d]).clamp(-1.0, 1.0);
+
+                        let zoom = if data_aspect.is_some() {
+                            // Zoom both axes equally to maintain aspect ratio:
+                            Vec2::splat(axis_zoom)
+                        } else {
+                            let mut zoom = Vec2::splat(1.0);
+                            zoom[d] = axis_zoom;
+                            zoom
+                        };
+
+                        if zoom != Vec2::splat(1.0) {
+                            let mut zoom_center = plot_rect.center();
+                            zoom_center[d] = drag_start_pos[d];
+                            mem.transform.zoom(zoom, zoom_center);
+                            mem.auto_bounds = false.into();
+                        }
+                    }
+                }
+            }
         }
 
         // Zooming
@@ -1217,6 +1298,7 @@ impl<'a> Plot<'a> {
         }
 
         let prepared = PreparedPlot {
+            plot_area_response: &response,
             items,
             show_x,
             show_y,
@@ -1225,8 +1307,8 @@ impl<'a> Plot<'a> {
             show_grid,
             grid_spacing,
             transform: mem.transform,
-            draw_cursor_x: linked_cursors.as_ref().map_or(false, |group| group.1.x),
-            draw_cursor_y: linked_cursors.as_ref().map_or(false, |group| group.1.y),
+            draw_cursor_x: linked_cursors.as_ref().is_some_and(|group| group.1.x),
+            draw_cursor_y: linked_cursors.as_ref().is_some_and(|group| group.1.y),
             draw_cursors,
             cursor_color,
             grid_spacers,
@@ -1342,7 +1424,7 @@ fn axis_widgets<'a>(
         let initial_x_range = complete_rect.x_range();
 
         for (i, cfg) in x_axes.iter().enumerate().rev() {
-            let mut height = cfg.thickness(Axis::X);
+            let mut height = cfg.min_thickness;
             if let Some(mem) = mem {
                 // If the labels took up too much space the previous frame, give them more space now:
                 height = height.max(mem.x_axis_thickness.get(&i).copied().unwrap_or_default());
@@ -1370,7 +1452,7 @@ fn axis_widgets<'a>(
         let plot_y_range = rect_left.y_range();
 
         for (i, cfg) in y_axes.iter().enumerate().rev() {
-            let mut width = cfg.thickness(Axis::Y);
+            let mut width = cfg.min_thickness;
             if let Some(mem) = mem {
                 // If the labels took up too much space the previous frame, give them more space now:
                 width = width.max(mem.y_axis_thickness.get(&i).copied().unwrap_or_default());
@@ -1421,7 +1503,8 @@ fn axis_widgets<'a>(
 /// User-requested modifications to the plot bounds. We collect them in the plot build function to later apply
 /// them at the right time, as other modifications need to happen first.
 enum BoundsModification {
-    Set(PlotBounds),
+    SetX(RangeInclusive<f64>),
+    SetY(RangeInclusive<f64>),
     Translate(Vec2),
     AutoBounds(Vec2b),
     Zoom(Vec2, PlotPoint),
@@ -1510,6 +1593,8 @@ pub fn uniform_grid_spacer<'a>(spacer: impl Fn(GridInput) -> [f64; 3] + 'a) -> G
 // ----------------------------------------------------------------------------
 
 struct PreparedPlot<'a> {
+    /// The response of the whole plot area
+    plot_area_response: &'a Response,
     items: Vec<Box<dyn PlotItem + 'a>>,
     show_x: bool,
     show_y: bool,
@@ -1528,7 +1613,7 @@ struct PreparedPlot<'a> {
     clamp_grid: bool,
 }
 
-impl<'a> PreparedPlot<'a> {
+impl PreparedPlot<'_> {
     fn ui(self, ui: &mut Ui, response: &Response) -> (Vec<Cursor>, Option<Id>) {
         let mut axes_shapes = Vec::new();
 
@@ -1597,6 +1682,7 @@ impl<'a> PreparedPlot<'a> {
         let painter = ui.painter().with_clip_rect(*transform.frame());
         painter.extend(shapes);
 
+        // Show coordinates in a corner of the plot:
         if let Some((corner, formatter)) = self.coordinates_formatter.as_ref() {
             let hover_pos = response.hover_pos();
             if let Some(pointer) = hover_pos {
@@ -1610,7 +1696,16 @@ impl<'a> PreparedPlot<'a> {
                     Corner::LeftBottom => (Align2::LEFT_BOTTOM, padded_frame.left_bottom()),
                     Corner::RightBottom => (Align2::RIGHT_BOTTOM, padded_frame.right_bottom()),
                 };
-                painter.text(position, anchor, text, font_id, ui.visuals().text_color());
+
+                let text_color = ui.visuals().text_color();
+                let galley = painter.layout_no_wrap(text, font_id, text_color);
+                let rect = anchor.anchor_size(position, galley.size());
+                painter.rect_filled(
+                    rect.expand(4.0),
+                    ui.style().visuals.window_corner_radius,
+                    ui.style().visuals.extreme_bg_color.gamma_multiply(0.75),
+                );
+                painter.galley(rect.min, galley, text_color);
             }
         }
 
@@ -1710,6 +1805,7 @@ impl<'a> PreparedPlot<'a> {
 
     fn hover(&self, ui: &Ui, pointer: Pos2, shapes: &mut Vec<Shape>) -> (Vec<Cursor>, Option<Id>) {
         let Self {
+            plot_area_response,
             transform,
             show_x,
             show_y,
@@ -1748,16 +1844,22 @@ impl<'a> PreparedPlot<'a> {
         let mut cursors = Vec::new();
 
         let hovered_plot_item_id = if let Some((item, elem)) = closest {
-            item.on_hover(elem, shapes, &mut cursors, &plot, label_formatter);
+            item.on_hover(
+                plot_area_response,
+                elem,
+                shapes,
+                &mut cursors,
+                &plot,
+                label_formatter,
+            );
             Some(item.id())
         } else {
             let value = transform.value_from_position(pointer);
-            items::rulers_at_value(
-                pointer,
+            items::rulers_and_tooltip_at_value(
+                plot_area_response,
                 value,
                 "",
                 &plot,
-                shapes,
                 &mut cursors,
                 label_formatter,
             );

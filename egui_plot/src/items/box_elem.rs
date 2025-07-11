@@ -3,7 +3,7 @@ use egui::epaint::{Color32, CornerRadius, RectShape, Shape, Stroke};
 
 use crate::{BoxPlot, Cursor, PlotPoint, PlotTransform};
 
-use super::{add_rulers_and_text, highlighted_color, Orientation, PlotConfig, RectElement};
+use super::{Orientation, PlotConfig, RectElement, add_rulers_and_text, highlighted_color};
 
 /// Contains the values of a single box in a box plot.
 #[derive(Clone, Debug, PartialEq)]
@@ -46,8 +46,10 @@ impl BoxSpread {
     }
 }
 
-/// A box in a [`BoxPlot`] diagram. This is a low level graphical element; it will not compute quartiles and whiskers,
-/// letting one use their preferred formula. Use [`Points`][`super::Points`] to draw the outliers.
+/// A box in a [`BoxPlot`] diagram.
+///
+/// This is a low-level graphical element; it will not compute quartiles and whiskers, letting one
+/// use their preferred formula. Use [`Points`][`super::Points`] to draw the outliers.
 #[derive(Clone, Debug, PartialEq)]
 pub struct BoxElem {
     /// Name of plot element in the diagram (annotated by default formatter).

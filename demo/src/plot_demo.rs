@@ -1,9 +1,9 @@
-use std::f64::consts::TAU;
 use std::ops::RangeInclusive;
+use std::{f64::consts::TAU, sync::Arc};
 
 use egui::{
-    remap, vec2, Color32, ComboBox, NumExt, Pos2, Response, ScrollArea, Stroke, TextWrapMode,
-    Vec2b, WidgetInfo, WidgetType,
+    Checkbox, Color32, ComboBox, NumExt as _, Pos2, Response, ScrollArea, Stroke, TextWrapMode,
+    Vec2b, WidgetInfo, WidgetType, remap, vec2,
 };
 
 use egui_plot::{
@@ -52,16 +52,59 @@ impl PlotDemo {
         ui.horizontal(|ui| {
             egui::reset_button(ui, self, "Reset");
             ui.collapsing("Instructions", |ui| {
-                ui.label("Pan by dragging, or scroll (+ shift = horizontal).");
-                ui.label("Box zooming: Right click to zoom in and zoom out using a selection.");
-                if cfg!(target_arch = "wasm32") {
-                    ui.label("Zoom with ctrl / ⌘ + pointer wheel, or with pinch gesture.");
-                } else if cfg!(target_os = "macos") {
-                    ui.label("Zoom with ctrl / ⌘ + scroll.");
-                } else {
-                    ui.label("Zoom with ctrl + scroll.");
-                }
-                ui.label("Reset view with double-click.");
+                egui::Grid::new("instructions")
+                    .num_columns(2)
+                    .striped(true)
+                    .show(ui, |ui| {
+                        let egui::InputOptions {
+                            zoom_modifier,
+                            horizontal_scroll_modifier,
+                            vertical_scroll_modifier,
+                            ..
+                        } = egui::InputOptions::default();
+
+                        ui.label("Pan");
+                        ui.label("Left-drag");
+                        ui.end_row();
+
+                        ui.label("Horizontal pan");
+                        ui.label(format!(
+                            "{} + Scroll",
+                            ui.ctx().format_modifiers(horizontal_scroll_modifier)
+                        ));
+                        ui.end_row();
+
+                        ui.label("Zoom");
+                        ui.label(format!(
+                            "{} + Scroll",
+                            ui.ctx().format_modifiers(zoom_modifier)
+                        ));
+                        ui.end_row();
+
+                        ui.label("Horizontal zoom");
+                        ui.label(format!(
+                            "{} + Scroll",
+                            ui.ctx()
+                                .format_modifiers(zoom_modifier | horizontal_scroll_modifier)
+                        ));
+                        ui.end_row();
+
+                        ui.label("Vertical zoom");
+                        ui.label(format!(
+                            "{} + Scroll",
+                            ui.ctx()
+                                .format_modifiers(zoom_modifier | vertical_scroll_modifier)
+                        ));
+                        ui.end_row();
+
+                        ui.label("Box zoom");
+                        ui.label("Right-drag");
+                        ui.end_row();
+
+                        ui.label("Reset");
+                        ui.label("Double-click");
+                        ui.end_row();
+                    });
             });
             ui.add(crate::egui_github_link_file!());
         });
@@ -135,6 +178,8 @@ struct LineDemo {
     show_axes: bool,
     show_grid: bool,
     line_style: LineStyle,
+    gradient: bool,
+    gradient_fill: bool,
 }
 
 impl Default for LineDemo {
@@ -150,6 +195,8 @@ impl Default for LineDemo {
             show_axes: true,
             show_grid: true,
             line_style: LineStyle::Solid,
+            gradient: false,
+            gradient_fill: false,
         }
     }
 }
@@ -167,6 +214,8 @@ impl LineDemo {
             show_axes,
             show_grid,
             line_style,
+            gradient,
+            gradient_fill,
         } = self;
 
         ui.horizontal(|ui| {
@@ -223,6 +272,11 @@ impl LineDemo {
                         }
                     });
             });
+
+            ui.vertical(|ui| {
+                ui.checkbox(gradient, "Gradient line");
+                ui.add_enabled(*gradient, Checkbox::new(gradient_fill, "Gradient fill"));
+            });
         });
     }
 
@@ -259,16 +313,29 @@ impl LineDemo {
 
     fn thingy<'a>(&self) -> Line<'a> {
         let time = self.time;
-        Line::new(
+        let mut thingy_line = Line::new(
             "x = sin(2t), y = sin(3t)",
             PlotPoints::from_parametric_callback(
-                move |t| ((2.0 * t + time).sin(), (3.0 * t).sin()),
+                move |t| ((2.0 * t + time).sin(), (3. * t).sin()),
                 0.0..=TAU,
                 256,
             ),
         )
-        .color(Color32::from_rgb(100, 150, 250))
-        .style(self.line_style)
+        .style(self.line_style);
+        if self.gradient {
+            thingy_line = thingy_line.gradient_color(
+                Arc::new(|point| {
+                    Color32::BLUE.lerp_to_gamma(Color32::ORANGE, point.x.abs().clamp(0., 1.) as f32)
+                }),
+                self.gradient_fill,
+            );
+            if self.gradient_fill {
+                thingy_line = thingy_line.fill(0.);
+            }
+        } else {
+            thingy_line = thingy_line.color(Color32::from_rgb(100, 150, 250));
+        }
+        thingy_line
     }
 }
 
@@ -283,7 +350,7 @@ impl LineDemo {
             self.time += ui.input(|i| i.unstable_dt).at_most(1.0 / 30.0) as f64;
         };
         let mut plot = Plot::new("lines_demo")
-            .legend(Legend::default())
+            .legend(Legend::default().title("Lines"))
             .show_axes(self.show_axes)
             .show_grid(self.show_grid);
         if self.square {
@@ -342,6 +409,7 @@ impl MarkerDemo {
                         [6.0, 0.5 + y_offset],
                     ],
                 )
+                .id(format!("marker_{i}"))
                 .name(format!("{marker:?}"))
                 .filled(self.fill_markers)
                 .radius(self.marker_radius)
@@ -373,7 +441,7 @@ impl MarkerDemo {
 
         let markers_plot = Plot::new("markers_demo")
             .data_aspect(1.0)
-            .legend(Legend::default());
+            .legend(Legend::default().title("Markers"));
         markers_plot
             .show(ui, |plot_ui| {
                 for marker in self.markers() {
@@ -761,7 +829,11 @@ impl ItemsDemo {
         );
 
         let plot = Plot::new("items_demo")
-            .legend(Legend::default().position(Corner::RightBottom))
+            .legend(
+                Legend::default()
+                    .position(Corner::RightBottom)
+                    .title("Items"),
+            )
             .show_x(false)
             .show_y(false)
             .data_aspect(1.0);

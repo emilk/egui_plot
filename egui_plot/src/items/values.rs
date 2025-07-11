@@ -1,6 +1,10 @@
 use std::ops::{Bound, RangeBounds, RangeInclusive};
 
-use egui::{lerp, Pos2, Shape, Stroke, Vec2};
+use egui::{
+    Pos2, Rect, Shape, Stroke, Vec2,
+    epaint::{ColorMode, PathStroke},
+    lerp, pos2,
+};
 
 use crate::transform::PlotBounds;
 
@@ -76,10 +80,16 @@ impl LineStyle {
     pub(super) fn style_line(
         &self,
         line: Vec<Pos2>,
-        mut stroke: Stroke,
+        mut stroke: PathStroke,
         highlight: bool,
         shapes: &mut Vec<Shape>,
     ) {
+        let path_stroke_color = match &stroke.color {
+            ColorMode::Solid(c) => *c,
+            ColorMode::UV(callback) => {
+                callback(Rect::from_min_max(pos2(0., 0.), pos2(0., 0.)), pos2(0., 0.))
+            }
+        };
         match line.len() {
             0 => {}
             1 => {
@@ -87,7 +97,7 @@ impl LineStyle {
                 if highlight {
                     radius *= 2f32.sqrt();
                 }
-                shapes.push(Shape::circle_filled(line[0], radius, stroke.color));
+                shapes.push(Shape::circle_filled(line[0], radius, path_stroke_color));
             }
             _ => {
                 match self {
@@ -104,7 +114,12 @@ impl LineStyle {
                         if highlight {
                             radius *= 2f32.sqrt();
                         }
-                        shapes.extend(Shape::dotted_line(&line, stroke.color, *spacing, radius));
+                        shapes.extend(Shape::dotted_line(
+                            &line,
+                            path_stroke_color,
+                            *spacing,
+                            radius,
+                        ));
                     }
                     Self::Dashed { length } => {
                         if highlight {
@@ -113,7 +128,7 @@ impl LineStyle {
                         let golden_ratio = (5.0_f32.sqrt() - 1.0) / 2.0; // 0.61803398875
                         shapes.extend(Shape::dashed_line(
                             &line,
-                            stroke,
+                            Stroke::new(stroke.width, path_stroke_color),
                             *length,
                             length * golden_ratio,
                         ));
@@ -162,19 +177,19 @@ pub enum PlotPoints<'a> {
     Borrowed(&'a [PlotPoint]),
 }
 
-impl<'a> Default for PlotPoints<'a> {
+impl Default for PlotPoints<'_> {
     fn default() -> Self {
         Self::Owned(Vec::new())
     }
 }
 
-impl<'a> From<[f64; 2]> for PlotPoints<'a> {
+impl From<[f64; 2]> for PlotPoints<'_> {
     fn from(coordinate: [f64; 2]) -> Self {
         Self::new(vec![coordinate])
     }
 }
 
-impl<'a> From<Vec<[f64; 2]>> for PlotPoints<'a> {
+impl From<Vec<[f64; 2]>> for PlotPoints<'_> {
     #[inline]
     fn from(coordinates: Vec<[f64; 2]>) -> Self {
         Self::new(coordinates)
@@ -188,7 +203,7 @@ impl<'a> From<&'a [PlotPoint]> for PlotPoints<'a> {
     }
 }
 
-impl<'a> FromIterator<[f64; 2]> for PlotPoints<'a> {
+impl FromIterator<[f64; 2]> for PlotPoints<'_> {
     fn from_iter<T: IntoIterator<Item = [f64; 2]>>(iter: T) -> Self {
         Self::Owned(iter.into_iter().map(|point| point.into()).collect())
     }

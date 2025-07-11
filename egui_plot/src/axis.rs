@@ -1,12 +1,12 @@
 use std::{fmt::Debug, ops::RangeInclusive, sync::Arc};
 
 use egui::{
-    emath::{remap_clamp, Rot2},
-    epaint::TextShape,
     Pos2, Rangef, Rect, Response, Sense, TextStyle, TextWrapMode, Ui, Vec2, WidgetText,
+    emath::{Rot2, remap_clamp},
+    epaint::TextShape,
 };
 
-use super::{transform::PlotTransform, GridMark};
+use super::{GridMark, transform::PlotTransform};
 
 // Gap between tick labels and axis label in units of the axis label height
 const AXIS_LABEL_GAP: f32 = 0.25;
@@ -109,9 +109,6 @@ pub struct AxisHints<'a> {
     pub(super) label_spacing: Rangef,
 }
 
-// TODO(JohannesProgrammiert): this just a guess. It might cease to work if a user changes font size.
-const LINE_HEIGHT: f32 = 12.0;
-
 impl<'a> AxisHints<'a> {
     /// Initializes a default axis configuration for the X axis.
     pub fn new_x() -> Self {
@@ -203,24 +200,6 @@ impl<'a> AxisHints<'a> {
         self.label_spacing = range.into();
         self
     }
-
-    pub(super) fn thickness(&self, axis: Axis) -> f32 {
-        match axis {
-            Axis::X => self.min_thickness.max(if self.label.is_empty() {
-                1.0 * LINE_HEIGHT
-            } else {
-                3.0 * LINE_HEIGHT
-            }),
-            Axis::Y => {
-                self.min_thickness
-                    + if self.label.is_empty() {
-                        0.0
-                    } else {
-                        LINE_HEIGHT
-                    }
-            }
-        }
-    }
 }
 
 #[derive(Clone)]
@@ -258,6 +237,10 @@ impl<'a> AxisWidget<'a> {
             return (response, 0.0);
         };
         let tick_labels_thickness = self.add_tick_labels(ui, transform, axis);
+
+        if self.hints.label.is_empty() {
+            return (response, tick_labels_thickness);
+        }
 
         let galley = self.hints.label.into_galley(
             ui,
@@ -317,6 +300,10 @@ impl<'a> AxisWidget<'a> {
         let font_id = TextStyle::Body.resolve(ui.style());
         let label_spacing = self.hints.label_spacing;
         let mut thickness: f32 = 0.0;
+
+        const SIDE_MARGIN: f32 = 4.0; // Add some margin to both sides of the text on the Y axis.
+        let painter = ui.painter();
+
         // Add tick labels:
         for step in self.steps.iter() {
             let text = (self.hints.formatter)(*step, &self.range);
@@ -333,29 +320,31 @@ impl<'a> AxisWidget<'a> {
                 let strength = remap_clamp(spacing_in_points, label_spacing, 0.0..=1.0);
 
                 let text_color = super::color_from_strength(ui, strength);
-                let galley = ui
-                    .painter()
-                    .layout_no_wrap(text, font_id.clone(), text_color);
+                let galley = painter.layout_no_wrap(text, font_id.clone(), text_color);
+                let galley_size = match axis {
+                    Axis::X => galley.size(),
+                    Axis::Y => galley.size() + 2.0 * SIDE_MARGIN * Vec2::X,
+                };
 
-                if spacing_in_points < galley.size()[axis as usize] {
+                if spacing_in_points < galley_size[axis as usize] {
                     continue; // the galley won't fit (likely too wide on the X axis).
                 }
 
                 match axis {
                     Axis::X => {
-                        thickness = thickness.max(galley.size().y);
+                        thickness = thickness.max(galley_size.y);
 
                         let projected_point = super::PlotPoint::new(step.value, 0.0);
                         let center_x = transform.position_from_point(&projected_point).x;
                         let y = match VPlacement::from(self.hints.placement) {
                             VPlacement::Bottom => self.rect.min.y,
-                            VPlacement::Top => self.rect.max.y - galley.size().y,
+                            VPlacement::Top => self.rect.max.y - galley_size.y,
                         };
-                        let pos = Pos2::new(center_x - galley.size().x / 2.0, y);
-                        ui.painter().add(TextShape::new(pos, galley, text_color));
+                        let pos = Pos2::new(center_x - galley_size.x / 2.0, y);
+                        painter.add(TextShape::new(pos, galley, text_color));
                     }
                     Axis::Y => {
-                        thickness = thickness.max(galley.size().x);
+                        thickness = thickness.max(galley_size.x);
 
                         let projected_point = super::PlotPoint::new(0.0, step.value);
                         let center_y = transform.position_from_point(&projected_point).y;
@@ -365,27 +354,25 @@ impl<'a> AxisWidget<'a> {
                                 let angle = 0.0; // TODO(emilk): allow users to rotate text
 
                                 if angle == 0.0 {
-                                    let x = self.rect.max.x - galley.size().x;
-                                    let pos = Pos2::new(x, center_y - galley.size().y / 2.0);
-                                    ui.painter().add(TextShape::new(pos, galley, text_color));
+                                    let x = self.rect.max.x - galley_size.x + SIDE_MARGIN;
+                                    let pos = Pos2::new(x, center_y - galley_size.y / 2.0);
+                                    painter.add(TextShape::new(pos, galley, text_color));
                                 } else {
-                                    let right = Pos2::new(
-                                        self.rect.max.x,
-                                        center_y - galley.size().y / 2.0,
-                                    );
-                                    let width = galley.size().x;
+                                    let right =
+                                        Pos2::new(self.rect.max.x, center_y - galley_size.y / 2.0);
+                                    let width = galley_size.x;
                                     let left =
                                         right - Rot2::from_angle(angle) * Vec2::new(width, 0.0);
 
-                                    ui.painter().add(
+                                    painter.add(
                                         TextShape::new(left, galley, text_color).with_angle(angle),
                                     );
                                 }
                             }
                             HPlacement::Right => {
-                                let x = self.rect.min.x;
-                                let pos = Pos2::new(x, center_y - galley.size().y / 2.0);
-                                ui.painter().add(TextShape::new(pos, galley, text_color));
+                                let x = self.rect.min.x + SIDE_MARGIN;
+                                let pos = Pos2::new(x, center_y - galley_size.y / 2.0);
+                                painter.add(TextShape::new(pos, galley, text_color));
                             }
                         };
                     }

@@ -1,7 +1,7 @@
-use egui::emath::NumExt;
+use egui::emath::NumExt as _;
 use egui::epaint::{Color32, CornerRadius, RectShape, Shape, Stroke};
 
-use super::{add_rulers_and_text, highlighted_color, Orientation, PlotConfig, RectElement};
+use super::{Orientation, PlotConfig, RectElement, add_rulers_and_text, highlighted_color};
 use crate::{BarChart, Cursor, PlotPoint, PlotTransform};
 
 /// One bar in a [`BarChart`]. Potentially floating, allowing stacked bar charts.
