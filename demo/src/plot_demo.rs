@@ -1,9 +1,9 @@
-use std::f64::consts::TAU;
 use std::ops::RangeInclusive;
+use std::{f64::consts::TAU, sync::Arc};
 
 use egui::{
-    Color32, ComboBox, NumExt as _, Pos2, Response, ScrollArea, Stroke, TextWrapMode, Vec2b,
-    WidgetInfo, WidgetType, remap, vec2,
+    Checkbox, Color32, ComboBox, NumExt as _, Pos2, Response, ScrollArea, Stroke, TextWrapMode,
+    Vec2b, WidgetInfo, WidgetType, remap, vec2,
 };
 
 use egui_plot::{
@@ -178,6 +178,8 @@ struct LineDemo {
     show_axes: bool,
     show_grid: bool,
     line_style: LineStyle,
+    gradient: bool,
+    gradient_fill: bool,
 }
 
 impl Default for LineDemo {
@@ -193,6 +195,8 @@ impl Default for LineDemo {
             show_axes: true,
             show_grid: true,
             line_style: LineStyle::Solid,
+            gradient: false,
+            gradient_fill: false,
         }
     }
 }
@@ -210,6 +214,8 @@ impl LineDemo {
             show_axes,
             show_grid,
             line_style,
+            gradient,
+            gradient_fill,
         } = self;
 
         ui.horizontal(|ui| {
@@ -266,6 +272,11 @@ impl LineDemo {
                         }
                     });
             });
+
+            ui.vertical(|ui| {
+                ui.checkbox(gradient, "Gradient line");
+                ui.add_enabled(*gradient, Checkbox::new(gradient_fill, "Gradient fill"));
+            });
         });
     }
 
@@ -302,16 +313,29 @@ impl LineDemo {
 
     fn thingy<'a>(&self) -> Line<'a> {
         let time = self.time;
-        Line::new(
+        let mut thingy_line = Line::new(
             "x = sin(2t), y = sin(3t)",
             PlotPoints::from_parametric_callback(
-                move |t| ((2.0 * t + time).sin(), (3.0 * t).sin()),
+                move |t| ((2.0 * t + time).sin(), (3. * t).sin()),
                 0.0..=TAU,
                 256,
             ),
         )
-        .color(Color32::from_rgb(100, 150, 250))
-        .style(self.line_style)
+        .style(self.line_style);
+        if self.gradient {
+            thingy_line = thingy_line.gradient_color(
+                Arc::new(|point| {
+                    Color32::BLUE.lerp_to_gamma(Color32::ORANGE, point.x.abs().clamp(0., 1.) as f32)
+                }),
+                self.gradient_fill,
+            );
+            if self.gradient_fill {
+                thingy_line = thingy_line.fill(0.);
+            }
+        } else {
+            thingy_line = thingy_line.color(Color32::from_rgb(100, 150, 250));
+        }
+        thingy_line
     }
 }
 
