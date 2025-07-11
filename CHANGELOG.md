@@ -4,6 +4,29 @@ All notable changes to the `egui_plot` integration will be noted in this file.
 This file is updated upon each release.
 Changes since the last release can be found at <https://github.com/emilk/egui_plot/compare/latest...HEAD> or by running the `scripts/generate_changelog.py` script.
 
+## 0.33.0 - 2025-07-11
+
+Full diff at https://github.com/emilk/egui_plot/compare/0.32.0..HEAD
+
+#### PRs
+* Update egui to 0.32 [#124](https://github.com/emilk/egui_plot/pull/124) by [@lucasmerlin](https://github.com/lucasmerlin)
+* Fix dynamic bounds modifications [#96](https://github.com/emilk/egui_plot/pull/96) by [@emilk](https://github.com/emilk)
+* Add `PlotUi::set_plot_bounds_x` and `set_plot_bounds_y` [#110](https://github.com/emilk/egui_plot/pull/110) by [@emilk](https://github.com/emilk)
+* Allow zooming one axis by dragging it [#102](https://github.com/emilk/egui_plot/pull/102) by [@damageboy](https://github.com/damageboy)
+* Add a background behind all text that is shown on hover [#112](https://github.com/emilk/egui_plot/pull/112) by [@emilk](https://github.com/emilk)
+* Fix plot axis sometimes being way too thick [#113](https://github.com/emilk/egui_plot/pull/113) by [@emilk](https://github.com/emilk)
+* Bump Rust Version and fix Plot Item Visibility in Demo [#104](https://github.com/emilk/egui_plot/pull/104) by [@bircni](https://github.com/bircni)
+* Make circles in legend slightly smaller [#114](https://github.com/emilk/egui_plot/pull/114) by [@emilk](https://github.com/emilk)
+* Show the hover-info about a plot using the `egui::Tooltip` API [#115](https://github.com/emilk/egui_plot/pull/115) by [@emilk](https://github.com/emilk)
+* Add small margin to the axis tick labels [#117](https://github.com/emilk/egui_plot/pull/117) by [@emilk](https://github.com/emilk)
+* Gradient line support [#83](https://github.com/emilk/egui_plot/pull/83) by [@sapessi](https://github.com/sapessi)
+* Add optional legend title [#105](https://github.com/emilk/egui_plot/pull/105) by [@bircni](https://github.com/bircni)
+* Fix BoxPlot legend [#97](https://github.com/emilk/egui_plot/pull/97) by [@mkalte666](https://github.com/mkalte666)
+* When dragging the axis to zoom, zoom in where the drag started [871d400](https://github.com/emilk/egui_plot/commit/871d40053a1a2f270ea7e2e7112ef3c0b4ba71e6)
+* Update MSRV to 1.85 and bump rust edition to 2024 [#116](https://github.com/emilk/egui_plot/pull/116) by [@emilk](https://github.com/emilk)
+* Update to Rust 1.84 and enable many clippy lints [#107](https://github.com/emilk/egui_plot/pull/107) by [@abey79](https://github.com/abey79)
+* Fix bad demo app name and icon [f835c51](https://github.com/emilk/egui_plot/commit/f835c51da82764c2b144b0f734ce4d212b538769)
+
 
 ## 0.32.1 - 2025-04-07
 
