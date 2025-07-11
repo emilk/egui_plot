@@ -26,10 +26,10 @@ ahash = { version = "0.8.11", default-features = false, features = [
     "std",
 ] }
 document-features = "0.2.10"
-eframe = { version = "0.31.0", default-features = false }
-egui = { version = "0.31.0", default-features = false }
-egui_kittest = { version = "0.31.0", default-features = false }
-emath = { version = "0.31.0", default-features = false }
+eframe = { version = "0.32", default-features = false }
+egui = { version = "0.32", default-features = false }
+egui_kittest = { version = "0.32", default-features = false }
+emath = { version = "0.32", default-features = false }
 env_logger = { version = "0.11.6", default-features = false, features = [
     "auto-color",
     "humantime",
@@ -43,10 +43,10 @@ web-sys = "0.3.70"
 
 [patch.crates-io]
 # When we want to use the bleeding edge version of egui and eframe:
-egui = { git = "https://github.com/emilk/egui", branch = "main" }
-egui_kittest = { git = "https://github.com/emilk/egui", branch = "main" }
-eframe = { git = "https://github.com/emilk/egui", branch = "main" }
-emath = { git = "https://github.com/emilk/egui", branch = "main" }
+# egui = { git = "https://github.com/emilk/egui", branch = "main" }
+# egui_kittest = { git = "https://github.com/emilk/egui", branch = "main" }
+# eframe = { git = "https://github.com/emilk/egui", branch = "main" }
+# emath = { git = "https://github.com/emilk/egui", branch = "main" }
 
 # If you fork https://github.com/emilk/egui you can test with:
 # eframe = { path = "../egui/crates/eframe" }
