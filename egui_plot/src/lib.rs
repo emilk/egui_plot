@@ -85,6 +85,64 @@ impl Default for CoordinatesFormatter<'_> {
 
 // ----------------------------------------------------------------------------
 
+/// Describes how an axis is scaled/displayed
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[derive(Debug, Copy, Clone, PartialEq, Default)]
+pub enum AxisTransform {
+    /// An axis the way you would expect
+    #[default]
+    Linear,
+
+    /// A logarithmic transform to the given base
+    Logarithmic(f64),
+}
+
+impl AxisTransform {
+    /// Alternative method to get an `AxisTransform::Linear`
+    pub fn linear() -> Self {
+        Self::Linear
+    }
+
+    /// Alternative method to get an `AxisTransform::Log(base)`
+    pub fn log(base: f64) -> Self {
+        Self::Logarithmic(base)
+    }
+
+    /// Alternative method to get an `AxisTransform::Log(10.0)`
+    pub fn log10() -> Self {
+        Self::Logarithmic(10.0)
+    }
+}
+
+/// Holds the transforms for both the horizontal and the vertical axis
+///
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[derive(Debug, Copy, Clone, PartialEq, Default)]
+pub struct AxisTransforms {
+    pub horizontal: AxisTransform,
+    pub vertical: AxisTransform,
+}
+
+impl AxisTransforms {
+    /// Create a new axis transform
+    pub fn new(horizontal: AxisTransform, vertical: AxisTransform) -> Self {
+        Self {
+            horizontal,
+            vertical,
+        }
+    }
+
+    /// Get the transform for a specific `egui_plot::Axis`
+    pub fn for_axis(&self, axis: Axis) -> AxisTransform {
+        match axis {
+            Axis::X => self.horizontal,
+            Axis::Y => self.vertical,
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+
 /// Indicates a vertical or horizontal cursor line in plot coordinates.
 #[derive(Copy, Clone, PartialEq)]
 pub enum Cursor {
@@ -186,6 +244,7 @@ pub struct Plot<'a> {
     cursor_color: Option<Color32>,
     show_background: bool,
     show_axes: Vec2b,
+    axis_transforms: AxisTransforms,
 
     show_grid: Vec2b,
     grid_spacing: Rangef,
@@ -234,6 +293,7 @@ impl<'a> Plot<'a> {
             cursor_color: None,
             show_background: true,
             show_axes: true.into(),
+            axis_transforms: AxisTransforms::default(),
 
             show_grid: true.into(),
             grid_spacing: Rangef::new(8.0, 300.0),
@@ -768,6 +828,15 @@ impl<'a> Plot<'a> {
         self
     }
 
+    /// Set if the axis are to be scaled logarithmically
+    ///
+    /// This will limit plot bounds to values above 0, and any plot point below 0 will be converted to NaN
+    #[inline]
+    pub fn axis_transforms(mut self, axis_transforms: AxisTransforms) -> Self {
+        self.axis_transforms = axis_transforms;
+        self
+    }
+
     /// Interact with and add items to the plot and finally draw it.
     pub fn show<'b, R>(
         self,
@@ -814,6 +883,7 @@ impl<'a> Plot<'a> {
             reset,
             show_background,
             show_axes,
+            axis_transforms,
             show_grid,
             grid_spacing,
             linked_axes,
@@ -920,7 +990,7 @@ impl<'a> Plot<'a> {
             auto_bounds: default_auto_bounds,
             hovered_legend_item: None,
             hidden_items: Default::default(),
-            transform: PlotTransform::new(plot_rect, min_auto_bounds, center_axis),
+            transform: PlotTransform::new(plot_rect, min_auto_bounds, center_axis, axis_transforms),
             last_click_pos_for_zoom: None,
             x_axis_thickness: Default::default(),
             y_axis_thickness: Default::default(),
@@ -1086,15 +1156,23 @@ impl<'a> Plot<'a> {
             }
 
             if auto_x {
-                bounds.add_relative_margin_x(margin_fraction);
+                if let AxisTransform::Logarithmic(base) = axis_transforms.horizontal {
+                    bounds.add_relative_margin_x_log(base, margin_fraction);
+                } else {
+                    bounds.add_relative_margin_x(margin_fraction);
+                }
             }
 
             if auto_y {
-                bounds.add_relative_margin_y(margin_fraction);
+                if let AxisTransform::Logarithmic(base) = axis_transforms.vertical {
+                    bounds.add_relative_margin_y_log(base, margin_fraction);
+                } else {
+                    bounds.add_relative_margin_y(margin_fraction);
+                }
             }
         }
 
-        mem.transform = PlotTransform::new(plot_rect, bounds, center_axis);
+        mem.transform = PlotTransform::new(plot_rect, bounds, center_axis, axis_transforms);
 
         // Enforce aspect ratio
         if let Some(data_aspect) = data_aspect {
@@ -1122,8 +1200,13 @@ impl<'a> Plot<'a> {
             if !allow_drag.y {
                 delta.y = 0.0;
             }
-            mem.transform
-                .translate_bounds((delta.x as f64, delta.y as f64));
+            let mouse_cursor = ui
+                .ctx()
+                .input(|i| i.pointer.hover_pos().unwrap_or(Pos2::new(0.0, 0.0)));
+            mem.transform.translate_bounds(
+                (mouse_cursor.x as f64, mouse_cursor.y as f64),
+                (delta.x as f64, delta.y as f64),
+            );
             mem.auto_bounds = mem.auto_bounds.and(!allow_drag);
         }
 
@@ -1249,9 +1332,14 @@ impl<'a> Plot<'a> {
                 if !allow_scroll.y {
                     scroll_delta.y = 0.0;
                 }
+                let mouse_cursor = ui
+                    .ctx()
+                    .input(|i| i.pointer.hover_pos().unwrap_or(Pos2::new(0.0, 0.0)));
                 if scroll_delta != Vec2::ZERO {
-                    mem.transform
-                        .translate_bounds((-scroll_delta.x as f64, -scroll_delta.y as f64));
+                    mem.transform.translate_bounds(
+                        (mouse_cursor.x as f64, mouse_cursor.y as f64),
+                        (-scroll_delta.x as f64, -scroll_delta.y as f64),
+                    );
                     mem.auto_bounds = false.into();
                 }
             }
@@ -1265,7 +1353,9 @@ impl<'a> Plot<'a> {
         let x_steps = Arc::new({
             let input = GridInput {
                 bounds: (bounds.min[0], bounds.max[0]),
-                base_step_size: mem.transform.dvalue_dpos()[0].abs() * grid_spacing.min as f64,
+                base_step_size: mem.transform.smallest_distance_per_point()[0].abs()
+                    * grid_spacing.min as f64,
+                axis_transform: axis_transforms.horizontal,
             };
             (grid_spacers[0])(input)
         });
@@ -1273,7 +1363,9 @@ impl<'a> Plot<'a> {
         let y_steps = Arc::new({
             let input = GridInput {
                 bounds: (bounds.min[1], bounds.max[1]),
-                base_step_size: mem.transform.dvalue_dpos()[1].abs() * grid_spacing.min as f64,
+                base_step_size: mem.transform.smallest_distance_per_point()[1].abs()
+                    * grid_spacing.min as f64,
+                axis_transform: axis_transforms.vertical,
             };
             (grid_spacers[1])(input)
         });
@@ -1294,7 +1386,12 @@ impl<'a> Plot<'a> {
 
         // Initialize values from functions.
         for item in &mut items {
-            item.initialize(mem.transform.bounds().range_x());
+            let log_base = if let AxisTransform::Logarithmic(base) = axis_transforms.horizontal {
+                Some(base)
+            } else {
+                None
+            };
+            item.initialize(mem.transform.bounds().range_x(), log_base);
         }
 
         let prepared = PreparedPlot {
@@ -1313,6 +1410,7 @@ impl<'a> Plot<'a> {
             cursor_color,
             grid_spacers,
             clamp_grid,
+            axis_transforms,
         };
 
         let (plot_cursors, mut hovered_plot_item) = prepared.ui(ui, &response);
@@ -1528,6 +1626,10 @@ pub struct GridInput {
     ///
     /// Always positive.
     pub base_step_size: f64,
+
+    /// Hint if the axis are logarithmic. Can be used to emit fewer grid lines
+    /// Have a look at the default grid spacer function for an example how this is used.
+    pub axis_transform: AxisTransform,
 }
 
 /// One mark (horizontal or vertical line) in the background grid of a plot.
@@ -1561,16 +1663,48 @@ pub fn log_grid_spacer(log_base: i64) -> GridSpacer<'static> {
         // to the next-bigger power of base
         let smallest_visible_unit = next_power(input.base_step_size, log_base);
 
-        let step_sizes = [
-            smallest_visible_unit,
-            smallest_visible_unit * log_base,
-            smallest_visible_unit * log_base * log_base,
-        ];
-
-        generate_marks(step_sizes, input.bounds)
+        // now we should differentiate between log and non-log axes
+        // in non-log axes we simply subdivide
+        if let AxisTransform::Logarithmic(base) = input.axis_transform {
+            gen_log_spaced_out_marks(base, smallest_visible_unit, input.bounds)
+        } else {
+            let step_sizes = [
+                smallest_visible_unit,
+                smallest_visible_unit * log_base,
+                smallest_visible_unit * log_base * log_base,
+            ];
+            generate_marks(step_sizes, input.bounds)
+        }
     };
 
     Box::new(step_sizes)
+}
+
+fn gen_log_spaced_out_marks(base: f64, min_size: f64, clamp_range: (f64, f64)) -> Vec<GridMark> {
+    let mut marks = Vec::new();
+    let ibase = base.ceil() as usize;
+    // We need to offset i in such a way
+    let mut i = 0;
+    loop {
+        i += 1;
+        let m = i % ibase;
+        let p = i / ibase;
+        let val = min_size * (m as f64) * base.powf(p as f64);
+        if m != 0 {
+            if val < clamp_range.0 || val < min_size {
+                continue;
+            } else if val > clamp_range.1 {
+                break;
+            }
+            let mark = GridMark {
+                value: val,
+                step_size: base.powf(p as f64) * min_size,
+            };
+            marks.push(mark);
+        }
+    }
+    marks.shrink_to_fit();
+    marks
 }
 
 /// Splits the grid into uniform-sized spacings (e.g. 100, 25, 1).
@@ -1611,6 +1745,7 @@ struct PreparedPlot<'a> {
     cursor_color: Option<Color32>,
 
     clamp_grid: bool,
+    axis_transforms: AxisTransforms,
 }
 
 impl PreparedPlot<'_> {
@@ -1730,7 +1865,9 @@ impl PreparedPlot<'_> {
 
         let input = GridInput {
             bounds: (bounds.min[iaxis], bounds.max[iaxis]),
-            base_step_size: transform.dvalue_dpos()[iaxis].abs() * fade_range.min as f64,
+            base_step_size: transform
+                .value_for_pixel_offset_from_bounds([fade_range.min, fade_range.min])[iaxis],
+            axis_transform: self.axis_transforms.for_axis(axis),
         };
         let steps = (grid_spacers[iaxis])(input);
 
@@ -1768,7 +1905,10 @@ impl PreparedPlot<'_> {
             };
 
             let pos_in_gui = transform.position_from_point(&value);
-            let spacing_in_points = (transform.dpos_dvalue()[iaxis] * step.step_size).abs() as f32;
+            let spacing_in_points = transform
+                .points_for_decade([step.value, step.value], [step.step_size, step.step_size])
+                [iaxis]
+                .abs();
 
             if spacing_in_points <= fade_range.min {
                 continue; // Too close together
