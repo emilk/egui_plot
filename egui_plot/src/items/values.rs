@@ -1,7 +1,7 @@
 use std::ops::{Bound, RangeBounds, RangeInclusive};
 
 use egui::{
-    Pos2, Rect, Shape, Stroke, Vec2,
+    Id, Pos2, Rect, Shape, Stroke, Vec2,
     epaint::{ColorMode, PathStroke},
     lerp, pos2,
 };
@@ -397,7 +397,7 @@ pub enum PlotGeometry<'a> {
     None,
 
     /// Point values (X-Y graphs)
-    Points(&'a [PlotPoint]),
+    Points(&'a [PlotPoint], Option<Id>),
 
     /// Rectangles (examples: boxes or bars)
     // Has currently no data, as it would require copying rects or iterating a list of pointers.
