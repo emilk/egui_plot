@@ -532,32 +532,39 @@ impl PlotItem for Line<'_> {
             let y = transform
                 .position_from_point(&PlotPoint::new(0.0, y_reference))
                 .y;
-            let mut fill_color = Rgba::from(stroke.color)
+            let default_fill_color = Rgba::from(stroke.color)
                 .to_opaque()
                 .multiply(fill_alpha)
                 .into();
+
+            let fill_color_for_point = |pos| {
+                if *gradient_fill && self.gradient_color.is_some() {
+                    Rgba::from(self
+                        .gradient_color
+                        .clone()
+                        .expect("Could not find gradient color callback")(
+                        transform.value_from_position(pos),
+                    ))
+                    .to_opaque()
+                    .multiply(fill_alpha)
+                    .into()
+                } else {
+                    default_fill_color
+                }
+            };
+
             let mut mesh = Mesh::default();
             let expected_intersections = 20;
             mesh.reserve_triangles((n_values - 1) * 2);
             mesh.reserve_vertices(n_values * 2 + expected_intersections);
             values_tf.windows(2).for_each(|w| {
-                if *gradient_fill && self.gradient_color.is_some() {
-                    fill_color = Rgba::from(self
-                        .gradient_color
-                        .clone()
-                        .expect("Could not find gradient color callback")(
-                        transform.value_from_position(w[1]),
-                    ))
-                    .to_opaque()
-                    .multiply(fill_alpha)
-                    .into();
-                }
+                let fill_color = fill_color_for_point(w[0]);
                 let i = mesh.vertices.len() as u32;
                 mesh.colored_vertex(w[0], fill_color);
                 mesh.colored_vertex(pos2(w[0].x, y), fill_color);
                 if let Some(x) = y_intersection(&w[0], &w[1], y) {
                     let point = pos2(x, y);
-                    mesh.colored_vertex(point, fill_color);
+                    mesh.colored_vertex(point, fill_color_for_point(point));
                     mesh.add_triangle(i, i + 1, i + 2);
                     mesh.add_triangle(i + 2, i + 3, i + 4);
                 } else {
@@ -566,6 +573,7 @@ impl PlotItem for Line<'_> {
                 }
             });
             let last = values_tf[n_values - 1];
+            let fill_color = fill_color_for_point(last);
             mesh.colored_vertex(last, fill_color);
             mesh.colored_vertex(pos2(last.x, y), fill_color);
             shapes.push(Shape::Mesh(std::sync::Arc::new(mesh)));
