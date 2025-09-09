@@ -1181,6 +1181,7 @@ impl<'a> Plot<'a> {
                 }
                 // when the click is release perform the zoom
                 if response.drag_stopped() {
+                    let zoom_type = ZoomType::new_from_corners(box_start_pos, box_end_pos);
                     let box_start_pos = mem.transform.value_from_position(box_start_pos);
                     let box_end_pos = mem.transform.value_from_position(box_end_pos);
                     let new_bounds = PlotBounds {
@@ -1309,7 +1310,8 @@ impl<'a> Plot<'a> {
                     ui.painter().with_clip_rect(plot_rect).add(rect_shape);
                     ui.painter().with_clip_rect(plot_rect).add(rect_shape1);
                 }
-                BoxedZoomType::Bars(shape, shape1, shape2, shape3) => {
+                BoxedZoomType::Horizontal(shape, shape1, shape2, shape3)
+                | BoxedZoomType::Vertical(shape, shape1, shape2, shape3) => {
                     ui.painter().with_clip_rect(plot_rect).add(shape);
                     ui.painter().with_clip_rect(plot_rect).add(shape1);
                     ui.painter().with_clip_rect(plot_rect).add(shape2);
@@ -1374,113 +1376,128 @@ impl<'a> Plot<'a> {
     }
 }
 
-enum BoxedZoomType {
-    Rect(epaint::RectShape, epaint::RectShape),
-    Bars(epaint::Shape, epaint::Shape, epaint::Shape, epaint::Shape),
+enum ZoomType {
+    Rect(Rect),
+    Horizontal(Rect),
+    Vertical(Rect),
 }
 
-impl BoxedZoomType {
+impl ZoomType {
     // random values for testing
     // "buffer" on `min` before rect should be used
     // NOTE: May want to be based on the axes?
-    const BUFFER: f32 = 100.0;
+    pub const BUFFER: f32 = 100.0;
     // if the ratio between `min` and `max` is about 10% different or less, its "square"
-    const SQUARENESS_THRESHOLD: f32 = 0.1;
+    pub const SQUARENESS_THRESHOLD: f32 = 0.1;
 
-    // as soon as there is a drag, add a buffer centered around `box_start_pos` in the `min` direction
-    // on the near and far ends of `rect`
-    //
-    // if `min` > (buffer/2) || aspect_ratio ~= 1 => rect zoom
-    // otherwise => single zoom
-    fn from_corners(box_start_pos: Pos2, box_end_pos: Pos2) -> Self {
-        let rect = epaint::Rect::from_two_pos(box_start_pos, box_end_pos);
+    fn new_from_corners(start: Pos2, end: Pos2) -> Self {
+        let rect = epaint::Rect::from_two_pos(start, end);
 
         let (min, is_vertical) = {
             let Vec2 { x, y } = rect.size();
             if x < y { (x, true) } else { (y, false) }
         };
 
+        let height = egui::vec2(0.0, rect.height());
+        let width = egui::vec2(rect.width(), 0.0);
+        let half_buffer_x = egui::vec2(Self::BUFFER / 2.0, 0.0);
+        let half_buffer_y = egui::vec2(0.0, Self::BUFFER / 2.0);
+
         if min > (Self::BUFFER / 2.0)
             || (rect.aspect_ratio() - 1.0).abs() < Self::SQUARENESS_THRESHOLD
         {
-            Self::Rect(
-                epaint::RectShape::stroke(
-                    rect,
-                    0.0,
-                    epaint::Stroke::new(4., Color32::DARK_BLUE),
-                    egui::StrokeKind::Middle,
-                ), // Outer stroke
-                epaint::RectShape::stroke(
-                    rect,
-                    0.0,
-                    epaint::Stroke::new(2., Color32::WHITE),
-                    egui::StrokeKind::Middle,
-                ), // Inner stroke
-            )
-        } else {
-            let height = egui::vec2(0.0, rect.height());
-            let width = egui::vec2(rect.width(), 0.0);
-            let half_buffer_x = egui::vec2(Self::BUFFER / 2.0, 0.0);
-            let half_buffer_y = egui::vec2(0.0, Self::BUFFER / 2.0);
-
-            if is_vertical {
-                let (top_center, bottom_center) = if box_start_pos.y > box_end_pos.y {
-                    (box_start_pos, box_start_pos - height)
-                } else {
-                    (box_start_pos + height, box_start_pos)
-                };
-                let top_left = top_center - half_buffer_x;
-                let top_right = top_center + half_buffer_x;
-                let bottom_left = bottom_center - half_buffer_x;
-                let bottom_right = bottom_center + half_buffer_x;
-
-                Self::Bars(
-                    epaint::Shape::line_segment(
-                        [top_left, top_right],
-                        epaint::Stroke::new(4., Color32::DARK_BLUE),
-                    ),
-                    epaint::Shape::line_segment(
-                        [bottom_left, bottom_right],
-                        epaint::Stroke::new(4., Color32::DARK_BLUE),
-                    ),
-                    epaint::Shape::line_segment(
-                        [top_left, top_right],
-                        epaint::Stroke::new(2., Color32::WHITE),
-                    ),
-                    epaint::Shape::line_segment(
-                        [bottom_left, bottom_right],
-                        epaint::Stroke::new(2., Color32::WHITE),
-                    ),
-                )
+            Self::Rect(rect)
+        } else if is_vertical {
+            let (top_center, bottom_center) = if start.y > end.y {
+                (start, start - height)
             } else {
-                let (left_center, right_center) = if box_start_pos.x > box_end_pos.x {
-                    (box_start_pos - width, box_start_pos)
-                } else {
-                    (box_start_pos, box_start_pos + width)
-                };
-                let top_left = left_center + half_buffer_y;
-                let bottom_left = left_center - half_buffer_y;
-                let top_right = right_center + half_buffer_y;
-                let bottom_right = right_center - half_buffer_y;
-                Self::Bars(
-                    epaint::Shape::line_segment(
-                        [top_left, bottom_left],
+                (start + height, start)
+            };
+            let top_left = top_center - half_buffer_x;
+            let bottom_right = bottom_center + half_buffer_x;
+
+            Self::Vertical(Rect::from_two_pos(top_left, bottom_right))
+        } else {
+            let (left_center, right_center) = if start.x > end.x {
+                (start - width, start)
+            } else {
+                (start, start + width)
+            };
+            let top_left = left_center + half_buffer_y;
+            let bottom_right = right_center - half_buffer_y;
+
+            Self::Horizontal(Rect::from_two_pos(top_left, bottom_right))
+        }
+    }
+}
+
+enum BoxedZoomType {
+    Rect(epaint::RectShape, epaint::RectShape),
+    // TODO: make this api not atrocious
+    Horizontal(epaint::Shape, epaint::Shape, epaint::Shape, epaint::Shape),
+    Vertical(epaint::Shape, epaint::Shape, epaint::Shape, epaint::Shape),
+}
+
+impl BoxedZoomType {
+    // as soon as there is a drag, add a buffer centered around `box_start_pos` in the `min` direction
+    // on the near and far ends of `rect`
+    //
+    // if `min` > (buffer/2) || aspect_ratio ~= 1 => rect zoom
+    // otherwise => single zoom
+    fn from_corners(start: Pos2, end: Pos2) -> Self {
+        match ZoomType::new_from_corners(start, end) {
+            ZoomType::Rect(rect) => {
+                Self::Rect(
+                    epaint::RectShape::stroke(
+                        rect,
+                        0.0,
                         epaint::Stroke::new(4., Color32::DARK_BLUE),
-                    ),
-                    epaint::Shape::line_segment(
-                        [top_right, bottom_right],
-                        epaint::Stroke::new(4., Color32::DARK_BLUE),
-                    ),
-                    epaint::Shape::line_segment(
-                        [top_left, bottom_left],
+                        egui::StrokeKind::Middle,
+                    ), // Outer stroke
+                    epaint::RectShape::stroke(
+                        rect,
+                        0.0,
                         epaint::Stroke::new(2., Color32::WHITE),
-                    ),
-                    epaint::Shape::line_segment(
-                        [top_right, bottom_right],
-                        epaint::Stroke::new(2., Color32::WHITE),
-                    ),
+                        egui::StrokeKind::Middle,
+                    ), // Inner stroke
                 )
             }
+            ZoomType::Horizontal(rect) => Self::Horizontal(
+                epaint::Shape::line_segment(
+                    [rect.left_top(), rect.left_bottom()],
+                    epaint::Stroke::new(4., Color32::DARK_BLUE),
+                ),
+                epaint::Shape::line_segment(
+                    [rect.right_top(), rect.right_bottom()],
+                    epaint::Stroke::new(4., Color32::DARK_BLUE),
+                ),
+                epaint::Shape::line_segment(
+                    [rect.left_top(), rect.left_bottom()],
+                    epaint::Stroke::new(2., Color32::WHITE),
+                ),
+                epaint::Shape::line_segment(
+                    [rect.right_top(), rect.right_bottom()],
+                    epaint::Stroke::new(2., Color32::WHITE),
+                ),
+            ),
+            ZoomType::Vertical(rect) => Self::Vertical(
+                epaint::Shape::line_segment(
+                    [rect.left_top(), rect.right_top()],
+                    epaint::Stroke::new(4., Color32::DARK_BLUE),
+                ),
+                epaint::Shape::line_segment(
+                    [rect.left_bottom(), rect.right_bottom()],
+                    epaint::Stroke::new(4., Color32::DARK_BLUE),
+                ),
+                epaint::Shape::line_segment(
+                    [rect.left_top(), rect.right_top()],
+                    epaint::Stroke::new(2., Color32::WHITE),
+                ),
+                epaint::Shape::line_segment(
+                    [rect.left_bottom(), rect.right_bottom()],
+                    epaint::Stroke::new(2., Color32::WHITE),
+                ),
+            ),
         }
     }
 }
