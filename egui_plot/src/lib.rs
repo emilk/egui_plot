@@ -1177,27 +1177,60 @@ impl<'a> Plot<'a> {
                 // while dragging prepare a Shape and draw it later on top of the plot
                 if response.dragged_by(boxed_zoom_pointer_button) {
                     response = response.on_hover_cursor(CursorIcon::ZoomIn);
-                    boxed_zoom_rect = Some(BoxedZoomType::from_corners(box_start_pos, box_end_pos));
+                    boxed_zoom_rect =
+                        Some(BoxedZoomType::new_from_corners(box_start_pos, box_end_pos));
                 }
                 // when the click is release perform the zoom
                 if response.drag_stopped() {
                     let zoom_type = ZoomType::new_from_corners(box_start_pos, box_end_pos);
-                    let box_start_pos = mem.transform.value_from_position(box_start_pos);
-                    let box_end_pos = mem.transform.value_from_position(box_end_pos);
-                    let new_bounds = PlotBounds {
-                        min: [
-                            box_start_pos.x.min(box_end_pos.x),
-                            box_start_pos.y.min(box_end_pos.y),
-                        ],
-                        max: [
-                            box_start_pos.x.max(box_end_pos.x),
-                            box_start_pos.y.max(box_end_pos.y),
-                        ],
-                    };
-                    if new_bounds.is_valid() {
-                        mem.transform.set_bounds(new_bounds);
-                        mem.auto_bounds = false.into();
+                    match zoom_type {
+                        ZoomType::Rect(rect) => {
+                            let top_left = mem.transform.value_from_position(rect.left_top());
+                            let bottom_right =
+                                mem.transform.value_from_position(rect.right_bottom());
+                            let new_bounds = PlotBounds {
+                                min: [top_left.x, bottom_right.y],
+                                max: [bottom_right.x, top_left.y],
+                            };
+                            if new_bounds.is_valid() {
+                                mem.transform.set_bounds(new_bounds);
+                                mem.auto_bounds = false.into();
+                            }
+                        }
+                        ZoomType::Horizontal(rect) => {
+                            let top_left = mem.transform.value_from_position(rect.left_top());
+                            let bottom_right =
+                                mem.transform.value_from_position(rect.right_bottom());
+                            let selected_bounds = PlotBounds {
+                                min: [top_left.x, bottom_right.y],
+                                max: [bottom_right.x, top_left.y],
+                            };
+
+                            let mut new_bounds = *mem.transform.bounds();
+                            new_bounds.set_x(&selected_bounds);
+                            if new_bounds.is_valid() {
+                                mem.transform.set_bounds(new_bounds);
+                                mem.auto_bounds = false.into();
+                            }
+                        }
+                        ZoomType::Vertical(rect) => {
+                            let top_left = mem.transform.value_from_position(rect.left_top());
+                            let bottom_right =
+                                mem.transform.value_from_position(rect.right_bottom());
+                            let selected_bounds = PlotBounds {
+                                min: [top_left.x, bottom_right.y],
+                                max: [bottom_right.x, top_left.y],
+                            };
+
+                            let mut new_bounds = *mem.transform.bounds();
+                            new_bounds.set_y(&selected_bounds);
+                            if new_bounds.is_valid() {
+                                mem.transform.set_bounds(new_bounds);
+                                mem.auto_bounds = false.into();
+                            }
+                        }
                     }
+
                     // reset the boxed zoom state
                     mem.last_click_pos_for_zoom = None;
                 }
@@ -1433,7 +1466,7 @@ impl ZoomType {
 
 enum BoxedZoomType {
     Rect(epaint::RectShape, epaint::RectShape),
-    // TODO: make this api not atrocious
+    // TODO(Mick): make this api not atrocious
     Horizontal(epaint::Shape, epaint::Shape, epaint::Shape, epaint::Shape),
     Vertical(epaint::Shape, epaint::Shape, epaint::Shape, epaint::Shape),
 }
@@ -1444,7 +1477,7 @@ impl BoxedZoomType {
     //
     // if `min` > (buffer/2) || aspect_ratio ~= 1 => rect zoom
     // otherwise => single zoom
-    fn from_corners(start: Pos2, end: Pos2) -> Self {
+    fn new_from_corners(start: Pos2, end: Pos2) -> Self {
         match ZoomType::new_from_corners(start, end) {
             ZoomType::Rect(rect) => {
                 Self::Rect(
