@@ -1193,12 +1193,12 @@ impl<'a> Plot<'a> {
                     let rect = epaint::Rect::from_two_pos(box_start_pos, box_end_pos);
 
                     let Vec2 { x, y } = rect.size();
-                    if let Some((min, is_width_min)) = x.partial_cmp(&y).and_then(|ord| match ord {
+                    if let Some((min, is_vertical)) = x.partial_cmp(&y).and_then(|ord| match ord {
                         Ordering::Less => Some((x, true)),
                         Ordering::Greater => Some((y, false)),
                         Ordering::Equal => None,
                     }) {
-                        boxed_zoom_rect = if min > BUFFER
+                        boxed_zoom_rect = if min > (BUFFER / 2.0)
                             || (rect.aspect_ratio() - 1.0).abs() < SQUARENESS_THRESHOLD
                         {
                             Some(BoxedZoomType::Rect(
@@ -1216,41 +1216,110 @@ impl<'a> Plot<'a> {
                                 ), // Inner stroke
                             ))
                         } else {
-                            if is_width_min {
+                            if is_vertical {
+                                let (top_center, bottom_center) = if box_start_pos.y > box_end_pos.y
+                                {
+                                    (
+                                        box_start_pos,
+                                        Pos2 {
+                                            x: box_start_pos.x,
+                                            y: box_start_pos.y - rect.height(),
+                                        },
+                                    )
+                                } else {
+                                    (
+                                        Pos2 {
+                                            x: box_start_pos.x,
+                                            y: box_start_pos.y + rect.height(),
+                                        },
+                                        box_start_pos,
+                                    )
+                                };
+                                let top_left = Pos2 {
+                                    x: top_center.x - (BUFFER / 2.0),
+                                    y: top_center.y,
+                                };
+                                let top_right = Pos2 {
+                                    x: top_center.x + (BUFFER / 2.0),
+                                    y: top_center.y,
+                                };
+                                let bottom_left = Pos2 {
+                                    x: bottom_center.x - (BUFFER / 2.0),
+                                    y: bottom_center.y,
+                                };
+                                let bottom_right = Pos2 {
+                                    x: bottom_center.x + (BUFFER / 2.0),
+                                    y: bottom_center.y,
+                                };
+
                                 Some(BoxedZoomType::Bars(
                                     epaint::Shape::line_segment(
-                                        [rect.left_top(), rect.right_top()],
+                                        [top_left, top_right],
                                         epaint::Stroke::new(4., Color32::DARK_BLUE),
                                     ),
                                     epaint::Shape::line_segment(
-                                        [rect.left_bottom(), rect.right_bottom()],
+                                        [bottom_left, bottom_right],
                                         epaint::Stroke::new(4., Color32::DARK_BLUE),
                                     ),
                                     epaint::Shape::line_segment(
-                                        [rect.left_top(), rect.right_top()],
+                                        [top_left, top_right],
                                         epaint::Stroke::new(2., Color32::WHITE),
                                     ),
                                     epaint::Shape::line_segment(
-                                        [rect.left_bottom(), rect.right_bottom()],
+                                        [bottom_left, bottom_right],
                                         epaint::Stroke::new(2., Color32::WHITE),
                                     ),
                                 ))
                             } else {
+                                let (left_center, right_center) = if box_start_pos.x > box_end_pos.x
+                                {
+                                    (
+                                        Pos2 {
+                                            x: box_start_pos.x - rect.width(),
+                                            y: box_start_pos.y,
+                                        },
+                                        box_start_pos,
+                                    )
+                                } else {
+                                    (
+                                        box_start_pos,
+                                        Pos2 {
+                                            x: box_start_pos.x + rect.width(),
+                                            y: box_start_pos.y,
+                                        },
+                                    )
+                                };
+                                let top_left = Pos2 {
+                                    x: left_center.x,
+                                    y: left_center.y + (BUFFER / 2.0),
+                                };
+                                let bottom_left = Pos2 {
+                                    x: left_center.x,
+                                    y: left_center.y - (BUFFER / 2.0),
+                                };
+                                let top_right = Pos2 {
+                                    x: right_center.x,
+                                    y: right_center.y + (BUFFER / 2.0),
+                                };
+                                let bottom_right = Pos2 {
+                                    x: right_center.x,
+                                    y: right_center.y - (BUFFER / 2.0),
+                                };
                                 Some(BoxedZoomType::Bars(
                                     epaint::Shape::line_segment(
-                                        [rect.left_top(), rect.left_bottom()],
+                                        [top_left, bottom_left],
                                         epaint::Stroke::new(4., Color32::DARK_BLUE),
                                     ),
                                     epaint::Shape::line_segment(
-                                        [rect.right_top(), rect.right_bottom()],
+                                        [top_right, bottom_right],
                                         epaint::Stroke::new(4., Color32::DARK_BLUE),
                                     ),
                                     epaint::Shape::line_segment(
-                                        [rect.left_top(), rect.left_bottom()],
+                                        [top_left, bottom_left],
                                         epaint::Stroke::new(2., Color32::WHITE),
                                     ),
                                     epaint::Shape::line_segment(
-                                        [rect.right_top(), rect.right_bottom()],
+                                        [top_right, bottom_right],
                                         epaint::Stroke::new(2., Color32::WHITE),
                                     ),
                                 ))
