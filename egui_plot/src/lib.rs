@@ -1176,22 +1176,79 @@ impl<'a> Plot<'a> {
             if let (Some(box_start_pos), Some(box_end_pos)) = (box_start_pos, box_end_pos) {
                 // while dragging prepare a Shape and draw it later on top of the plot
                 if response.dragged_by(boxed_zoom_pointer_button) {
+                    const SINGLE_THRESHOLD: f32 = 0.5;
+                    const SQUARE_THRESHOLD: f32 = 0.5;
                     response = response.on_hover_cursor(CursorIcon::ZoomIn);
+                    // if the rect is "nearly" square or the smaller dimension is > some threshold => rect
+                    // else draw 2 bars on either side.
                     let rect = epaint::Rect::from_two_pos(box_start_pos, box_end_pos);
-                    boxed_zoom_rect = Some((
-                        epaint::RectShape::stroke(
-                            rect,
-                            0.0,
-                            epaint::Stroke::new(4., Color32::DARK_BLUE),
-                            egui::StrokeKind::Middle,
-                        ), // Outer stroke
-                        epaint::RectShape::stroke(
-                            rect,
-                            0.0,
-                            epaint::Stroke::new(2., Color32::WHITE),
-                            egui::StrokeKind::Middle,
-                        ), // Inner stroke
-                    ));
+                    let min_dimension = rect.width().min(rect.height()) < SINGLE_THRESHOLD;
+                    let nearly_square = (rect.aspect_ratio() - 1.0).abs() > SQUARE_THRESHOLD;
+                    let is_single_dimension = min_dimension || nearly_square;
+                    boxed_zoom_rect = if is_single_dimension {
+                        rect.width().partial_cmp(&rect.height()).and_then(|ord| {
+                            match ord {
+                                Ordering::Less => {
+                                    // width < height => vertical selection -> horizontal bars
+                                    Some(BoxedZoomType::Bars(
+                                        epaint::Shape::line_segment(
+                                            [rect.left_top(), rect.right_top()],
+                                            epaint::Stroke::new(4., Color32::DARK_BLUE),
+                                        ),
+                                        epaint::Shape::line_segment(
+                                            [rect.left_bottom(), rect.right_bottom()],
+                                            epaint::Stroke::new(4., Color32::DARK_BLUE),
+                                        ),
+                                        epaint::Shape::line_segment(
+                                            [rect.left_top(), rect.right_top()],
+                                            epaint::Stroke::new(2., Color32::WHITE),
+                                        ),
+                                        epaint::Shape::line_segment(
+                                            [rect.left_bottom(), rect.right_bottom()],
+                                            epaint::Stroke::new(2., Color32::WHITE),
+                                        ),
+                                    ))
+                                }
+                                Ordering::Greater => {
+                                    // width > height => horizontal selection -> vertical bars
+                                    Some(BoxedZoomType::Bars(
+                                        epaint::Shape::line_segment(
+                                            [rect.left_top(), rect.left_bottom()],
+                                            epaint::Stroke::new(4., Color32::DARK_BLUE),
+                                        ),
+                                        epaint::Shape::line_segment(
+                                            [rect.right_top(), rect.right_bottom()],
+                                            epaint::Stroke::new(4., Color32::DARK_BLUE),
+                                        ),
+                                        epaint::Shape::line_segment(
+                                            [rect.left_top(), rect.left_bottom()],
+                                            epaint::Stroke::new(2., Color32::WHITE),
+                                        ),
+                                        epaint::Shape::line_segment(
+                                            [rect.right_top(), rect.right_bottom()],
+                                            epaint::Stroke::new(2., Color32::WHITE),
+                                        ),
+                                    ))
+                                }
+                                Ordering::Equal => None,
+                            }
+                        })
+                    } else {
+                        Some(BoxedZoomType::Rect(
+                            epaint::RectShape::stroke(
+                                rect,
+                                0.0,
+                                epaint::Stroke::new(4., Color32::DARK_BLUE),
+                                egui::StrokeKind::Middle,
+                            ), // Outer stroke
+                            epaint::RectShape::stroke(
+                                rect,
+                                0.0,
+                                epaint::Stroke::new(2., Color32::WHITE),
+                                egui::StrokeKind::Middle,
+                            ), // Inner stroke
+                        ))
+                    };
                 }
                 // when the click is release perform the zoom
                 if response.drag_stopped() {
@@ -1318,12 +1375,18 @@ impl<'a> Plot<'a> {
         let (plot_cursors, mut hovered_plot_item) = prepared.ui(ui, &response);
 
         if let Some(boxed_zoom_rect) = boxed_zoom_rect {
-            ui.painter()
-                .with_clip_rect(plot_rect)
-                .add(boxed_zoom_rect.0);
-            ui.painter()
-                .with_clip_rect(plot_rect)
-                .add(boxed_zoom_rect.1);
+            match boxed_zoom_rect {
+                BoxedZoomType::Rect(rect_shape, rect_shape1) => {
+                    ui.painter().with_clip_rect(plot_rect).add(rect_shape);
+                    ui.painter().with_clip_rect(plot_rect).add(rect_shape1);
+                }
+                BoxedZoomType::Bars(shape, shape1, shape2, shape3) => {
+                    ui.painter().with_clip_rect(plot_rect).add(shape);
+                    ui.painter().with_clip_rect(plot_rect).add(shape1);
+                    ui.painter().with_clip_rect(plot_rect).add(shape2);
+                    ui.painter().with_clip_rect(plot_rect).add(shape3);
+                }
+            }
         }
 
         if let Some(mut legend) = legend {
@@ -1380,6 +1443,11 @@ impl<'a> Plot<'a> {
             hovered_plot_item,
         }
     }
+}
+
+enum BoxedZoomType {
+    Rect(epaint::RectShape, epaint::RectShape),
+    Bars(epaint::Shape, epaint::Shape, epaint::Shape, epaint::Shape),
 }
 
 /// Returns the rect left after adding axes.
