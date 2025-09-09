@@ -1177,13 +1177,20 @@ impl<'a> Plot<'a> {
                 // while dragging prepare a Shape and draw it later on top of the plot
                 if response.dragged_by(boxed_zoom_pointer_button) {
                     response = response.on_hover_cursor(CursorIcon::ZoomIn);
-                    boxed_zoom_rect =
-                        Some(BoxedZoomType::new_from_corners(box_start_pos, box_end_pos));
+                    boxed_zoom_rect = Some(BoxedZoomType::new_from_corners(
+                        box_start_pos,
+                        box_end_pos,
+                        data_aspect.is_none(),
+                    ));
                 }
                 // when the click is release perform the zoom
                 if response.drag_stopped() {
-                    let zoom_type = ZoomType::new_from_corners(box_start_pos, box_end_pos);
-                    match zoom_type {
+                    // NOTE(Mick): maybe a `PlotBounds::From<Rect>` could be useful here?
+                    match ZoomType::new_from_corners(
+                        box_start_pos,
+                        box_end_pos,
+                        data_aspect.is_none(),
+                    ) {
                         ZoomType::Rect(rect) => {
                             let top_left = mem.transform.value_from_position(rect.left_top());
                             let bottom_right =
@@ -1416,14 +1423,14 @@ enum ZoomType {
 }
 
 impl ZoomType {
-    // random values for testing
     // "buffer" on `min` before rect should be used
     // NOTE: May want to be based on the axes?
     pub const BUFFER: f32 = 100.0;
     // if the ratio between `min` and `max` is about 10% different or less, its "square"
     pub const SQUARENESS_THRESHOLD: f32 = 0.1;
 
-    fn new_from_corners(start: Pos2, end: Pos2) -> Self {
+    // NOTE(Mick): non-Rect zooming is only supported if proportional axes is off.
+    fn new_from_corners(start: Pos2, end: Pos2, supports_single_dimension_zoom: bool) -> Self {
         let rect = epaint::Rect::from_two_pos(start, end);
 
         let (min, is_vertical) = {
@@ -1435,6 +1442,10 @@ impl ZoomType {
         let width = egui::vec2(rect.width(), 0.0);
         let half_buffer_x = egui::vec2(Self::BUFFER / 2.0, 0.0);
         let half_buffer_y = egui::vec2(0.0, Self::BUFFER / 2.0);
+
+        if !supports_single_dimension_zoom {
+            return Self::Rect(rect);
+        }
 
         if min > (Self::BUFFER / 2.0)
             || (rect.aspect_ratio() - 1.0).abs() < Self::SQUARENESS_THRESHOLD
@@ -1466,19 +1477,19 @@ impl ZoomType {
 
 enum BoxedZoomType {
     Rect(epaint::RectShape, epaint::RectShape),
-    // TODO(Mick): make this api not atrocious
     Horizontal(epaint::Shape, epaint::Shape, epaint::Shape, epaint::Shape),
     Vertical(epaint::Shape, epaint::Shape, epaint::Shape, epaint::Shape),
 }
 
+// TODO(Mick): make this api not atrocious
 impl BoxedZoomType {
     // as soon as there is a drag, add a buffer centered around `box_start_pos` in the `min` direction
     // on the near and far ends of `rect`
     //
     // if `min` > (buffer/2) || aspect_ratio ~= 1 => rect zoom
     // otherwise => single zoom
-    fn new_from_corners(start: Pos2, end: Pos2) -> Self {
-        match ZoomType::new_from_corners(start, end) {
+    fn new_from_corners(start: Pos2, end: Pos2, supports_single_dimension_zoom: bool) -> Self {
+        match ZoomType::new_from_corners(start, end, supports_single_dimension_zoom) {
             ZoomType::Rect(rect) => {
                 Self::Rect(
                     epaint::RectShape::stroke(
