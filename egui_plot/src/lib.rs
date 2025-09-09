@@ -1176,156 +1176,8 @@ impl<'a> Plot<'a> {
             if let (Some(box_start_pos), Some(box_end_pos)) = (box_start_pos, box_end_pos) {
                 // while dragging prepare a Shape and draw it later on top of the plot
                 if response.dragged_by(boxed_zoom_pointer_button) {
-                    // as soon as there is a drag, add a buffer centered around `box_start_pos` in the `min` direction
-                    // on the near and far ends of `rect`
-                    //
-                    // if `min` > (buffer/2) || aspect_ratio ~= 1 => rect zoom
-                    // otherwise => single zoom
-
-                    // random values for testing
-                    // "buffer" on `min` before rect should be used
-                    // NOTE: May want to be based on the axes?
-                    const BUFFER: f32 = 100.0;
-                    // if the ratio between `min` and `max` is about 10% different or less, its "square"
-                    const SQUARENESS_THRESHOLD: f32 = 0.1;
-
                     response = response.on_hover_cursor(CursorIcon::ZoomIn);
-                    let rect = epaint::Rect::from_two_pos(box_start_pos, box_end_pos);
-
-                    let Vec2 { x, y } = rect.size();
-                    if let Some((min, is_vertical)) = x.partial_cmp(&y).and_then(|ord| match ord {
-                        Ordering::Less => Some((x, true)),
-                        Ordering::Greater => Some((y, false)),
-                        Ordering::Equal => None,
-                    }) {
-                        boxed_zoom_rect = if min > (BUFFER / 2.0)
-                            || (rect.aspect_ratio() - 1.0).abs() < SQUARENESS_THRESHOLD
-                        {
-                            Some(BoxedZoomType::Rect(
-                                epaint::RectShape::stroke(
-                                    rect,
-                                    0.0,
-                                    epaint::Stroke::new(4., Color32::DARK_BLUE),
-                                    egui::StrokeKind::Middle,
-                                ), // Outer stroke
-                                epaint::RectShape::stroke(
-                                    rect,
-                                    0.0,
-                                    epaint::Stroke::new(2., Color32::WHITE),
-                                    egui::StrokeKind::Middle,
-                                ), // Inner stroke
-                            ))
-                        } else {
-                            if is_vertical {
-                                let (top_center, bottom_center) = if box_start_pos.y > box_end_pos.y
-                                {
-                                    (
-                                        box_start_pos,
-                                        Pos2 {
-                                            x: box_start_pos.x,
-                                            y: box_start_pos.y - rect.height(),
-                                        },
-                                    )
-                                } else {
-                                    (
-                                        Pos2 {
-                                            x: box_start_pos.x,
-                                            y: box_start_pos.y + rect.height(),
-                                        },
-                                        box_start_pos,
-                                    )
-                                };
-                                let top_left = Pos2 {
-                                    x: top_center.x - (BUFFER / 2.0),
-                                    y: top_center.y,
-                                };
-                                let top_right = Pos2 {
-                                    x: top_center.x + (BUFFER / 2.0),
-                                    y: top_center.y,
-                                };
-                                let bottom_left = Pos2 {
-                                    x: bottom_center.x - (BUFFER / 2.0),
-                                    y: bottom_center.y,
-                                };
-                                let bottom_right = Pos2 {
-                                    x: bottom_center.x + (BUFFER / 2.0),
-                                    y: bottom_center.y,
-                                };
-
-                                Some(BoxedZoomType::Bars(
-                                    epaint::Shape::line_segment(
-                                        [top_left, top_right],
-                                        epaint::Stroke::new(4., Color32::DARK_BLUE),
-                                    ),
-                                    epaint::Shape::line_segment(
-                                        [bottom_left, bottom_right],
-                                        epaint::Stroke::new(4., Color32::DARK_BLUE),
-                                    ),
-                                    epaint::Shape::line_segment(
-                                        [top_left, top_right],
-                                        epaint::Stroke::new(2., Color32::WHITE),
-                                    ),
-                                    epaint::Shape::line_segment(
-                                        [bottom_left, bottom_right],
-                                        epaint::Stroke::new(2., Color32::WHITE),
-                                    ),
-                                ))
-                            } else {
-                                let (left_center, right_center) = if box_start_pos.x > box_end_pos.x
-                                {
-                                    (
-                                        Pos2 {
-                                            x: box_start_pos.x - rect.width(),
-                                            y: box_start_pos.y,
-                                        },
-                                        box_start_pos,
-                                    )
-                                } else {
-                                    (
-                                        box_start_pos,
-                                        Pos2 {
-                                            x: box_start_pos.x + rect.width(),
-                                            y: box_start_pos.y,
-                                        },
-                                    )
-                                };
-                                let top_left = Pos2 {
-                                    x: left_center.x,
-                                    y: left_center.y + (BUFFER / 2.0),
-                                };
-                                let bottom_left = Pos2 {
-                                    x: left_center.x,
-                                    y: left_center.y - (BUFFER / 2.0),
-                                };
-                                let top_right = Pos2 {
-                                    x: right_center.x,
-                                    y: right_center.y + (BUFFER / 2.0),
-                                };
-                                let bottom_right = Pos2 {
-                                    x: right_center.x,
-                                    y: right_center.y - (BUFFER / 2.0),
-                                };
-                                Some(BoxedZoomType::Bars(
-                                    epaint::Shape::line_segment(
-                                        [top_left, bottom_left],
-                                        epaint::Stroke::new(4., Color32::DARK_BLUE),
-                                    ),
-                                    epaint::Shape::line_segment(
-                                        [top_right, bottom_right],
-                                        epaint::Stroke::new(4., Color32::DARK_BLUE),
-                                    ),
-                                    epaint::Shape::line_segment(
-                                        [top_left, bottom_left],
-                                        epaint::Stroke::new(2., Color32::WHITE),
-                                    ),
-                                    epaint::Shape::line_segment(
-                                        [top_right, bottom_right],
-                                        epaint::Stroke::new(2., Color32::WHITE),
-                                    ),
-                                ))
-                            }
-                        };
-                    }
+                    boxed_zoom_rect = Some(BoxedZoomType::from_corners(box_start_pos, box_end_pos));
                 }
                 // when the click is release perform the zoom
                 if response.drag_stopped() {
@@ -1525,6 +1377,112 @@ impl<'a> Plot<'a> {
 enum BoxedZoomType {
     Rect(epaint::RectShape, epaint::RectShape),
     Bars(epaint::Shape, epaint::Shape, epaint::Shape, epaint::Shape),
+}
+
+impl BoxedZoomType {
+    // random values for testing
+    // "buffer" on `min` before rect should be used
+    // NOTE: May want to be based on the axes?
+    const BUFFER: f32 = 100.0;
+    // if the ratio between `min` and `max` is about 10% different or less, its "square"
+    const SQUARENESS_THRESHOLD: f32 = 0.1;
+
+    // as soon as there is a drag, add a buffer centered around `box_start_pos` in the `min` direction
+    // on the near and far ends of `rect`
+    //
+    // if `min` > (buffer/2) || aspect_ratio ~= 1 => rect zoom
+    // otherwise => single zoom
+    fn from_corners(box_start_pos: Pos2, box_end_pos: Pos2) -> Self {
+        let rect = epaint::Rect::from_two_pos(box_start_pos, box_end_pos);
+
+        let (min, is_vertical) = {
+            let Vec2 { x, y } = rect.size();
+            if x < y { (x, true) } else { (y, false) }
+        };
+
+        if min > (Self::BUFFER / 2.0)
+            || (rect.aspect_ratio() - 1.0).abs() < Self::SQUARENESS_THRESHOLD
+        {
+            Self::Rect(
+                epaint::RectShape::stroke(
+                    rect,
+                    0.0,
+                    epaint::Stroke::new(4., Color32::DARK_BLUE),
+                    egui::StrokeKind::Middle,
+                ), // Outer stroke
+                epaint::RectShape::stroke(
+                    rect,
+                    0.0,
+                    epaint::Stroke::new(2., Color32::WHITE),
+                    egui::StrokeKind::Middle,
+                ), // Inner stroke
+            )
+        } else {
+            let height = egui::vec2(0.0, rect.height());
+            let width = egui::vec2(rect.width(), 0.0);
+            let half_buffer_x = egui::vec2(Self::BUFFER / 2.0, 0.0);
+            let half_buffer_y = egui::vec2(0.0, Self::BUFFER / 2.0);
+
+            if is_vertical {
+                let (top_center, bottom_center) = if box_start_pos.y > box_end_pos.y {
+                    (box_start_pos, box_start_pos - height)
+                } else {
+                    (box_start_pos + height, box_start_pos)
+                };
+                let top_left = top_center - half_buffer_x;
+                let top_right = top_center + half_buffer_x;
+                let bottom_left = bottom_center - half_buffer_x;
+                let bottom_right = bottom_center + half_buffer_x;
+
+                Self::Bars(
+                    epaint::Shape::line_segment(
+                        [top_left, top_right],
+                        epaint::Stroke::new(4., Color32::DARK_BLUE),
+                    ),
+                    epaint::Shape::line_segment(
+                        [bottom_left, bottom_right],
+                        epaint::Stroke::new(4., Color32::DARK_BLUE),
+                    ),
+                    epaint::Shape::line_segment(
+                        [top_left, top_right],
+                        epaint::Stroke::new(2., Color32::WHITE),
+                    ),
+                    epaint::Shape::line_segment(
+                        [bottom_left, bottom_right],
+                        epaint::Stroke::new(2., Color32::WHITE),
+                    ),
+                )
+            } else {
+                let (left_center, right_center) = if box_start_pos.x > box_end_pos.x {
+                    (box_start_pos - width, box_start_pos)
+                } else {
+                    (box_start_pos, box_start_pos + width)
+                };
+                let top_left = left_center + half_buffer_y;
+                let bottom_left = left_center - half_buffer_y;
+                let top_right = right_center + half_buffer_y;
+                let bottom_right = right_center - half_buffer_y;
+                Self::Bars(
+                    epaint::Shape::line_segment(
+                        [top_left, bottom_left],
+                        epaint::Stroke::new(4., Color32::DARK_BLUE),
+                    ),
+                    epaint::Shape::line_segment(
+                        [top_right, bottom_right],
+                        epaint::Stroke::new(4., Color32::DARK_BLUE),
+                    ),
+                    epaint::Shape::line_segment(
+                        [top_left, bottom_left],
+                        epaint::Stroke::new(2., Color32::WHITE),
+                    ),
+                    epaint::Shape::line_segment(
+                        [top_right, bottom_right],
+                        epaint::Stroke::new(2., Color32::WHITE),
+                    ),
+                )
+            }
+        }
+    }
 }
 
 /// Returns the rect left after adding axes.
