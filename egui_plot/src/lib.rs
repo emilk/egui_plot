@@ -1177,7 +1177,7 @@ impl<'a> Plot<'a> {
                 // while dragging prepare a Shape and draw it later on top of the plot
                 if response.dragged_by(boxed_zoom_pointer_button) {
                     response = response.on_hover_cursor(CursorIcon::ZoomIn);
-                    boxed_zoom_rect = Some(BoxedZoomType::new_from_corners(
+                    boxed_zoom_rect = Some(ZoomType::new_from_corners(
                         box_start_pos,
                         box_end_pos,
                         data_aspect.is_none(),
@@ -1185,7 +1185,7 @@ impl<'a> Plot<'a> {
                 }
                 // when the click is release perform the zoom
                 if response.drag_stopped() {
-                    // NOTE(Mick): maybe a `PlotBounds::From<Rect>` could be useful here?
+                    // TODO(Mick): not a fan of the recalculate
                     match ZoomType::new_from_corners(
                         box_start_pos,
                         box_end_pos,
@@ -1345,19 +1345,7 @@ impl<'a> Plot<'a> {
         let (plot_cursors, mut hovered_plot_item) = prepared.ui(ui, &response);
 
         if let Some(boxed_zoom_rect) = boxed_zoom_rect {
-            match boxed_zoom_rect {
-                BoxedZoomType::Rect(rect_shape, rect_shape1) => {
-                    ui.painter().with_clip_rect(plot_rect).add(rect_shape);
-                    ui.painter().with_clip_rect(plot_rect).add(rect_shape1);
-                }
-                BoxedZoomType::Horizontal(shape, shape1, shape2, shape3)
-                | BoxedZoomType::Vertical(shape, shape1, shape2, shape3) => {
-                    ui.painter().with_clip_rect(plot_rect).add(shape);
-                    ui.painter().with_clip_rect(plot_rect).add(shape1);
-                    ui.painter().with_clip_rect(plot_rect).add(shape2);
-                    ui.painter().with_clip_rect(plot_rect).add(shape3);
-                }
-            }
+            boxed_zoom_rect.paint(ui, plot_rect);
         }
 
         if let Some(mut legend) = legend {
@@ -1473,75 +1461,70 @@ impl ZoomType {
             Self::Horizontal(Rect::from_two_pos(top_left, bottom_right))
         }
     }
-}
 
-enum BoxedZoomType {
-    Rect(epaint::RectShape, epaint::RectShape),
-    Horizontal(epaint::Shape, epaint::Shape, epaint::Shape, epaint::Shape),
-    Vertical(epaint::Shape, epaint::Shape, epaint::Shape, epaint::Shape),
-}
-
-// TODO(Mick): make this api not atrocious
-impl BoxedZoomType {
-    // as soon as there is a drag, add a buffer centered around `box_start_pos` in the `min` direction
-    // on the near and far ends of `rect`
-    //
-    // if `min` > (buffer/2) || aspect_ratio ~= 1 => rect zoom
-    // otherwise => single zoom
-    fn new_from_corners(start: Pos2, end: Pos2, supports_single_dimension_zoom: bool) -> Self {
-        match ZoomType::new_from_corners(start, end, supports_single_dimension_zoom) {
+    fn paint(&self, ui: &mut egui::Ui, clip_rect: Rect) {
+        let painter = ui.painter().with_clip_rect(clip_rect);
+        match self {
             ZoomType::Rect(rect) => {
-                Self::Rect(
-                    epaint::RectShape::stroke(
-                        rect,
-                        0.0,
-                        epaint::Stroke::new(4., Color32::DARK_BLUE),
-                        egui::StrokeKind::Middle,
-                    ), // Outer stroke
-                    epaint::RectShape::stroke(
-                        rect,
-                        0.0,
-                        epaint::Stroke::new(2., Color32::WHITE),
-                        egui::StrokeKind::Middle,
-                    ), // Inner stroke
-                )
+                // Outer stroke
+                painter.add(epaint::RectShape::stroke(
+                    *rect,
+                    0.0,
+                    epaint::Stroke::new(4., Color32::DARK_BLUE),
+                    egui::StrokeKind::Middle,
+                ));
+                // Inner stroke
+                painter.add(epaint::RectShape::stroke(
+                    *rect,
+                    0.0,
+                    epaint::Stroke::new(2., Color32::WHITE),
+                    egui::StrokeKind::Middle,
+                ));
             }
-            ZoomType::Horizontal(rect) => Self::Horizontal(
-                epaint::Shape::line_segment(
+            ZoomType::Horizontal(rect) => {
+                // Left Outer stroke
+                painter.add(epaint::Shape::line_segment(
                     [rect.left_top(), rect.left_bottom()],
                     epaint::Stroke::new(4., Color32::DARK_BLUE),
-                ),
-                epaint::Shape::line_segment(
+                ));
+                // Right Outer stroke
+                painter.add(epaint::Shape::line_segment(
                     [rect.right_top(), rect.right_bottom()],
                     epaint::Stroke::new(4., Color32::DARK_BLUE),
-                ),
-                epaint::Shape::line_segment(
+                ));
+                // Left Inner stroke
+                painter.add(epaint::Shape::line_segment(
                     [rect.left_top(), rect.left_bottom()],
                     epaint::Stroke::new(2., Color32::WHITE),
-                ),
-                epaint::Shape::line_segment(
+                ));
+                // Right Inner stroke
+                painter.add(epaint::Shape::line_segment(
                     [rect.right_top(), rect.right_bottom()],
                     epaint::Stroke::new(2., Color32::WHITE),
-                ),
-            ),
-            ZoomType::Vertical(rect) => Self::Vertical(
-                epaint::Shape::line_segment(
+                ));
+            }
+            ZoomType::Vertical(rect) => {
+                // Top Outer stroke
+                painter.add(epaint::Shape::line_segment(
                     [rect.left_top(), rect.right_top()],
                     epaint::Stroke::new(4., Color32::DARK_BLUE),
-                ),
-                epaint::Shape::line_segment(
+                ));
+                // Bottom Outer stroke
+                painter.add(epaint::Shape::line_segment(
                     [rect.left_bottom(), rect.right_bottom()],
                     epaint::Stroke::new(4., Color32::DARK_BLUE),
-                ),
-                epaint::Shape::line_segment(
+                ));
+                // Top Inner stroke
+                painter.add(epaint::Shape::line_segment(
                     [rect.left_top(), rect.right_top()],
                     epaint::Stroke::new(2., Color32::WHITE),
-                ),
-                epaint::Shape::line_segment(
+                ));
+                // Bottom Inner stroke
+                painter.add(epaint::Shape::line_segment(
                     [rect.left_bottom(), rect.right_bottom()],
                     epaint::Stroke::new(2., Color32::WHITE),
-                ),
-            ),
+                ));
+            }
         }
     }
 }
