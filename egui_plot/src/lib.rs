@@ -1462,10 +1462,10 @@ impl ZoomType {
         }
     }
 
-    fn paint(&self, ui: &mut egui::Ui, clip_rect: Rect) {
+    fn paint(&self, ui: &Ui, clip_rect: Rect) {
         let painter = ui.painter().with_clip_rect(clip_rect);
         match self {
-            ZoomType::Rect(rect) => {
+            Self::Rect(rect) => {
                 // Outer stroke
                 painter.add(epaint::RectShape::stroke(
                     *rect,
@@ -1481,7 +1481,7 @@ impl ZoomType {
                     egui::StrokeKind::Middle,
                 ));
             }
-            ZoomType::Horizontal(rect) => {
+            Self::Horizontal(rect) => {
                 // Left Outer stroke
                 painter.add(epaint::Shape::line_segment(
                     [rect.left_top(), rect.left_bottom()],
@@ -1503,7 +1503,7 @@ impl ZoomType {
                     epaint::Stroke::new(2., Color32::WHITE),
                 ));
             }
-            ZoomType::Vertical(rect) => {
+            Self::Vertical(rect) => {
                 // Top Outer stroke
                 painter.add(epaint::Shape::line_segment(
                     [rect.left_top(), rect.right_top()],
