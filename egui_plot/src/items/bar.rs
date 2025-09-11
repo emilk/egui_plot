@@ -15,16 +15,16 @@ pub struct Bar {
     pub orientation: Orientation,
 
     /// Position on the argument (input) axis -- X if vertical, Y if horizontal
-    pub argument: f64,
+    pub argument: f32,
 
     /// Position on the value (output) axis -- Y if vertical, X if horizontal
-    pub value: f64,
+    pub value: f32,
 
     /// For stacked bars, this denotes where the bar starts. None if base axis
-    pub base_offset: Option<f64>,
+    pub base_offset: Option<f32>,
 
     /// Thickness of the bar
-    pub bar_width: f64,
+    pub bar_width: f32,
 
     /// Line width and color
     pub stroke: Stroke,
@@ -40,7 +40,7 @@ impl Bar {
     /// - `value`: Height of the bar (if vertical).
     ///
     /// By default the bar is vertical and its base is at zero.
-    pub fn new(argument: f64, height: f64) -> Self {
+    pub fn new(argument: f32, height: f32) -> Self {
         Self {
             argument,
             value: height,
@@ -79,14 +79,14 @@ impl Bar {
     /// This offset is on the Y axis for a vertical bar
     /// and on the X axis for a horizontal bar.
     #[inline]
-    pub fn base_offset(mut self, offset: f64) -> Self {
+    pub fn base_offset(mut self, offset: f32) -> Self {
         self.base_offset = Some(offset);
         self
     }
 
     /// Set the bar width.
     #[inline]
-    pub fn width(mut self, width: f64) -> Self {
+    pub fn width(mut self, width: f32) -> Self {
         self.bar_width = width;
         self
     }
@@ -105,7 +105,7 @@ impl Bar {
         self
     }
 
-    pub(super) fn lower(&self) -> f64 {
+    pub(super) fn lower(&self) -> f32 {
         if self.value.is_sign_positive() {
             self.base_offset.unwrap_or(0.0)
         } else {
@@ -113,7 +113,7 @@ impl Bar {
         }
     }
 
-    pub(super) fn upper(&self) -> f64 {
+    pub(super) fn upper(&self) -> f32 {
         if self.value.is_sign_positive() {
             self.base_offset.map_or(self.value, |o| o + self.value)
         } else {

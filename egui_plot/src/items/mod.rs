@@ -101,7 +101,7 @@ pub trait PlotItem {
     fn shapes(&self, ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>);
 
     /// For plot-items which are generated based on x values (plotting functions).
-    fn initialize(&mut self, x_range: RangeInclusive<f64>);
+    fn initialize(&mut self, x_range: RangeInclusive<f32>);
 
     fn name(&self) -> &str {
         &self.base().name
@@ -201,13 +201,13 @@ pub trait PlotItem {
 #[derive(Clone, Debug, PartialEq)]
 pub struct HLine {
     base: PlotItemBase,
-    pub(super) y: f64,
+    pub(super) y: f32,
     pub(super) stroke: Stroke,
     pub(super) style: LineStyle,
 }
 
 impl HLine {
-    pub fn new(name: impl Into<String>, y: impl Into<f64>) -> Self {
+    pub fn new(name: impl Into<String>, y: impl Into<f32>) -> Self {
         Self {
             base: PlotItemBase::new(name.into()),
             y: y.into(),
@@ -269,7 +269,7 @@ impl PlotItem for HLine {
         );
     }
 
-    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {}
+    fn initialize(&mut self, _x_range: RangeInclusive<f32>) {}
 
     fn color(&self) -> Color32 {
         self.stroke.color
@@ -299,13 +299,13 @@ impl PlotItem for HLine {
 #[derive(Clone, Debug, PartialEq)]
 pub struct VLine {
     base: PlotItemBase,
-    pub(super) x: f64,
+    pub(super) x: f32,
     pub(super) stroke: Stroke,
     pub(super) style: LineStyle,
 }
 
 impl VLine {
-    pub fn new(name: impl Into<String>, x: impl Into<f64>) -> Self {
+    pub fn new(name: impl Into<String>, x: impl Into<f32>) -> Self {
         Self {
             base: PlotItemBase::new(name.into()),
             x: x.into(),
@@ -367,7 +367,7 @@ impl PlotItem for VLine {
         );
     }
 
-    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {}
+    fn initialize(&mut self, _x_range: RangeInclusive<f32>) {}
 
     fn color(&self) -> Color32 {
         self.stroke.color
@@ -573,7 +573,7 @@ impl PlotItem for Line<'_> {
         style.style_line(values_tf, final_stroke, base.highlight, shapes);
     }
 
-    fn initialize(&mut self, x_range: RangeInclusive<f64>) {
+    fn initialize(&mut self, x_range: RangeInclusive<f32>) {
         self.series.generate_points(x_range);
     }
 
@@ -683,7 +683,7 @@ impl PlotItem for Polygon<'_> {
         );
     }
 
-    fn initialize(&mut self, x_range: RangeInclusive<f64>) {
+    fn initialize(&mut self, x_range: RangeInclusive<f32>) {
         self.series.generate_points(x_range);
     }
 
@@ -776,7 +776,7 @@ impl PlotItem for Text {
         }
     }
 
-    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {}
+    fn initialize(&mut self, _x_range: RangeInclusive<f32>) {}
 
     fn color(&self) -> Color32 {
         self.color
@@ -1004,7 +1004,7 @@ impl PlotItem for Points<'_> {
             });
     }
 
-    fn initialize(&mut self, x_range: RangeInclusive<f64>) {
+    fn initialize(&mut self, x_range: RangeInclusive<f32>) {
         self.series.generate_points(x_range);
     }
 
@@ -1113,10 +1113,10 @@ impl PlotItem for Arrows<'_> {
             });
     }
 
-    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {
+    fn initialize(&mut self, _x_range: RangeInclusive<f32>) {
         self.origins
-            .generate_points(f64::NEG_INFINITY..=f64::INFINITY);
-        self.tips.generate_points(f64::NEG_INFINITY..=f64::INFINITY);
+            .generate_points(f32::NEG_INFINITY..=f32::INFINITY);
+        self.tips.generate_points(f32::NEG_INFINITY..=f32::INFINITY);
     }
 
     fn color(&self) -> Color32 {
@@ -1148,7 +1148,7 @@ pub struct PlotImage {
     pub(super) texture_id: TextureId,
     pub(super) uv: Rect,
     pub(super) size: Vec2,
-    pub(crate) rotation: f64,
+    pub(crate) rotation: f32,
     pub(super) bg_fill: Color32,
     pub(super) tint: Color32,
 }
@@ -1196,7 +1196,7 @@ impl PlotImage {
 
     /// Rotate the image counter-clockwise around its center by an angle in radians.
     #[inline]
-    pub fn rotate(mut self, angle: f64) -> Self {
+    pub fn rotate(mut self, angle: f32) -> Self {
         self.rotation = angle;
         self
     }
@@ -1218,19 +1218,13 @@ impl PlotItem for PlotImage {
             ..
         } = self;
         let image_screen_rect = {
-            let left_top = PlotPoint::new(
-                position.x - 0.5 * size.x as f64,
-                position.y - 0.5 * size.y as f64,
-            );
-            let right_bottom = PlotPoint::new(
-                position.x + 0.5 * size.x as f64,
-                position.y + 0.5 * size.y as f64,
-            );
+            let left_top = PlotPoint::new(position.x - 0.5 * size.x, position.y - 0.5 * size.y);
+            let right_bottom = PlotPoint::new(position.x + 0.5 * size.x, position.y + 0.5 * size.y);
             let left_top_screen = transform.position_from_point(&left_top);
             let right_bottom_screen = transform.position_from_point(&right_bottom);
             Rect::from_two_pos(left_top_screen, right_bottom_screen)
         };
-        let screen_rotation = -*rotation as f32;
+        let screen_rotation = -*rotation;
 
         egui::paint_texture_at(
             ui.painter(),
@@ -1263,7 +1257,7 @@ impl PlotItem for PlotImage {
         }
     }
 
-    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {}
+    fn initialize(&mut self, _x_range: RangeInclusive<f32>) {}
 
     fn color(&self) -> Color32 {
         Color32::TRANSPARENT
@@ -1276,12 +1270,12 @@ impl PlotItem for PlotImage {
     fn bounds(&self) -> PlotBounds {
         let mut bounds = PlotBounds::NOTHING;
         let left_top = PlotPoint::new(
-            self.position.x as f32 - self.size.x / 2.0,
-            self.position.y as f32 - self.size.y / 2.0,
+            self.position.x - self.size.x / 2.0,
+            self.position.y - self.size.y / 2.0,
         );
         let right_bottom = PlotPoint::new(
-            self.position.x as f32 + self.size.x / 2.0,
-            self.position.y as f32 + self.size.y / 2.0,
+            self.position.x + self.size.x / 2.0,
+            self.position.y + self.size.y / 2.0,
         );
         bounds.extend_with(&left_top);
         bounds.extend_with(&right_bottom);
@@ -1360,7 +1354,7 @@ impl BarChart {
 
     /// Set the width (thickness) of all its elements.
     #[inline]
-    pub fn width(mut self, width: f64) -> Self {
+    pub fn width(mut self, width: f32) -> Self {
         for b in &mut self.bars {
             b.bar_width = width;
         }
@@ -1410,7 +1404,7 @@ impl PlotItem for BarChart {
         }
     }
 
-    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {
+    fn initialize(&mut self, _x_range: RangeInclusive<f32>) {
         // nothing to do
     }
 
@@ -1537,7 +1531,7 @@ impl PlotItem for BoxPlot {
         }
     }
 
-    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {
+    fn initialize(&mut self, _x_range: RangeInclusive<f32>) {
         // nothing to do
     }
 

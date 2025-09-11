@@ -6,39 +6,39 @@ use crate::Axis;
 
 use super::PlotPoint;
 
-/// 2D bounding box of f64 precision.
+/// 2D bounding box of f32 precision.
 ///
 /// The range of data values we show.
 #[derive(Clone, Copy, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 pub struct PlotBounds {
-    pub(crate) min: [f64; 2],
-    pub(crate) max: [f64; 2],
+    pub(crate) min: [f32; 2],
+    pub(crate) max: [f32; 2],
 }
 
 impl PlotBounds {
     pub const NOTHING: Self = Self {
-        min: [f64::INFINITY; 2],
-        max: [-f64::INFINITY; 2],
+        min: [f32::INFINITY; 2],
+        max: [-f32::INFINITY; 2],
     };
 
     #[inline]
-    pub fn from_min_max(min: [f64; 2], max: [f64; 2]) -> Self {
+    pub fn from_min_max(min: [f32; 2], max: [f32; 2]) -> Self {
         Self { min, max }
     }
 
     #[inline]
-    pub fn min(&self) -> [f64; 2] {
+    pub fn min(&self) -> [f32; 2] {
         self.min
     }
 
     #[inline]
-    pub fn max(&self) -> [f64; 2] {
+    pub fn max(&self) -> [f32; 2] {
         self.max
     }
 
     #[inline]
-    pub fn new_symmetrical(half_extent: f64) -> Self {
+    pub fn new_symmetrical(half_extent: f32) -> Self {
         Self {
             min: [-half_extent; 2],
             max: [half_extent; 2],
@@ -79,12 +79,12 @@ impl PlotBounds {
     }
 
     #[inline]
-    pub fn width(&self) -> f64 {
+    pub fn width(&self) -> f32 {
         self.max[0] - self.min[0]
     }
 
     #[inline]
-    pub fn height(&self) -> f64 {
+    pub fn height(&self) -> f32 {
         self.max[1] - self.min[1]
     }
 
@@ -106,14 +106,14 @@ impl PlotBounds {
 
     /// Expand to include the given x coordinate
     #[inline]
-    pub fn extend_with_x(&mut self, x: f64) {
+    pub fn extend_with_x(&mut self, x: f32) {
         self.min[0] = self.min[0].min(x);
         self.max[0] = self.max[0].max(x);
     }
 
     /// Expand to include the given y coordinate
     #[inline]
-    pub fn extend_with_y(&mut self, y: f64) {
+    pub fn extend_with_y(&mut self, y: f32) {
         self.min[1] = self.min[1].min(y);
         self.max[1] = self.max[1].max(y);
     }
@@ -121,12 +121,12 @@ impl PlotBounds {
     #[inline]
     fn clamp_to_finite(&mut self) {
         for d in 0..2 {
-            self.min[d] = self.min[d].clamp(f64::MIN, f64::MAX);
+            self.min[d] = self.min[d].clamp(f32::MIN, f32::MAX);
             if self.min[d].is_nan() {
                 self.min[d] = 0.0;
             }
 
-            self.max[d] = self.max[d].clamp(f64::MIN, f64::MAX);
+            self.max[d] = self.max[d].clamp(f32::MIN, f32::MAX);
             if self.max[d].is_nan() {
                 self.max[d] = 0.0;
             }
@@ -134,7 +134,7 @@ impl PlotBounds {
     }
 
     #[inline]
-    pub fn expand_x(&mut self, pad: f64) {
+    pub fn expand_x(&mut self, pad: f32) {
         if pad.is_finite() {
             self.min[0] -= pad;
             self.max[0] += pad;
@@ -143,7 +143,7 @@ impl PlotBounds {
     }
 
     #[inline]
-    pub fn expand_y(&mut self, pad: f64) {
+    pub fn expand_y(&mut self, pad: f32) {
         if pad.is_finite() {
             self.min[1] -= pad;
             self.max[1] += pad;
@@ -170,7 +170,7 @@ impl PlotBounds {
     }
 
     #[inline]
-    pub fn set_x_center_width(&mut self, x: f64, width: f64) {
+    pub fn set_x_center_width(&mut self, x: f32, width: f32) {
         self.min[0] = x - width / 2.0;
         self.max[0] = x + width / 2.0;
     }
@@ -182,7 +182,7 @@ impl PlotBounds {
     }
 
     #[inline]
-    pub fn set_y_center_height(&mut self, y: f64, height: f64) {
+    pub fn set_y_center_height(&mut self, y: f32, height: f32) {
         self.min[1] = y - height / 2.0;
         self.max[1] = y + height / 2.0;
     }
@@ -196,7 +196,7 @@ impl PlotBounds {
     }
 
     #[inline]
-    pub fn translate_x(&mut self, delta: f64) {
+    pub fn translate_x(&mut self, delta: f32) {
         if delta.is_finite() {
             self.min[0] += delta;
             self.max[0] += delta;
@@ -205,7 +205,7 @@ impl PlotBounds {
     }
 
     #[inline]
-    pub fn translate_y(&mut self, delta: f64) {
+    pub fn translate_y(&mut self, delta: f32) {
         if delta.is_finite() {
             self.min[1] += delta;
             self.max[1] += delta;
@@ -214,38 +214,38 @@ impl PlotBounds {
     }
 
     #[inline]
-    pub fn translate(&mut self, delta: (f64, f64)) {
+    pub fn translate(&mut self, delta: (f32, f32)) {
         self.translate_x(delta.0);
         self.translate_y(delta.1);
     }
 
     #[inline]
     pub fn zoom(&mut self, zoom_factor: Vec2, center: PlotPoint) {
-        self.min[0] = center.x + (self.min[0] - center.x) / (zoom_factor.x as f64);
-        self.max[0] = center.x + (self.max[0] - center.x) / (zoom_factor.x as f64);
-        self.min[1] = center.y + (self.min[1] - center.y) / (zoom_factor.y as f64);
-        self.max[1] = center.y + (self.max[1] - center.y) / (zoom_factor.y as f64);
+        self.min[0] = center.x + (self.min[0] - center.x) / zoom_factor.x;
+        self.max[0] = center.x + (self.max[0] - center.x) / zoom_factor.x;
+        self.min[1] = center.y + (self.min[1] - center.y) / zoom_factor.y;
+        self.max[1] = center.y + (self.max[1] - center.y) / zoom_factor.y;
     }
 
     #[inline]
     pub fn add_relative_margin_x(&mut self, margin_fraction: Vec2) {
         let width = self.width().max(0.0);
-        self.expand_x(margin_fraction.x as f64 * width);
+        self.expand_x(margin_fraction.x * width);
     }
 
     #[inline]
     pub fn add_relative_margin_y(&mut self, margin_fraction: Vec2) {
         let height = self.height().max(0.0);
-        self.expand_y(margin_fraction.y as f64 * height);
+        self.expand_y(margin_fraction.y * height);
     }
 
     #[inline]
-    pub fn range_x(&self) -> RangeInclusive<f64> {
+    pub fn range_x(&self) -> RangeInclusive<f32> {
         self.min[0]..=self.max[0]
     }
 
     #[inline]
-    pub fn range_y(&self) -> RangeInclusive<f64> {
+    pub fn range_y(&self) -> RangeInclusive<f32> {
         self.min[1]..=self.max[1]
     }
 
@@ -358,7 +358,7 @@ impl PlotTransform {
         self.bounds = bounds;
     }
 
-    pub fn translate_bounds(&mut self, mut delta_pos: (f64, f64)) {
+    pub fn translate_bounds(&mut self, mut delta_pos: (f32, f32)) {
         if self.centered.x {
             delta_pos.0 = 0.;
         }
@@ -382,20 +382,20 @@ impl PlotTransform {
         }
     }
 
-    pub fn position_from_point_x(&self, value: f64) -> f32 {
+    pub fn position_from_point_x(&self, value: f32) -> f32 {
         remap(
             value,
             self.bounds.min[0]..=self.bounds.max[0],
-            (self.frame.left() as f64)..=(self.frame.right() as f64),
-        ) as f32
+            self.frame.left()..=self.frame.right(),
+        )
     }
 
-    pub fn position_from_point_y(&self, value: f64) -> f32 {
+    pub fn position_from_point_y(&self, value: f32) -> f32 {
         remap(
             value,
             self.bounds.min[1]..=self.bounds.max[1],
-            (self.frame.bottom() as f64)..=(self.frame.top() as f64), // negated y axis!
-        ) as f32
+            self.frame.bottom()..=self.frame.top(), // negated y axis!
+        )
     }
 
     /// Screen/ui position from point on plot.
@@ -409,13 +409,13 @@ impl PlotTransform {
     /// Plot point from screen/ui position.
     pub fn value_from_position(&self, pos: Pos2) -> PlotPoint {
         let x = remap(
-            pos.x as f64,
-            (self.frame.left() as f64)..=(self.frame.right() as f64),
+            pos.x,
+            self.frame.left()..=self.frame.right(),
             self.bounds.range_x(),
         );
         let y = remap(
-            pos.y as f64,
-            (self.frame.bottom() as f64)..=(self.frame.top() as f64), // negated y axis!
+            pos.y,
+            self.frame.bottom()..=self.frame.top(), // negated y axis!
             self.bounds.range_y(),
         );
         PlotPoint::new(x, y)
@@ -436,38 +436,38 @@ impl PlotTransform {
     }
 
     /// delta position / delta value = how many ui points per step in the X axis in "plot space"
-    pub fn dpos_dvalue_x(&self) -> f64 {
-        self.frame.width() as f64 / self.bounds.width()
+    pub fn dpos_dvalue_x(&self) -> f32 {
+        self.frame.width() / self.bounds.width()
     }
 
     /// delta position / delta value = how many ui points per step in the Y axis in "plot space"
-    pub fn dpos_dvalue_y(&self) -> f64 {
-        -self.frame.height() as f64 / self.bounds.height() // negated y axis!
+    pub fn dpos_dvalue_y(&self) -> f32 {
+        -self.frame.height() / self.bounds.height() // negated y axis!
     }
 
     /// delta position / delta value = how many ui points per step in "plot space"
-    pub fn dpos_dvalue(&self) -> [f64; 2] {
+    pub fn dpos_dvalue(&self) -> [f32; 2] {
         [self.dpos_dvalue_x(), self.dpos_dvalue_y()]
     }
 
     /// delta value / delta position = how much ground do we cover in "plot space" per ui point?
-    pub fn dvalue_dpos(&self) -> [f64; 2] {
+    pub fn dvalue_dpos(&self) -> [f32; 2] {
         [1.0 / self.dpos_dvalue_x(), 1.0 / self.dpos_dvalue_y()]
     }
 
     /// scale.x/scale.y ratio.
     ///
     /// If 1.0, it means the scale factor is the same in both axes.
-    fn aspect(&self) -> f64 {
-        let rw = self.frame.width() as f64;
-        let rh = self.frame.height() as f64;
+    fn aspect(&self) -> f32 {
+        let rw = self.frame.width();
+        let rh = self.frame.height();
         (self.bounds.width() / rw) / (self.bounds.height() / rh)
     }
 
     /// Sets the aspect ratio by expanding the x- or y-axis.
     ///
     /// This never contracts, so we don't miss out on any data.
-    pub(crate) fn set_aspect_by_expanding(&mut self, aspect: f64) {
+    pub(crate) fn set_aspect_by_expanding(&mut self, aspect: f32) {
         let current_aspect = self.aspect();
 
         let epsilon = 1e-5;
@@ -486,7 +486,7 @@ impl PlotTransform {
     }
 
     /// Sets the aspect ratio by changing either the X or Y axis (callers choice).
-    pub(crate) fn set_aspect_by_changing_axis(&mut self, aspect: f64, axis: Axis) {
+    pub(crate) fn set_aspect_by_changing_axis(&mut self, aspect: f32, axis: Axis) {
         let current_aspect = self.aspect();
 
         let epsilon = 1e-5;

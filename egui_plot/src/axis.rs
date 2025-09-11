@@ -11,7 +11,7 @@ use super::{GridMark, transform::PlotTransform};
 // Gap between tick labels and axis label in units of the axis label height
 const AXIS_LABEL_GAP: f32 = 0.25;
 
-pub(super) type AxisFormatterFn<'a> = dyn Fn(GridMark, &RangeInclusive<f64>) -> String + 'a;
+pub(super) type AxisFormatterFn<'a> = dyn Fn(GridMark, &RangeInclusive<f32>) -> String + 'a;
 
 /// X or Y axis.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -139,21 +139,21 @@ impl<'a> AxisHints<'a> {
 
     /// Specify custom formatter for ticks.
     ///
-    /// The first parameter of `formatter` is the raw tick value as `f64`.
+    /// The first parameter of `formatter` is the raw tick value as `f32`.
     /// The second parameter of `formatter` is the currently shown range on this axis.
     pub fn formatter(
         mut self,
-        fmt: impl Fn(GridMark, &RangeInclusive<f64>) -> String + 'a,
+        fmt: impl Fn(GridMark, &RangeInclusive<f32>) -> String + 'a,
     ) -> Self {
         self.formatter = Arc::new(fmt);
         self
     }
 
-    fn default_formatter(mark: GridMark, _range: &RangeInclusive<f64>) -> String {
+    fn default_formatter(mark: GridMark, _range: &RangeInclusive<f32>) -> String {
         // Example: If the step to the next tick is `0.01`, we should use 2 decimals of precision:
         let num_decimals = -mark.step_size.log10().round() as usize;
 
-        emath::format_with_decimals_in_range(mark.value, num_decimals..=num_decimals)
+        emath::format_with_decimals_in_range(mark.value as f64, num_decimals..=num_decimals)
     }
 
     /// Specify axis label.
@@ -204,7 +204,7 @@ impl<'a> AxisHints<'a> {
 
 #[derive(Clone)]
 pub(super) struct AxisWidget<'a> {
-    pub range: RangeInclusive<f64>,
+    pub range: RangeInclusive<f32>,
     pub hints: AxisHints<'a>,
 
     /// The region where we draw the axis labels.
@@ -309,7 +309,7 @@ impl<'a> AxisWidget<'a> {
             let text = (self.hints.formatter)(*step, &self.range);
             if !text.is_empty() {
                 let spacing_in_points =
-                    (transform.dpos_dvalue()[usize::from(axis)] * step.step_size).abs() as f32;
+                    (transform.dpos_dvalue()[usize::from(axis)] * step.step_size).abs();
 
                 if spacing_in_points <= label_spacing.min {
                     // Labels are too close together - don't paint them.

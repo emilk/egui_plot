@@ -11,30 +11,30 @@ pub struct BoxSpread {
     /// Value of lower whisker (typically minimum).
     ///
     /// The whisker is not drawn if `lower_whisker >= quartile1`.
-    pub lower_whisker: f64,
+    pub lower_whisker: f32,
 
     /// Value of lower box threshold (typically 25% quartile)
-    pub quartile1: f64,
+    pub quartile1: f32,
 
     /// Value of middle line in box (typically median)
-    pub median: f64,
+    pub median: f32,
 
     /// Value of upper box threshold (typically 75% quartile)
-    pub quartile3: f64,
+    pub quartile3: f32,
 
     /// Value of upper whisker (typically maximum)
     ///
     /// The whisker is not drawn if `upper_whisker <= quartile3`.
-    pub upper_whisker: f64,
+    pub upper_whisker: f32,
 }
 
 impl BoxSpread {
     pub fn new(
-        lower_whisker: f64,
-        quartile1: f64,
-        median: f64,
-        quartile3: f64,
-        upper_whisker: f64,
+        lower_whisker: f32,
+        quartile1: f32,
+        median: f32,
+        quartile3: f32,
+        upper_whisker: f32,
     ) -> Self {
         Self {
             lower_whisker,
@@ -59,16 +59,16 @@ pub struct BoxElem {
     pub orientation: Orientation,
 
     /// Position on the argument (input) axis -- X if vertical, Y if horizontal.
-    pub argument: f64,
+    pub argument: f32,
 
     /// Values of the box
     pub spread: BoxSpread,
 
     /// Thickness of the box
-    pub box_width: f64,
+    pub box_width: f32,
 
     /// Width of the whisker at minimum/maximum
-    pub whisker_width: f64,
+    pub whisker_width: f32,
 
     /// Line width and color
     pub stroke: Stroke,
@@ -81,7 +81,7 @@ impl BoxElem {
     /// Create a box element. Its `orientation` is set by its [`BoxPlot`] parent.
     ///
     /// Check [`BoxElem`] fields for detailed description.
-    pub fn new(argument: f64, spread: BoxSpread) -> Self {
+    pub fn new(argument: f32, spread: BoxSpread) -> Self {
         Self {
             argument,
             orientation: Orientation::default(),
@@ -118,14 +118,14 @@ impl BoxElem {
 
     /// Set the box width.
     #[inline]
-    pub fn box_width(mut self, width: f64) -> Self {
+    pub fn box_width(mut self, width: f32) -> Self {
         self.box_width = width;
         self
     }
 
     /// Set the whisker width.
     #[inline]
-    pub fn whisker_width(mut self, width: f64) -> Self {
+    pub fn whisker_width(mut self, width: f32) -> Self {
         self.whisker_width = width;
         self
     }

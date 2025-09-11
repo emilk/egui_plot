@@ -46,13 +46,13 @@ impl<'a> PlotUi<'a> {
     }
 
     /// Set the X bounds. Can be useful for implementing alternative plot navigation methods.
-    pub fn set_plot_bounds_x(&mut self, range: impl Into<RangeInclusive<f64>>) {
+    pub fn set_plot_bounds_x(&mut self, range: impl Into<RangeInclusive<f32>>) {
         self.bounds_modifications
             .push(BoundsModification::SetX(range.into()));
     }
 
     /// Set the Y bounds. Can be useful for implementing alternative plot navigation methods.
-    pub fn set_plot_bounds_y(&mut self, range: impl Into<RangeInclusive<f64>>) {
+    pub fn set_plot_bounds_y(&mut self, range: impl Into<RangeInclusive<f32>>) {
         self.bounds_modifications
             .push(BoundsModification::SetY(range.into()));
     }
@@ -117,7 +117,7 @@ impl<'a> PlotUi<'a> {
     pub fn pointer_coordinate_drag_delta(&self) -> Vec2 {
         let delta = self.response.drag_delta();
         let dp_dv = self.last_plot_transform.dpos_dvalue();
-        Vec2::new(delta.x / dp_dv[0] as f32, delta.y / dp_dv[1] as f32)
+        Vec2::new(delta.x / dp_dv[0], delta.y / dp_dv[1])
     }
 
     /// Read the transform between plot coordinates and screen coordinates.

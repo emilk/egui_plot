@@ -33,7 +33,7 @@ pub(super) trait RectElement {
     fn orientation(&self) -> Orientation;
 
     /// Get X/Y-value for (argument, value) pair, taking into account orientation
-    fn point_at(&self, argument: f64, value: f64) -> PlotPoint {
+    fn point_at(&self, argument: f32, value: f32) -> PlotPoint {
         match self.orientation() {
             Orientation::Horizontal => PlotPoint::new(value, argument),
             Orientation::Vertical => PlotPoint::new(argument, value),

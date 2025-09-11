@@ -10,28 +10,28 @@ use crate::transform::PlotBounds;
 
 /// A point coordinate in the plot.
 ///
-/// Uses f64 for improved accuracy to enable plotting
+/// Uses f32 for improved accuracy to enable plotting
 /// large values (e.g. unix time on x axis).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PlotPoint {
     /// This is often something monotonically increasing, such as time, but doesn't have to be.
     /// Goes from left to right.
-    pub x: f64,
+    pub x: f32,
 
     /// Goes from bottom to top (inverse of everything else in egui!).
-    pub y: f64,
+    pub y: f32,
 }
 
-impl From<[f64; 2]> for PlotPoint {
+impl From<[f32; 2]> for PlotPoint {
     #[inline]
-    fn from([x, y]: [f64; 2]) -> Self {
+    fn from([x, y]: [f32; 2]) -> Self {
         Self { x, y }
     }
 }
 
 impl PlotPoint {
     #[inline(always)]
-    pub fn new(x: impl Into<f64>, y: impl Into<f64>) -> Self {
+    pub fn new(x: impl Into<f32>, y: impl Into<f32>) -> Self {
         Self {
             x: x.into(),
             y: y.into(),
@@ -40,12 +40,12 @@ impl PlotPoint {
 
     #[inline(always)]
     pub fn to_pos2(self) -> Pos2 {
-        Pos2::new(self.x as f32, self.y as f32)
+        Pos2::new(self.x, self.y)
     }
 
     #[inline(always)]
     pub fn to_vec2(self) -> Vec2 {
-        Vec2::new(self.x as f32, self.y as f32)
+        Vec2::new(self.x, self.y)
     }
 }
 
@@ -183,15 +183,15 @@ impl Default for PlotPoints<'_> {
     }
 }
 
-impl From<[f64; 2]> for PlotPoints<'_> {
-    fn from(coordinate: [f64; 2]) -> Self {
+impl From<[f32; 2]> for PlotPoints<'_> {
+    fn from(coordinate: [f32; 2]) -> Self {
         Self::new(vec![coordinate])
     }
 }
 
-impl From<Vec<[f64; 2]>> for PlotPoints<'_> {
+impl From<Vec<[f32; 2]>> for PlotPoints<'_> {
     #[inline]
-    fn from(coordinates: Vec<[f64; 2]>) -> Self {
+    fn from(coordinates: Vec<[f32; 2]>) -> Self {
         Self::new(coordinates)
     }
 }
@@ -203,14 +203,14 @@ impl<'a> From<&'a [PlotPoint]> for PlotPoints<'a> {
     }
 }
 
-impl FromIterator<[f64; 2]> for PlotPoints<'_> {
-    fn from_iter<T: IntoIterator<Item = [f64; 2]>>(iter: T) -> Self {
+impl FromIterator<[f32; 2]> for PlotPoints<'_> {
+    fn from_iter<T: IntoIterator<Item = [f32; 2]>>(iter: T) -> Self {
         Self::Owned(iter.into_iter().map(|point| point.into()).collect())
     }
 }
 
 impl<'a> PlotPoints<'a> {
-    pub fn new(points: Vec<[f64; 2]>) -> Self {
+    pub fn new(points: Vec<[f32; 2]>) -> Self {
         Self::from_iter(points)
     }
 
@@ -224,17 +224,17 @@ impl<'a> PlotPoints<'a> {
 
     /// Draw a line based on a function `y=f(x)`, a range (which can be infinite) for x and the number of points.
     pub fn from_explicit_callback(
-        function: impl Fn(f64) -> f64 + 'a,
-        x_range: impl RangeBounds<f64>,
+        function: impl Fn(f32) -> f32 + 'a,
+        x_range: impl RangeBounds<f32>,
         points: usize,
     ) -> Self {
         let start = match x_range.start_bound() {
             Bound::Included(x) | Bound::Excluded(x) => *x,
-            Bound::Unbounded => f64::NEG_INFINITY,
+            Bound::Unbounded => f32::NEG_INFINITY,
         };
         let end = match x_range.end_bound() {
             Bound::Included(x) | Bound::Excluded(x) => *x,
-            Bound::Unbounded => f64::INFINITY,
+            Bound::Unbounded => f32::INFINITY,
         };
         let x_range = start..=end;
 
@@ -250,8 +250,8 @@ impl<'a> PlotPoints<'a> {
     /// Draw a line based on a function `(x,y)=f(t)`, a range for t and the number of points.
     /// The range may be specified as start..end or as start..=end.
     pub fn from_parametric_callback(
-        function: impl Fn(f64) -> (f64, f64),
-        t_range: impl RangeBounds<f64>,
+        function: impl Fn(f32) -> (f32, f32),
+        t_range: impl RangeBounds<f32>,
         points: usize,
     ) -> Self {
         let start = match t_range.start_bound() {
@@ -265,13 +265,13 @@ impl<'a> PlotPoints<'a> {
         };
         let last_point_included = matches!(t_range.end_bound(), Bound::Included(_));
         let increment = if last_point_included {
-            (end - start) / (points - 1) as f64
+            (end - start) / (points - 1) as f32
         } else {
-            (end - start) / points as f64
+            (end - start) / points as f32
         };
         (0..points)
             .map(|i| {
-                let t = start + i as f64 * increment;
+                let t = start + i as f32 * increment;
                 function(t).into()
             })
             .collect()
@@ -280,16 +280,16 @@ impl<'a> PlotPoints<'a> {
     /// From a series of y-values.
     /// The x-values will be the indices of these values
     pub fn from_ys_f32(ys: &[f32]) -> Self {
-        ys.iter()
-            .enumerate()
-            .map(|(i, &y)| [i as f64, y as f64])
-            .collect()
+        ys.iter().enumerate().map(|(i, &y)| [i as f32, y]).collect()
     }
 
     /// From a series of y-values.
     /// The x-values will be the indices of these values
     pub fn from_ys_f64(ys: &[f64]) -> Self {
-        ys.iter().enumerate().map(|(i, &y)| [i as f64, y]).collect()
+        ys.iter()
+            .enumerate()
+            .map(|(i, &y)| [i as f32, y as f32])
+            .collect()
     }
 
     /// Returns true if there are no data points available and there is no function to generate any.
@@ -303,15 +303,15 @@ impl<'a> PlotPoints<'a> {
 
     /// If initialized with a generator function, this will generate `n` evenly spaced points in the
     /// given range.
-    pub(super) fn generate_points(&mut self, x_range: RangeInclusive<f64>) {
+    pub(super) fn generate_points(&mut self, x_range: RangeInclusive<f32>) {
         if let Self::Generator(generator) = self {
             *self = Self::range_intersection(&x_range, &generator.x_range)
                 .map(|intersection| {
                     let increment =
-                        (intersection.end() - intersection.start()) / (generator.points - 1) as f64;
+                        (intersection.end() - intersection.start()) / (generator.points - 1) as f32;
                     (0..generator.points)
                         .map(|i| {
-                            let x = intersection.start() + i as f64 * increment;
+                            let x = intersection.start() + i as f32 * increment;
                             let y = (generator.function)(x);
                             [x, y]
                         })
@@ -323,9 +323,9 @@ impl<'a> PlotPoints<'a> {
 
     /// Returns the intersection of two ranges if they intersect.
     fn range_intersection(
-        range1: &RangeInclusive<f64>,
-        range2: &RangeInclusive<f64>,
-    ) -> Option<RangeInclusive<f64>> {
+        range1: &RangeInclusive<f32>,
+        range2: &RangeInclusive<f32>,
+    ) -> Option<RangeInclusive<f32>> {
         let start = range1.start().max(*range2.start());
         let end = range1.end().min(*range2.end());
         (start < end).then_some(start..=end)
@@ -409,8 +409,8 @@ pub enum PlotGeometry<'a> {
 
 /// Describes a function y = f(x) with an optional range for x and a number of points.
 pub struct ExplicitGenerator<'a> {
-    function: Box<dyn Fn(f64) -> f64 + 'a>,
-    x_range: RangeInclusive<f64>,
+    function: Box<dyn Fn(f32) -> f32 + 'a>,
+    x_range: RangeInclusive<f32>,
     points: usize,
 }
 
@@ -418,7 +418,7 @@ impl ExplicitGenerator<'_> {
     fn estimate_bounds(&self) -> PlotBounds {
         let mut bounds = PlotBounds::NOTHING;
 
-        let mut add_x = |x: f64| {
+        let mut add_x = |x: f32| {
             // avoid infinities, as we cannot auto-bound on them!
             if x.is_finite() {
                 bounds.extend_with_x(x);
@@ -439,14 +439,14 @@ impl ExplicitGenerator<'_> {
             // Sample some points in the interval:
             const N: u32 = 8;
             for i in 1..N {
-                let t = i as f64 / (N - 1) as f64;
+                let t = i as f32 / (N - 1) as f32;
                 let x = lerp(min_x..=max_x, t);
                 add_x(x);
             }
         } else {
             // Try adding some points anyway:
             for x in [-1, 0, 1] {
-                let x = x as f64;
+                let x = x as f32;
                 if min_x <= x && x <= max_x {
                     add_x(x);
                 }

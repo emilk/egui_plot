@@ -88,8 +88,8 @@ impl Default for CoordinatesFormatter<'_> {
 /// Indicates a vertical or horizontal cursor line in plot coordinates.
 #[derive(Copy, Clone, PartialEq)]
 pub enum Cursor {
-    Horizontal { y: f64 },
-    Vertical { x: f64 },
+    Horizontal { y: f32 },
+    Vertical { x: f32 },
 }
 
 /// Contains the cursors drawn for a plot widget in a single frame.
@@ -143,7 +143,7 @@ pub struct PlotResponse<R> {
 /// use egui_plot::{Line, Plot, PlotPoints};
 ///
 /// let sin: PlotPoints = (0..1000).map(|i| {
-///     let x = i as f64 * 0.01;
+///     let x = i as f32 * 0.01;
 ///     [x, x.sin()]
 /// }).collect();
 /// let line = Line::new("sin", sin);
@@ -407,7 +407,7 @@ impl<'a> Plot<'a> {
     /// # egui::__run_test_ui(|ui| {
     /// use egui_plot::{Line, Plot, PlotPoints};
     /// let sin: PlotPoints = (0..1000).map(|i| {
-    ///     let x = i as f64 * 0.01;
+    ///     let x = i as f32 * 0.01;
     ///     [x, x.sin()]
     /// }).collect();
     /// let line = Line::new("sin", sin);
@@ -519,7 +519,7 @@ impl<'a> Plot<'a> {
     ///
     /// Panics in debug builds if `min >= max`.
     #[inline]
-    pub fn default_x_bounds(mut self, min: f64, max: f64) -> Self {
+    pub fn default_x_bounds(mut self, min: f32, max: f32) -> Self {
         debug_assert!(
             min < max,
             "`min` must be less than `max` in `default_x_bounds`"
@@ -535,7 +535,7 @@ impl<'a> Plot<'a> {
     ///
     /// Panics in debug builds if `min >= max`.
     #[inline]
-    pub fn default_y_bounds(mut self, min: f64, max: f64) -> Self {
+    pub fn default_y_bounds(mut self, min: f32, max: f32) -> Self {
         debug_assert!(
             min < max,
             "`min` must be less than `max` in `default_y_bounds`"
@@ -549,7 +549,7 @@ impl<'a> Plot<'a> {
     /// Expand bounds to include the given x value.
     /// For instance, to always show the y axis, call `plot.include_x(0.0)`.
     #[inline]
-    pub fn include_x(mut self, x: impl Into<f64>) -> Self {
+    pub fn include_x(mut self, x: impl Into<f32>) -> Self {
         self.min_auto_bounds.extend_with_x(x.into());
         self
     }
@@ -557,7 +557,7 @@ impl<'a> Plot<'a> {
     /// Expand bounds to include the given y value.
     /// For instance, to always show the x axis, call `plot.include_y(0.0)`.
     #[inline]
-    pub fn include_y(mut self, y: impl Into<f64>) -> Self {
+    pub fn include_y(mut self, y: impl Into<f32>) -> Self {
         self.min_auto_bounds.extend_with_y(y.into());
         self
     }
@@ -700,7 +700,7 @@ impl<'a> Plot<'a> {
     /// * currently shown range on this axis.
     pub fn x_axis_formatter(
         mut self,
-        fmt: impl Fn(GridMark, &RangeInclusive<f64>) -> String + 'a,
+        fmt: impl Fn(GridMark, &RangeInclusive<f32>) -> String + 'a,
     ) -> Self {
         if let Some(main) = self.x_axes.first_mut() {
             main.formatter = Arc::new(fmt);
@@ -715,7 +715,7 @@ impl<'a> Plot<'a> {
     /// * currently shown range on this axis.
     pub fn y_axis_formatter(
         mut self,
-        fmt: impl Fn(GridMark, &RangeInclusive<f64>) -> String + 'a,
+        fmt: impl Fn(GridMark, &RangeInclusive<f32>) -> String + 'a,
     ) -> Self {
         if let Some(main) = self.y_axes.first_mut() {
             main.formatter = Arc::new(fmt);
@@ -1048,7 +1048,7 @@ impl<'a> Plot<'a> {
                     mem.auto_bounds.y = false;
                 }
                 BoundsModification::Translate(delta) => {
-                    let delta = (delta.x as f64, delta.y as f64);
+                    let delta = (delta.x, delta.y);
                     bounds.translate(delta);
                     mem.auto_bounds = false.into();
                 }
@@ -1101,14 +1101,14 @@ impl<'a> Plot<'a> {
             if let Some((_, linked_axes)) = &linked_axes {
                 let change_x = linked_axes.y && !linked_axes.x;
                 mem.transform.set_aspect_by_changing_axis(
-                    data_aspect as f64,
+                    data_aspect,
                     if change_x { Axis::X } else { Axis::Y },
                 );
             } else if default_auto_bounds.any() {
-                mem.transform.set_aspect_by_expanding(data_aspect as f64);
+                mem.transform.set_aspect_by_expanding(data_aspect);
             } else {
                 mem.transform
-                    .set_aspect_by_changing_axis(data_aspect as f64, Axis::Y);
+                    .set_aspect_by_changing_axis(data_aspect, Axis::Y);
             }
         }
 
@@ -1122,8 +1122,7 @@ impl<'a> Plot<'a> {
             if !allow_drag.y {
                 delta.y = 0.0;
             }
-            mem.transform
-                .translate_bounds((delta.x as f64, delta.y as f64));
+            mem.transform.translate_bounds((delta.x, delta.y));
             mem.auto_bounds = mem.auto_bounds.and(!allow_drag);
         }
 
@@ -1251,7 +1250,7 @@ impl<'a> Plot<'a> {
                 }
                 if scroll_delta != Vec2::ZERO {
                     mem.transform
-                        .translate_bounds((-scroll_delta.x as f64, -scroll_delta.y as f64));
+                        .translate_bounds((-scroll_delta.x, -scroll_delta.y));
                     mem.auto_bounds = false.into();
                 }
             }
@@ -1265,7 +1264,7 @@ impl<'a> Plot<'a> {
         let x_steps = Arc::new({
             let input = GridInput {
                 bounds: (bounds.min[0], bounds.max[0]),
-                base_step_size: mem.transform.dvalue_dpos()[0].abs() * grid_spacing.min as f64,
+                base_step_size: mem.transform.dvalue_dpos()[0].abs() * grid_spacing.min,
             };
             (grid_spacers[0])(input)
         });
@@ -1273,7 +1272,7 @@ impl<'a> Plot<'a> {
         let y_steps = Arc::new({
             let input = GridInput {
                 bounds: (bounds.min[1], bounds.max[1]),
-                base_step_size: mem.transform.dvalue_dpos()[1].abs() * grid_spacing.min as f64,
+                base_step_size: mem.transform.dvalue_dpos()[1].abs() * grid_spacing.min,
             };
             (grid_spacers[1])(input)
         });
@@ -1503,8 +1502,8 @@ fn axis_widgets<'a>(
 /// User-requested modifications to the plot bounds. We collect them in the plot build function to later apply
 /// them at the right time, as other modifications need to happen first.
 enum BoundsModification {
-    SetX(RangeInclusive<f64>),
-    SetY(RangeInclusive<f64>),
+    SetX(RangeInclusive<f32>),
+    SetY(RangeInclusive<f32>),
     Translate(Vec2),
     AutoBounds(Vec2b),
     Zoom(Vec2, PlotPoint),
@@ -1519,7 +1518,7 @@ enum BoundsModification {
 pub struct GridInput {
     /// Min/max of the visible data range (the values at the two edges of the plot,
     /// for the current axis).
-    pub bounds: (f64, f64),
+    pub bounds: (f32, f32),
 
     /// Recommended (but not required) lower-bound on the step size returned by custom grid spacers.
     ///
@@ -1527,14 +1526,14 @@ pub struct GridInput {
     /// (in frame/window coordinates), scaled up to represent the minimal possible step.
     ///
     /// Always positive.
-    pub base_step_size: f64,
+    pub base_step_size: f32,
 }
 
 /// One mark (horizontal or vertical line) in the background grid of a plot.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct GridMark {
     /// X or Y value in the plot.
-    pub value: f64,
+    pub value: f32,
 
     /// The (approximate) distance to the next value of same thickness.
     ///
@@ -1542,7 +1541,7 @@ pub struct GridMark {
     /// matches the difference between two `value`s precisely, but rather that grid marks of
     /// same thickness have same `step_size`. For example, months can have a different number
     /// of days, but consistently using a `step_size` of 30 days is a valid approximation.
-    pub step_size: f64,
+    pub step_size: f32,
 }
 
 /// Recursively splits the grid into `base` subdivisions (e.g. 100, 10, 1).
@@ -1550,10 +1549,10 @@ pub struct GridMark {
 /// The logarithmic base, expressing how many times each grid unit is subdivided.
 /// 10 is a typical value, others are possible though.
 pub fn log_grid_spacer(log_base: i64) -> GridSpacer<'static> {
-    let log_base = log_base as f64;
+    let log_base = log_base as f32;
     let step_sizes = move |input: GridInput| -> Vec<GridMark> {
         // handle degenerate cases
-        if input.base_step_size.abs() < f64::EPSILON {
+        if input.base_step_size.abs() < f32::EPSILON {
             return Vec::new();
         }
 
@@ -1580,7 +1579,7 @@ pub fn log_grid_spacer(log_base: i64) -> GridSpacer<'static> {
 ///
 /// Why only 3 step sizes? Three is the number of different line thicknesses that egui typically uses in the grid.
 /// Ideally, those 3 are not hardcoded values, but depend on the visible range (accessible through `GridInput`).
-pub fn uniform_grid_spacer<'a>(spacer: impl Fn(GridInput) -> [f64; 3] + 'a) -> GridSpacer<'a> {
+pub fn uniform_grid_spacer<'a>(spacer: impl Fn(GridInput) -> [f32; 3] + 'a) -> GridSpacer<'a> {
     let get_marks = move |input: GridInput| -> Vec<GridMark> {
         let bounds = input.bounds;
         let step_sizes = spacer(input);
@@ -1726,11 +1725,11 @@ impl PreparedPlot<'_> {
 
         // Where on the cross-dimension to show the label values
         let bounds = transform.bounds();
-        let value_cross = 0.0_f64.clamp(bounds.min[1 - iaxis], bounds.max[1 - iaxis]);
+        let value_cross = 0.0_f32.clamp(bounds.min[1 - iaxis], bounds.max[1 - iaxis]);
 
         let input = GridInput {
             bounds: (bounds.min[iaxis], bounds.max[iaxis]),
-            base_step_size: transform.dvalue_dpos()[iaxis].abs() * fade_range.min as f64,
+            base_step_size: transform.dvalue_dpos()[iaxis].abs() * fade_range.min,
         };
         let steps = (grid_spacers[iaxis])(input);
 
@@ -1768,7 +1767,7 @@ impl PreparedPlot<'_> {
             };
 
             let pos_in_gui = transform.position_from_point(&value);
-            let spacing_in_points = (transform.dpos_dvalue()[iaxis] * step.step_size).abs() as f32;
+            let spacing_in_points = (transform.dpos_dvalue()[iaxis] * step.step_size).abs();
 
             if spacing_in_points <= fade_range.min {
                 continue; // Too close together
@@ -1878,13 +1877,13 @@ impl PreparedPlot<'_> {
 /// assert_eq!(next_power(0.02, 10.0), 0.1);
 /// assert_eq!(next_power(0.2,  10.0), 1);
 /// ```
-fn next_power(value: f64, base: f64) -> f64 {
+fn next_power(value: f32, base: f32) -> f32 {
     debug_assert_ne!(value, 0.0, "Bad input"); // can be negative (typical for Y axis)
     base.powi(value.abs().log(base).ceil() as i32)
 }
 
 /// Fill in all values between [min, max] which are a multiple of `step_size`
-fn generate_marks(step_sizes: [f64; 3], bounds: (f64, f64)) -> Vec<GridMark> {
+fn generate_marks(step_sizes: [f32; 3], bounds: (f32, f32)) -> Vec<GridMark> {
     let mut steps = vec![];
     fill_marks_between(&mut steps, step_sizes[0], bounds);
     fill_marks_between(&mut steps, step_sizes[1], bounds);
@@ -1896,9 +1895,9 @@ fn generate_marks(step_sizes: [f64; 3], bounds: (f64, f64)) -> Vec<GridMark> {
     // step_size[1] =  100  =>  [     0,                                     100          ]
     // step_size[2] = 1000  =>  [     0                                                   ]
 
-    steps.sort_by(|a, b| cmp_f64(a.value, b.value));
+    steps.sort_by(|a, b| cmp_f32(a.value, b.value));
 
-    let min_step = step_sizes.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    let min_step = step_sizes.iter().fold(f32::INFINITY, |a, &b| a.min(b));
     let eps = 0.1 * min_step; // avoid putting two ticks too closely together
 
     let mut deduplicated: Vec<GridMark> = Vec::with_capacity(steps.len());
@@ -1967,7 +1966,7 @@ fn test_generate_marks() {
     }
 }
 
-fn cmp_f64(a: f64, b: f64) -> Ordering {
+fn cmp_f32(a: f32, b: f32) -> Ordering {
     match a.partial_cmp(&b) {
         Some(ord) => ord,
         None => a.is_nan().cmp(&b.is_nan()),
@@ -1975,13 +1974,13 @@ fn cmp_f64(a: f64, b: f64) -> Ordering {
 }
 
 /// Fill in all values between [min, max] which are a multiple of `step_size`
-fn fill_marks_between(out: &mut Vec<GridMark>, step_size: f64, (min, max): (f64, f64)) {
+fn fill_marks_between(out: &mut Vec<GridMark>, step_size: f32, (min, max): (f32, f32)) {
     debug_assert!(min <= max, "Bad plot bounds: min: {min}, max: {max}");
     let first = (min / step_size).ceil() as i64;
     let last = (max / step_size).ceil() as i64;
 
     let marks_iter = (first..last).map(|i| {
-        let value = (i as f64) * step_size;
+        let value = (i as f32) * step_size;
         GridMark { value, step_size }
     });
     out.extend(marks_iter);
@@ -1989,8 +1988,8 @@ fn fill_marks_between(out: &mut Vec<GridMark>, step_size: f64, (min, max): (f64,
 
 /// Helper for formatting a number so that we always show at least a few decimals,
 /// unless it is an integer, in which case we never show any decimals.
-pub fn format_number(number: f64, num_decimals: usize) -> String {
-    let is_integral = number as i64 as f64 == number;
+pub fn format_number(number: f32, num_decimals: usize) -> String {
+    let is_integral = number as i64 as f32 == number;
     if is_integral {
         // perfect integer - show it as such:
         format!("{number:.0}")
