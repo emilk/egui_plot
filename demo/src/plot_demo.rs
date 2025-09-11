@@ -1,5 +1,5 @@
 use std::ops::RangeInclusive;
-use std::{f64::consts::TAU, sync::Arc};
+use std::{f32::consts::TAU, sync::Arc};
 
 use egui::{
     Checkbox, Color32, ComboBox, NumExt as _, Pos2, Response, ScrollArea, Stroke, TextWrapMode,
@@ -169,8 +169,8 @@ impl PlotDemo {
 #[derive(Copy, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
 struct LineDemo {
     animate: bool,
-    time: f64,
-    circle_radius: f64,
+    time: f32,
+    circle_radius: f32,
     circle_center: Pos2,
     square: bool,
     proportional: bool,
@@ -225,7 +225,7 @@ impl LineDemo {
                     ui.add(
                         egui::DragValue::new(circle_radius)
                             .speed(0.1)
-                            .range(0.0..=f64::INFINITY)
+                            .range(0.0..=f32::INFINITY)
                             .prefix("r: "),
                     );
                     ui.horizontal(|ui| {
@@ -284,11 +284,11 @@ impl LineDemo {
         let n = 512;
         let circle_points: PlotPoints<'_> = (0..=n)
             .map(|i| {
-                let t = remap(i as f64, 0.0..=(n as f64), 0.0..=TAU);
+                let t = remap(i as f32, 0.0..=(n as f32), 0.0..=TAU);
                 let r = self.circle_radius;
                 [
-                    r * t.cos() + self.circle_center.x as f64,
-                    r * t.sin() + self.circle_center.y as f64,
+                    r * t.cos() + self.circle_center.x as f32,
+                    r * t.sin() + self.circle_center.y as f32,
                 ]
             })
             .collect();
@@ -347,7 +347,7 @@ impl LineDemo {
 
         if self.animate {
             ui.ctx().request_repaint();
-            self.time += ui.input(|i| i.unstable_dt).at_most(1.0 / 30.0) as f64;
+            self.time += ui.input(|i| i.unstable_dt).at_most(1.0 / 30.0) as f32;
         };
         let mut plot = Plot::new("lines_demo")
             .legend(Legend::default().title("Lines"))
@@ -397,7 +397,7 @@ impl MarkerDemo {
         MarkerShape::all()
             .enumerate()
             .map(|(i, marker)| {
-                let y_offset = i as f64 * 0.5 + 1.0;
+                let y_offset = i as f32 * 0.5 + 1.0;
                 let mut points = Points::new(
                     "marker",
                     vec![
@@ -430,7 +430,7 @@ impl MarkerDemo {
             ui.add(
                 egui::DragValue::new(&mut self.marker_radius)
                     .speed(0.1)
-                    .range(0.0..=f64::INFINITY)
+                    .range(0.0..=f32::INFINITY)
                     .prefix("Radius: "),
             );
             ui.checkbox(&mut self.automatic_colors, "Automatic colors");
@@ -460,7 +460,7 @@ struct LegendDemo {
 }
 
 impl LegendDemo {
-    fn line_with_slope<'a>(slope: f64) -> Line<'a> {
+    fn line_with_slope<'a>(slope: f32) -> Line<'a> {
         Line::new(
             "line with slope",
             PlotPoints::from_explicit_callback(move |x| slope * x, .., 100),
@@ -538,11 +538,11 @@ impl LegendDemo {
 struct CustomAxesDemo {}
 
 impl CustomAxesDemo {
-    const MINS_PER_DAY: f64 = 24.0 * 60.0;
-    const MINS_PER_H: f64 = 60.0;
+    const MINS_PER_DAY: f32 = 24.0 * 60.0;
+    const MINS_PER_H: f32 = 60.0;
 
     fn logistic_fn<'a>() -> Line<'a> {
-        fn days(min: f64) -> f64 {
+        fn days(min: f32) -> f32 {
             CustomAxesDemo::MINS_PER_DAY * min
         }
 
@@ -581,7 +581,7 @@ impl CustomAxesDemo {
             };
 
             marks.push(GridMark {
-                value: i as f64,
+                value: i as f32,
                 step_size,
             });
         }
@@ -591,26 +591,26 @@ impl CustomAxesDemo {
 
     #[allow(clippy::unused_self)]
     fn ui(&self, ui: &mut egui::Ui) -> Response {
-        const MINS_PER_DAY: f64 = CustomAxesDemo::MINS_PER_DAY;
-        const MINS_PER_H: f64 = CustomAxesDemo::MINS_PER_H;
+        const MINS_PER_DAY: f32 = CustomAxesDemo::MINS_PER_DAY;
+        const MINS_PER_H: f32 = CustomAxesDemo::MINS_PER_H;
 
-        fn day(x: f64) -> f64 {
+        fn day(x: f32) -> f32 {
             (x / MINS_PER_DAY).floor()
         }
 
-        fn hour(x: f64) -> f64 {
+        fn hour(x: f32) -> f32 {
             (x.rem_euclid(MINS_PER_DAY) / MINS_PER_H).floor()
         }
 
-        fn minute(x: f64) -> f64 {
+        fn minute(x: f32) -> f32 {
             x.rem_euclid(MINS_PER_H).floor()
         }
 
-        fn percent(y: f64) -> f64 {
+        fn percent(y: f32) -> f32 {
             100.0 * y
         }
 
-        let time_formatter = |mark: GridMark, _range: &RangeInclusive<f64>| {
+        let time_formatter = |mark: GridMark, _range: &RangeInclusive<f32>| {
             let minutes = mark.value;
             if !(0.0..5.0 * MINS_PER_DAY).contains(&minutes) {
                 // No labels outside value bounds
@@ -624,7 +624,7 @@ impl CustomAxesDemo {
             }
         };
 
-        let percentage_formatter = |mark: GridMark, _range: &RangeInclusive<f64>| {
+        let percentage_formatter = |mark: GridMark, _range: &RangeInclusive<f32>| {
             let percent = 100.0 * mark.value;
             if is_approx_zero(percent) {
                 String::new() // skip zero
@@ -695,7 +695,7 @@ impl Default for LinkedAxesDemo {
 }
 
 impl LinkedAxesDemo {
-    fn line_with_slope<'a>(slope: f64) -> Line<'a> {
+    fn line_with_slope<'a>(slope: f32) -> Line<'a> {
         Line::new(
             "line with slope",
             PlotPoints::from_explicit_callback(move |x| slope * x, .., 100),
@@ -786,7 +786,7 @@ impl ItemsDemo {
     fn ui(&mut self, ui: &mut egui::Ui) -> Response {
         let n = 100;
         let mut sin_values: Vec<_> = (0..=n)
-            .map(|i| remap(i as f64, 0.0..=n as f64, -TAU..=TAU))
+            .map(|i| remap(i as f32, 0.0..=n as f32, -TAU..=TAU))
             .map(|i| [i, i.sin()])
             .collect();
 
@@ -1037,11 +1037,11 @@ impl ChartsDemo {
             "Normal Distribution",
             (-395..=395)
                 .step_by(10)
-                .map(|x| x as f64 * 0.01)
+                .map(|x| x as f32 * 0.01)
                 .map(|x| {
                     (
                         x,
-                        (-x * x / 2.0).exp() / (2.0 * std::f64::consts::PI).sqrt(),
+                        (-x * x / 2.0).exp() / (2.0 * std::f32::consts::PI).sqrt(),
                     )
                 })
                 // The 10 factor here is purely for a nice 1:1 aspect ratio
@@ -1191,10 +1191,10 @@ impl ChartsDemo {
     }
 }
 
-fn is_approx_zero(val: f64) -> bool {
+fn is_approx_zero(val: f32) -> bool {
     val.abs() < 1e-6
 }
 
-fn is_approx_integer(val: f64) -> bool {
+fn is_approx_integer(val: f32) -> bool {
     val.fract().abs() < 1e-6
 }

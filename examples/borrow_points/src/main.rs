@@ -12,7 +12,7 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
 
-    let points: Vec<[f64; 2]> = vec![[0.0, 1.0], [2.0, 3.0], [3.0, 2.0]];
+    let points: Vec<[f32; 2]> = vec![[0.0, 1.0], [2.0, 3.0], [3.0, 2.0]];
 
     let points: Vec<PlotPoint> = points.iter().map(|p| PlotPoint::new(p[0], p[1])).collect();
     eframe::run_native(

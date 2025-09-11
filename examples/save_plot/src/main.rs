@@ -32,7 +32,7 @@ impl eframe::App for MyApp {
             let my_plot = Plot::new("My Plot").legend(Legend::default());
 
             // let's create a dummy line in the plot
-            let graph: Vec<[f64; 2]> = vec![[0.0, 1.0], [2.0, 3.0], [3.0, 2.0]];
+            let graph: Vec<[f32; 2]> = vec![[0.0, 1.0], [2.0, 3.0], [3.0, 2.0]];
             let inner = my_plot.show(ui, |plot_ui| {
                 plot_ui.line(Line::new("curve", PlotPoints::from(graph)));
             });

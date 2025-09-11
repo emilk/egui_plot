@@ -11,9 +11,9 @@ fn main() -> eframe::Result {
         viewport: egui::ViewportBuilder::default().with_inner_size([350.0, 200.0]),
         ..Default::default()
     };
-    let graph: Vec<[f64; 2]> = vec![[0.0, 1.0], [2.0, 3.0], [3.0, 2.0]];
-    let graph2: Vec<[f64; 2]> = vec![[0.0, 2.0], [2.0, 4.0], [3.0, 3.0]];
-    let graph3: Vec<[f64; 2]> = vec![[0.0, 3.0], [2.0, 5.0], [3.0, 4.0]];
+    let graph: Vec<[f32; 2]> = vec![[0.0, 1.0], [2.0, 3.0], [3.0, 2.0]];
+    let graph2: Vec<[f32; 2]> = vec![[0.0, 2.0], [2.0, 4.0], [3.0, 3.0]];
+    let graph3: Vec<[f32; 2]> = vec![[0.0, 3.0], [2.0, 5.0], [3.0, 4.0]];
 
     eframe::run_native(
         "My egui App with a plot",
@@ -32,9 +32,9 @@ fn main() -> eframe::Result {
 #[derive(Default)]
 struct MyApp {
     insert_order: bool,
-    graph: Vec<[f64; 2]>,
-    graph2: Vec<[f64; 2]>,
-    graph3: Vec<[f64; 2]>,
+    graph: Vec<[f32; 2]>,
+    graph2: Vec<[f32; 2]>,
+    graph3: Vec<[f32; 2]>,
 }
 
 impl eframe::App for MyApp {
