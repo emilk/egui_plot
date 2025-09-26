@@ -437,7 +437,7 @@ impl<'a> Plot<'a> {
     }
 
     /// Provide a function to customize the on-hover label for the x and y axis.
-    /// This is a generalized version of label_formatter that also provides the point's index,
+    /// This is a generalized version of `label_formatter` that also provides the point's index,
     /// and allows for the tooltip to be hidden conditionally by returning an Option<String>
     ///
     /// ```
