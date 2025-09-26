@@ -636,14 +636,14 @@ impl CustomAxesDemo {
             }
         };
 
-        let label_fmt = |_s: &str, val: &PlotPoint| {
-            format!(
+        let label_fmt = |_nearest: Option<(&str, usize)>, val: &PlotPoint| {
+            Some(format!(
                 "Day {d}, {h}:{m:02}\n{p:.2}%",
                 d = day(val.x),
                 h = hour(val.x),
                 m = minute(val.x),
                 p = percent(val.y)
-            )
+            ))
         };
 
         ui.label("Zoom in on the X-axis to see hours and minutes");
@@ -669,7 +669,7 @@ impl CustomAxesDemo {
             .custom_x_axes(x_axes)
             .custom_y_axes(y_axes)
             .x_grid_spacer(Self::x_grid)
-            .label_formatter(label_fmt)
+            .enumerated_label_formatter(label_fmt)
             .show(ui, |plot_ui| {
                 plot_ui.line(Self::logistic_fn());
             })
