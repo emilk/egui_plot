@@ -45,6 +45,9 @@ use legend::LegendWidget;
 type LabelFormatterFn<'a> = dyn Fn(&str, &PlotPoint) -> String + 'a;
 pub type LabelFormatter<'a> = Option<Box<LabelFormatterFn<'a>>>;
 
+type NewLabelFormatterFn<'a> = dyn Fn(&HoverPosition<'_>) -> Option<String> + 'a;
+pub type NewLabelFormatter<'a> = Option<Box<NewLabelFormatterFn<'a>>>;
+
 type GridSpacerFn<'a> = dyn Fn(GridInput) -> Vec<GridMark> + 'a;
 type GridSpacer<'a> = Box<GridSpacerFn<'a>>;
 
@@ -90,6 +93,23 @@ impl Default for CoordinatesFormatter<'_> {
 pub enum Cursor {
     Horizontal { y: f64 },
     Vertical { x: f64 },
+}
+
+/// Indicates the position of the cursor in a plot for hover purposes.
+#[derive(Copy, Clone, PartialEq)]
+pub enum HoverPosition<'a> {
+    NearDataPoint {
+        /// The name of the plot whose data point is nearest to the cursor
+        plot_name: &'a str,
+        /// The position of the nearest data point
+        position: PlotPoint,
+        /// The index of the nearest data point in its plot
+        index: usize,
+    },
+    Elsewhere {
+        /// The position in the plot over which the cursor hovers
+        position: PlotPoint,
+    },
 }
 
 /// Contains the cursors drawn for a plot widget in a single frame.
@@ -178,7 +198,7 @@ pub struct Plot<'a> {
 
     show_x: bool,
     show_y: bool,
-    label_formatter: LabelFormatter<'a>,
+    label_formatter: NewLabelFormatter<'a>,
     coordinates_formatter: Option<(Corner, CoordinatesFormatter<'a>)>,
     x_axes: Vec<AxisHints<'a>>, // default x axes
     y_axes: Vec<AxisHints<'a>>, // default y axes
@@ -425,6 +445,46 @@ impl<'a> Plot<'a> {
     pub fn label_formatter(
         mut self,
         label_formatter: impl Fn(&str, &PlotPoint) -> String + 'a,
+    ) -> Self {
+        let inner_box = Box::new(label_formatter);
+        self.label_formatter = Some(Box::new(move |position| {
+            Some(match position {
+                HoverPosition::NearDataPoint {
+                    plot_name,
+                    position,
+                    index: _,
+                } => inner_box(plot_name, &position),
+                HoverPosition::Elsewhere { position: _ } => "".to_owned(),
+            })
+        }));
+        self
+    }
+
+    /// Provide a function to customize the on-hover label for the x and y axis.
+    /// This is a generalized version of `label_formatter` that also provides the point's index,
+    /// and allows for the tooltip to be hidden conditionally by returning an Option<String>
+    ///
+    /// ```
+    /// # egui::__run_test_ui(|ui| {
+    /// use egui_plot::{Line, Plot, PlotPoints};
+    /// let sin: PlotPoints = (0..1000).map(|i| {
+    ///     let x = i as f64 * 0.01;
+    ///     [x, x.sin()]
+    /// }).collect();
+    /// let line = Line::new("sin", sin);
+    /// Plot::new("my_plot").view_aspect(2.0)
+    /// .enumerated_label_formatter(|context| {
+    ///     match context {
+    ///         Some((name, index)) => format!("{}: {:.*}%", name, 1, index),
+    ///         Elsewhere { ... } => None,
+    ///     }
+    /// })
+    /// .show(ui, |plot_ui| plot_ui.line(line));
+    /// # });
+    /// ```
+    pub fn enumerated_label_formatter(
+        mut self,
+        label_formatter: impl Fn(&HoverPosition<'_>) -> Option<String> + 'a,
     ) -> Self {
         self.label_formatter = Some(Box::new(label_formatter));
         self
@@ -1598,7 +1658,7 @@ struct PreparedPlot<'a> {
     items: Vec<Box<dyn PlotItem + 'a>>,
     show_x: bool,
     show_y: bool,
-    label_formatter: LabelFormatter<'a>,
+    label_formatter: NewLabelFormatter<'a>,
     coordinates_formatter: Option<(Corner, CoordinatesFormatter<'a>)>,
     // axis_formatters: [AxisFormatter; 2],
     transform: PlotTransform,
@@ -1858,7 +1918,7 @@ impl PreparedPlot<'_> {
             items::rulers_and_tooltip_at_value(
                 plot_area_response,
                 value,
-                "",
+                None,
                 &plot,
                 &mut cursors,
                 label_formatter,

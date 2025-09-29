@@ -14,7 +14,9 @@ use egui::{
 use emath::Float as _;
 use rect_elem::{RectElement, highlighted_color};
 
-use super::{Cursor, LabelFormatter, PlotBounds, PlotTransform};
+use crate::HoverPosition;
+
+use super::{Cursor, NewLabelFormatter, PlotBounds, PlotTransform};
 
 pub use bar::Bar;
 pub use box_elem::{BoxElem, BoxSpread};
@@ -161,7 +163,7 @@ pub trait PlotItem {
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
         plot: &PlotConfig<'_>,
-        label_formatter: &LabelFormatter<'_>,
+        label_formatter: &NewLabelFormatter<'_>,
     ) {
         let points = match self.geometry() {
             PlotGeometry::Points(points) => points,
@@ -187,7 +189,7 @@ pub trait PlotItem {
         rulers_and_tooltip_at_value(
             plot_area_response,
             value,
-            self.name(),
+            Some((self.name(), elem.index)),
             plot,
             cursors,
             label_formatter,
@@ -1441,7 +1443,7 @@ impl PlotItem for BarChart {
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
         plot: &PlotConfig<'_>,
-        _: &LabelFormatter<'_>,
+        _: &NewLabelFormatter<'_>,
     ) {
         let bar = &self.bars[elem.index];
 
@@ -1568,7 +1570,7 @@ impl PlotItem for BoxPlot {
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
         plot: &PlotConfig<'_>,
-        _: &LabelFormatter<'_>,
+        _: &NewLabelFormatter<'_>,
     ) {
         let box_plot = &self.boxes[elem.index];
 
@@ -1690,14 +1692,15 @@ fn add_rulers_and_text(
 /// and a label describing the coordinate.
 ///
 /// `value` is used to for text displaying X/Y coordinates.
+/// `nearest_point` contains the nearest point from a plot with its name and index.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn rulers_and_tooltip_at_value(
     plot_area_response: &egui::Response,
     value: PlotPoint,
-    name: &str,
+    nearest_point: Option<(&str, usize)>,
     plot: &PlotConfig<'_>,
     cursors: &mut Vec<Cursor>,
-    label_formatter: &LabelFormatter<'_>,
+    label_formatter: &NewLabelFormatter<'_>,
 ) {
     if plot.show_x {
         cursors.push(Cursor::Vertical { x: value.x });
@@ -1707,17 +1710,25 @@ pub(super) fn rulers_and_tooltip_at_value(
     }
 
     let text = if let Some(custom_label) = label_formatter {
-        custom_label(name, &value)
+        let hover_position = match nearest_point {
+            Some((name, index)) => HoverPosition::NearDataPoint {
+                plot_name: name,
+                position: value,
+                index: index,
+            },
+            None => HoverPosition::Elsewhere { position: value },
+        };
+        custom_label(&hover_position)
     } else {
-        let prefix = if name.is_empty() {
-            String::new()
-        } else {
+        let prefix = if let Some((name, _)) = nearest_point {
             format!("{name}\n")
+        } else {
+            String::new()
         };
         let scale = plot.transform.dvalue_dpos();
         let x_decimals = ((-scale[0].abs().log10()).ceil().at_least(0.0) as usize).clamp(1, 6);
         let y_decimals = ((-scale[1].abs().log10()).ceil().at_least(0.0) as usize).clamp(1, 6);
-        if plot.show_x && plot.show_y {
+        let result = if plot.show_x && plot.show_y {
             format!(
                 "{}x = {:.*}\ny = {:.*}",
                 prefix, x_decimals, value.x, y_decimals, value.y
@@ -1728,25 +1739,28 @@ pub(super) fn rulers_and_tooltip_at_value(
             format!("{}y = {:.*}", prefix, y_decimals, value.y)
         } else {
             unreachable!()
-        }
+        };
+        Some(result)
     };
 
-    // We show the tooltip as soon as we're hovering the plot area:
-    let mut tooltip = egui::Tooltip::always_open(
-        plot_area_response.ctx.clone(),
-        plot_area_response.layer_id,
-        plot_area_response.id,
-        PopupAnchor::Pointer,
-    );
+    if let Some(text) = text {
+        // We show the tooltip as soon as we're hovering the plot area:
+        let mut tooltip = egui::Tooltip::always_open(
+            plot_area_response.ctx.clone(),
+            plot_area_response.layer_id,
+            plot_area_response.id,
+            PopupAnchor::Pointer,
+        );
 
-    let tooltip_width = plot_area_response.ctx.style().spacing.tooltip_width;
+        let tooltip_width = plot_area_response.ctx.style().spacing.tooltip_width;
 
-    tooltip.popup = tooltip.popup.width(tooltip_width);
+        tooltip.popup = tooltip.popup.width(tooltip_width);
 
-    tooltip.gap(12.0).show(|ui| {
-        ui.set_max_width(tooltip_width);
-        ui.label(text);
-    });
+        tooltip.gap(12.0).show(|ui| {
+            ui.set_max_width(tooltip_width);
+            ui.label(text);
+        });
+    }
 }
 
 fn find_closest_rect<'a, T>(
