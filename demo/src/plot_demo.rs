@@ -8,8 +8,8 @@ use egui::{
 
 use egui_plot::{
     Arrows, AxisHints, Bar, BarChart, BoxElem, BoxPlot, BoxSpread, CoordinatesFormatter, Corner,
-    GridInput, GridMark, HLine, Legend, Line, LineStyle, MarkerShape, Plot, PlotImage, PlotPoint,
-    PlotPoints, PlotResponse, Points, Polygon, Text, VLine,
+    GridInput, GridMark, HLine, HoverPosition, Legend, Line, LineStyle, MarkerShape, Plot,
+    PlotImage, PlotPoint, PlotPoints, PlotResponse, Points, Polygon, Text, VLine,
 };
 
 // ----------------------------------------------------------------------------
@@ -636,14 +636,19 @@ impl CustomAxesDemo {
             }
         };
 
-        let label_fmt = |_nearest: Option<(&str, usize)>, val: &PlotPoint| {
-            Some(format!(
+        let label_fmt = |position: &HoverPosition<'_>| match position {
+            HoverPosition::NearDataPoint {
+                plot_name: _,
+                position,
+                index: _,
+            } => Some(format!(
                 "Day {d}, {h}:{m:02}\n{p:.2}%",
-                d = day(val.x),
-                h = hour(val.x),
-                m = minute(val.x),
-                p = percent(val.y)
-            ))
+                d = day(position.x),
+                h = hour(position.x),
+                m = minute(position.x),
+                p = percent(position.y)
+            )),
+            HoverPosition::Elsewhere { position: _ } => None,
         };
 
         ui.label("Zoom in on the X-axis to see hours and minutes");

@@ -14,6 +14,8 @@ use egui::{
 use emath::Float as _;
 use rect_elem::{RectElement, highlighted_color};
 
+use crate::HoverPosition;
+
 use super::{Cursor, NewLabelFormatter, PlotBounds, PlotTransform};
 
 pub use bar::Bar;
@@ -1708,7 +1710,15 @@ pub(super) fn rulers_and_tooltip_at_value(
     }
 
     let text = if let Some(custom_label) = label_formatter {
-        custom_label(nearest_point, &value)
+        let hover_position = match nearest_point {
+            Some((name, index)) => HoverPosition::NearDataPoint {
+                plot_name: name,
+                position: value,
+                index: index,
+            },
+            None => HoverPosition::Elsewhere { position: value },
+        };
+        custom_label(&hover_position)
     } else {
         let prefix = if let Some((name, _)) = nearest_point {
             format!("{name}\n")

@@ -45,7 +45,7 @@ use legend::LegendWidget;
 type LabelFormatterFn<'a> = dyn Fn(&str, &PlotPoint) -> String + 'a;
 pub type LabelFormatter<'a> = Option<Box<LabelFormatterFn<'a>>>;
 
-type NewLabelFormatterFn<'a> = dyn Fn(Option<(&str, usize)>, &PlotPoint) -> Option<String> + 'a;
+type NewLabelFormatterFn<'a> = dyn Fn(&HoverPosition<'_>) -> Option<String> + 'a;
 pub type NewLabelFormatter<'a> = Option<Box<NewLabelFormatterFn<'a>>>;
 
 type GridSpacerFn<'a> = dyn Fn(GridInput) -> Vec<GridMark> + 'a;
@@ -93,6 +93,23 @@ impl Default for CoordinatesFormatter<'_> {
 pub enum Cursor {
     Horizontal { y: f64 },
     Vertical { x: f64 },
+}
+
+/// Indicates the position of the cursor in a plot for hover purposes.
+#[derive(Copy, Clone, PartialEq)]
+pub enum HoverPosition<'a> {
+    NearDataPoint {
+        /// The name of the plot whose data point is nearest to the cursor
+        plot_name: &'a str,
+        /// The position of the nearest data point
+        position: PlotPoint,
+        /// The index of the nearest data point in its plot
+        index: usize,
+    },
+    Elsewhere {
+        /// The position in the plot over which the cursor hovers
+        position: PlotPoint,
+    },
 }
 
 /// Contains the cursors drawn for a plot widget in a single frame.
@@ -430,8 +447,15 @@ impl<'a> Plot<'a> {
         label_formatter: impl Fn(&str, &PlotPoint) -> String + 'a,
     ) -> Self {
         let inner_box = Box::new(label_formatter);
-        self.label_formatter = Some(Box::new(move |option, point| {
-            Some(inner_box(option.map_or("", |(name, _)| name), point))
+        self.label_formatter = Some(Box::new(move |position| {
+            Some(match position {
+                HoverPosition::NearDataPoint {
+                    plot_name,
+                    position,
+                    index: _,
+                } => inner_box(plot_name, &position),
+                HoverPosition::Elsewhere { position: _ } => "".to_owned(),
+            })
         }));
         self
     }
@@ -449,15 +473,18 @@ impl<'a> Plot<'a> {
     /// }).collect();
     /// let line = Line::new("sin", sin);
     /// Plot::new("my_plot").view_aspect(2.0)
-    /// .enumerated_label_formatter(|nearest_point, value| {
-    ///     nearest_point.map(|(name, _index)| format!("{}: {:.*}%", name, 1, value.y))
+    /// .enumerated_label_formatter(|context| {
+    ///     match context {
+    ///         Some((name, index)) => format!("{}: {:.*}%", name, 1, index),
+    ///         Elsewhere { ... } => None,
+    ///     }
     /// })
     /// .show(ui, |plot_ui| plot_ui.line(line));
     /// # });
     /// ```
     pub fn enumerated_label_formatter(
         mut self,
-        label_formatter: impl Fn(Option<(&str, usize)>, &PlotPoint) -> Option<String> + 'a,
+        label_formatter: impl Fn(&HoverPosition<'_>) -> Option<String> + 'a,
     ) -> Self {
         self.label_formatter = Some(Box::new(label_formatter));
         self
