@@ -173,6 +173,8 @@ pub struct Plot<'a> {
     height: Option<f32>,
     data_aspect: Option<f32>,
     view_aspect: Option<f32>,
+    invert_x: bool,
+    invert_y: bool,
 
     reset: bool,
 
@@ -221,6 +223,8 @@ impl<'a> Plot<'a> {
             height: None,
             data_aspect: None,
             view_aspect: None,
+            invert_x: false,
+            invert_y: false,
 
             reset: false,
 
@@ -270,6 +274,22 @@ impl<'a> Plot<'a> {
     #[inline]
     pub fn view_aspect(mut self, view_aspect: f32) -> Self {
         self.view_aspect = Some(view_aspect);
+        self
+    }
+
+    /// Set whether to invert the x-axis (i.e. positive values go to the left).
+    /// By default the x-axis is not inverted (i.e. positive values go to the right).
+    #[inline]
+    pub fn invert_x(mut self, invert: bool) -> Self {
+        self.invert_x = invert;
+        self
+    }
+
+    /// Set whether to invert the y-axis (i.e. positive values go down).
+    /// By default the y-axis is not inverted (i.e. positive values go up).
+    #[inline]
+    pub fn invert_y(mut self, invert: bool) -> Self {
+        self.invert_y = invert;
         self
     }
 
@@ -802,6 +822,8 @@ impl<'a> Plot<'a> {
             mut min_size,
             data_aspect,
             view_aspect,
+            invert_x,
+            invert_y,
             mut show_x,
             mut show_y,
             label_formatter,
@@ -919,7 +941,12 @@ impl<'a> Plot<'a> {
             auto_bounds: default_auto_bounds,
             hovered_legend_item: None,
             hidden_items: Default::default(),
-            transform: PlotTransform::new(plot_rect, min_auto_bounds, center_axis),
+            transform: PlotTransform::new_with_invert_axis(
+                plot_rect,
+                min_auto_bounds,
+                center_axis,
+                Vec2b::new(invert_x, invert_y),
+            ),
             last_click_pos_for_zoom: None,
             x_axis_thickness: Default::default(),
             y_axis_thickness: Default::default(),
@@ -1093,7 +1120,12 @@ impl<'a> Plot<'a> {
             }
         }
 
-        mem.transform = PlotTransform::new(plot_rect, bounds, center_axis);
+        mem.transform = PlotTransform::new_with_invert_axis(
+            plot_rect,
+            bounds,
+            center_axis,
+            Vec2b::new(invert_x, invert_y),
+        );
 
         // Enforce aspect ratio
         if let Some(data_aspect) = data_aspect {

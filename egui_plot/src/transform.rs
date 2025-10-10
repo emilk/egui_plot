@@ -276,6 +276,9 @@ pub struct PlotTransform {
 
     /// Whether to always center the x-range or y-range of the bounds.
     centered: Vec2b,
+
+    /// Whether to always invert the x and/or y axis
+    inverted_axis: Vec2b,
 }
 
 impl PlotTransform {
@@ -338,7 +341,19 @@ impl PlotTransform {
             frame,
             bounds: new_bounds,
             centered: center_axis,
+            inverted_axis: Vec2b::new(false, false),
         }
+    }
+
+    pub fn new_with_invert_axis(
+        frame: Rect,
+        bounds: PlotBounds,
+        center_axis: impl Into<Vec2b>,
+        invert_axis: impl Into<Vec2b>,
+    ) -> Self {
+        let mut new = Self::new(frame, bounds, center_axis);
+        new.inverted_axis = invert_axis.into();
+        new
     }
 
     /// ui-space rectangle.
@@ -386,7 +401,11 @@ impl PlotTransform {
         remap(
             value,
             self.bounds.min[0]..=self.bounds.max[0],
-            (self.frame.left() as f64)..=(self.frame.right() as f64),
+            if self.inverted_axis[0] {
+                (self.frame.right() as f64)..=(self.frame.left() as f64)
+            } else {
+                (self.frame.left() as f64)..=(self.frame.right() as f64)
+            },
         ) as f32
     }
 
@@ -394,7 +413,12 @@ impl PlotTransform {
         remap(
             value,
             self.bounds.min[1]..=self.bounds.max[1],
-            (self.frame.bottom() as f64)..=(self.frame.top() as f64), // negated y axis!
+            // negated y axis by default
+            if self.inverted_axis[1] {
+                (self.frame.top() as f64)..=(self.frame.bottom() as f64)
+            } else {
+                (self.frame.bottom() as f64)..=(self.frame.top() as f64)
+            },
         ) as f32
     }
 
@@ -410,14 +434,24 @@ impl PlotTransform {
     pub fn value_from_position(&self, pos: Pos2) -> PlotPoint {
         let x = remap(
             pos.x as f64,
-            (self.frame.left() as f64)..=(self.frame.right() as f64),
+            if self.inverted_axis[0] {
+                (self.frame.right() as f64)..=(self.frame.left() as f64)
+            } else {
+                (self.frame.left() as f64)..=(self.frame.right() as f64)
+            },
             self.bounds.range_x(),
         );
         let y = remap(
             pos.y as f64,
-            (self.frame.bottom() as f64)..=(self.frame.top() as f64), // negated y axis!
+            // negated y axis by default
+            if self.inverted_axis[1] {
+                (self.frame.top() as f64)..=(self.frame.bottom() as f64)
+            } else {
+                (self.frame.bottom() as f64)..=(self.frame.top() as f64)
+            },
             self.bounds.range_y(),
         );
+
         PlotPoint::new(x, y)
     }
 
@@ -437,12 +471,14 @@ impl PlotTransform {
 
     /// delta position / delta value = how many ui points per step in the X axis in "plot space"
     pub fn dpos_dvalue_x(&self) -> f64 {
-        self.frame.width() as f64 / self.bounds.width()
+        let flip = if self.inverted_axis[0] { -1.0 } else { 1.0 };
+        flip * (self.frame.width() as f64) / self.bounds.width()
     }
 
     /// delta position / delta value = how many ui points per step in the Y axis in "plot space"
     pub fn dpos_dvalue_y(&self) -> f64 {
-        -self.frame.height() as f64 / self.bounds.height() // negated y axis!
+        let flip = if self.inverted_axis[1] { 1.0 } else { -1.0 };
+        flip * (self.frame.height() as f64) / self.bounds.height()
     }
 
     /// delta position / delta value = how many ui points per step in "plot space"

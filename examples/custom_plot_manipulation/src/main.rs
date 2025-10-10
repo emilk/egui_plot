@@ -80,6 +80,8 @@ impl eframe::App for PlotExample {
                 .allow_zoom(false)
                 .allow_drag(false)
                 .allow_scroll(false)
+                .invert_x(false)
+                .invert_y(true)
                 .legend(Legend::default())
                 .show(ui, |plot_ui| {
                     if let Some(mut scroll) = scroll {

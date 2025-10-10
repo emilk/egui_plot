@@ -172,6 +172,8 @@ struct LineDemo {
     line_style: LineStyle,
     gradient: bool,
     gradient_fill: bool,
+    invert_x: bool,
+    invert_y: bool,
 }
 
 impl Default for LineDemo {
@@ -189,6 +191,8 @@ impl Default for LineDemo {
             line_style: LineStyle::Solid,
             gradient: false,
             gradient_fill: false,
+            invert_x: false,
+            invert_y: false,
         }
     }
 }
@@ -208,6 +212,8 @@ impl LineDemo {
             line_style,
             gradient,
             gradient_fill,
+            invert_x,
+            invert_y,
         } = self;
 
         ui.horizontal(|ui| {
@@ -268,6 +274,11 @@ impl LineDemo {
             ui.vertical(|ui| {
                 ui.checkbox(gradient, "Gradient line");
                 ui.add_enabled(*gradient, Checkbox::new(gradient_fill, "Gradient fill"));
+            });
+
+            ui.vertical(|ui| {
+                ui.checkbox(invert_x, "Invert X axis");
+                ui.checkbox(invert_y, "Invert Y axis");
             });
         });
     }
@@ -344,7 +355,10 @@ impl LineDemo {
         let mut plot = Plot::new("lines_demo")
             .legend(Legend::default().title("Lines"))
             .show_axes(self.show_axes)
-            .show_grid(self.show_grid);
+            .show_grid(self.show_grid)
+            .invert_x(self.invert_x)
+            .invert_y(self.invert_y);
+
         if self.square {
             plot = plot.view_aspect(1.0);
         }
