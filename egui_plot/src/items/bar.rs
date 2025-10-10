@@ -54,7 +54,7 @@ impl Bar {
     }
 
     /// Name of this bar chart element.
-    #[allow(clippy::needless_pass_by_value)]
+    #[expect(clippy::needless_pass_by_value)]
     #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
         self.name = name.to_string();

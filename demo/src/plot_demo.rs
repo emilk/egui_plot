@@ -113,25 +113,17 @@ impl PlotDemo {
             // We give the ui a label so we can easily enumerate all demos in the tests
             // The actual accessibility benefit is questionable considering the plot itself isn't
             // accessible at all
-            let container_response = ui.response();
-            container_response
+            ui.response()
                 .widget_info(|| WidgetInfo::labeled(WidgetType::RadioGroup, true, "Select Demo"));
 
-            // TODO(lucasmerlin): The parent ui should ideally be automatically set as AccessKit parent
-            // or at least, with an opt in via UiBuilder, making this much more readable
-            // See https://github.com/emilk/egui/issues/5674
-            ui.ctx()
-                .clone()
-                .with_accessibility_parent(container_response.id, || {
-                    ui.selectable_value(&mut self.open_panel, Panel::Lines, "Lines");
-                    ui.selectable_value(&mut self.open_panel, Panel::Markers, "Markers");
-                    ui.selectable_value(&mut self.open_panel, Panel::Legend, "Legend");
-                    ui.selectable_value(&mut self.open_panel, Panel::Charts, "Charts");
-                    ui.selectable_value(&mut self.open_panel, Panel::Items, "Items");
-                    ui.selectable_value(&mut self.open_panel, Panel::Interaction, "Interaction");
-                    ui.selectable_value(&mut self.open_panel, Panel::CustomAxes, "Custom Axes");
-                    ui.selectable_value(&mut self.open_panel, Panel::LinkedAxes, "Linked Axes");
-                });
+            ui.selectable_value(&mut self.open_panel, Panel::Lines, "Lines");
+            ui.selectable_value(&mut self.open_panel, Panel::Markers, "Markers");
+            ui.selectable_value(&mut self.open_panel, Panel::Legend, "Legend");
+            ui.selectable_value(&mut self.open_panel, Panel::Charts, "Charts");
+            ui.selectable_value(&mut self.open_panel, Panel::Items, "Items");
+            ui.selectable_value(&mut self.open_panel, Panel::Interaction, "Interaction");
+            ui.selectable_value(&mut self.open_panel, Panel::CustomAxes, "Custom Axes");
+            ui.selectable_value(&mut self.open_panel, Panel::LinkedAxes, "Linked Axes");
         });
         ui.separator();
 
@@ -348,7 +340,7 @@ impl LineDemo {
         if self.animate {
             ui.ctx().request_repaint();
             self.time += ui.input(|i| i.unstable_dt).at_most(1.0 / 30.0) as f64;
-        };
+        }
         let mut plot = Plot::new("lines_demo")
             .legend(Legend::default().title("Lines"))
             .show_axes(self.show_axes)
@@ -554,7 +546,7 @@ impl CustomAxesDemo {
         Line::new("logistic fn", values)
     }
 
-    #[allow(clippy::needless_pass_by_value)]
+    #[expect(clippy::needless_pass_by_value)]
     fn x_grid(input: GridInput) -> Vec<GridMark> {
         // Note: this always fills all possible marks. For optimization, `input.bounds`
         // could be used to decide when the low-interval grids (minutes) should be added.
@@ -589,7 +581,7 @@ impl CustomAxesDemo {
         marks
     }
 
-    #[allow(clippy::unused_self)]
+    #[expect(clippy::unused_self)]
     fn ui(&self, ui: &mut egui::Ui) -> Response {
         const MINS_PER_DAY: f64 = CustomAxesDemo::MINS_PER_DAY;
         const MINS_PER_H: f64 = CustomAxesDemo::MINS_PER_H;
@@ -862,7 +854,7 @@ impl ItemsDemo {
 struct InteractionDemo {}
 
 impl InteractionDemo {
-    #[allow(clippy::unused_self)]
+    #[expect(clippy::unused_self)]
     fn ui(&self, ui: &mut egui::Ui) -> Response {
         let id = ui.make_persistent_id("interaction_demo");
 

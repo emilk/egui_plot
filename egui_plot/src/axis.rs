@@ -374,9 +374,9 @@ impl<'a> AxisWidget<'a> {
                                 let pos = Pos2::new(x, center_y - galley_size.y / 2.0);
                                 painter.add(TextShape::new(pos, galley, text_color));
                             }
-                        };
+                        }
                     }
-                };
+                }
             }
         }
         thickness
