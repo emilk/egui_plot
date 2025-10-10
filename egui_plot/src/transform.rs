@@ -91,8 +91,8 @@ impl PlotBounds {
     #[inline]
     pub fn center(&self) -> PlotPoint {
         [
-            (self.min[0] + self.max[0]) / 2.0,
-            (self.min[1] + self.max[1]) / 2.0,
+            emath::fast_midpoint(self.min[0], self.max[0]),
+            emath::fast_midpoint(self.min[1], self.max[1]),
         ]
         .into()
     }
@@ -306,7 +306,7 @@ impl PlotTransform {
                     1.0
                 },
             );
-        };
+        }
 
         if !bounds.is_finite_y() {
             new_bounds.set_y(&PlotBounds::new_symmetrical(1.0));
@@ -319,15 +319,15 @@ impl PlotTransform {
                     1.0
                 },
             );
-        };
+        }
 
         // Scale axes so that the origin is in the center.
         if center_axis.x {
             new_bounds.make_x_symmetrical();
-        };
+        }
         if center_axis.y {
             new_bounds.make_y_symmetrical();
-        };
+        }
 
         debug_assert!(
             new_bounds.is_valid(),
