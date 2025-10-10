@@ -778,7 +778,6 @@ impl<'a> Plot<'a> {
     }
 
     #[expect(clippy::too_many_lines)] // TODO(emilk): shorten this function
-    #[expect(clippy::type_complexity)] // build_fn
     fn show_dyn<'b, R>(
         self,
         ui: &mut Ui,
@@ -1713,7 +1712,6 @@ impl PreparedPlot<'_> {
     }
 
     fn paint_grid(&self, ui: &Ui, shapes: &mut Vec<(Shape, f32)>, axis: Axis, fade_range: Rangef) {
-        #![allow(clippy::collapsible_else_if)]
         let Self {
             transform,
             // axis_formatters,
@@ -1946,14 +1944,15 @@ fn test_generate_marks() {
         gm(3.01, 0.01),
     ];
 
-    let mut problem = None;
-    if marks.len() != expected.len() {
-        problem = Some(format!(
+    let mut problem = if marks.len() == expected.len() {
+        None
+    } else {
+        Some(format!(
             "Different lengths: got {}, expected {}",
             marks.len(),
             expected.len()
-        ));
-    }
+        ))
+    };
 
     for (i, (a, b)) in marks.iter().zip(&expected).enumerate() {
         if !approx_eq(a, b) {
