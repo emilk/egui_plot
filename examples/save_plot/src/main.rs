@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
-#![allow(rustdoc::missing_crate_level_docs)] // it's an example
+#![expect(rustdoc::missing_crate_level_docs)] // it's an example
+#![expect(clippy::print_stderr)]
 
 use eframe::egui;
 use egui_plot::{Legend, Line, Plot, PlotPoints};
@@ -68,8 +69,8 @@ impl eframe::App for MyApp {
                     image::ColorType::Rgba8,
                 );
                 match result {
-                    Ok(()) => eprintln!("Image saved to {path:?}"),
-                    Err(err) => eprintln!("Failed to save image to {path:?}: {err}"),
+                    Ok(()) => eprintln!("Image saved to {}", path.display()),
+                    Err(err) => eprintln!("Failed to save image to {}: {err}", path.display()),
                 }
             }
         }

@@ -1,5 +1,5 @@
 //! Contains items that can be added to a plot.
-#![allow(clippy::type_complexity)] // TODO(emilk): simplify some of the callback types with type aliases
+#![expect(clippy::type_complexity)] // TODO(emilk): simplify some of the callback types with type aliases
 
 use std::{ops::RangeInclusive, sync::Arc};
 
@@ -54,7 +54,6 @@ macro_rules! builder_methods_for_base {
         /// Name of this plot item.
         ///
         /// This name will show up in the plot legend, if legends are turned on.
-        #[allow(clippy::needless_pass_by_value)]
         #[inline]
         pub fn name(mut self, name: impl ToString) -> Self {
             self.base_mut().name = name.to_string();
@@ -881,7 +880,6 @@ impl<'a> Points<'a> {
 }
 
 impl PlotItem for Points<'_> {
-    #[allow(clippy::too_many_lines)] // TODO(emilk): shorten this function
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let sqrt_3 = 3_f32.sqrt();
         let frac_sqrt_3_2 = 3_f32.sqrt() / 2.0;
@@ -1682,7 +1680,7 @@ fn add_rulers_and_text(
     let font_id = TextStyle::Body.resolve(plot.ui.style());
 
     let corner_value = elem.corner_value();
-    plot.ui.fonts(|f| {
+    plot.ui.fonts_mut(|f| {
         shapes.push(Shape::text(
             f,
             plot.transform.position_from_point(&corner_value) + vec2(3.0, -2.0),
@@ -1698,7 +1696,6 @@ fn add_rulers_and_text(
 /// and a label describing the coordinate.
 ///
 /// `value` is used to for text displaying X/Y coordinates.
-#[allow(clippy::too_many_arguments)]
 pub(super) fn rulers_and_tooltip_at_value(
     plot_area_response: &egui::Response,
     value: PlotPoint,
