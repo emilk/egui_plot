@@ -4,7 +4,7 @@ use egui::{Color32, Pos2, Response, Vec2, Vec2b, epaint::Hsva};
 
 use crate::{BoundsModification, PlotBounds, PlotItem, PlotPoint, PlotTransform};
 
-#[allow(unused_imports)] // for links in docstrings
+#[expect(unused_imports)] // for links in docstrings
 use crate::Plot;
 
 /// Provides methods to interact with a plot while building it. It is the single argument of the closure
@@ -149,7 +149,7 @@ impl<'a> PlotUi<'a> {
     pub fn line(&mut self, mut line: crate::Line<'a>) {
         if line.series.is_empty() {
             return;
-        };
+        }
 
         // Give the stroke an automatic color if no color has been assigned.
         if line.stroke.color == Color32::TRANSPARENT {
@@ -162,7 +162,7 @@ impl<'a> PlotUi<'a> {
     pub fn polygon(&mut self, mut polygon: crate::Polygon<'a>) {
         if polygon.series.is_empty() {
             return;
-        };
+        }
 
         // Give the stroke an automatic color if no color has been assigned.
         if polygon.stroke.color == Color32::TRANSPARENT {
@@ -175,7 +175,7 @@ impl<'a> PlotUi<'a> {
     pub fn text(&mut self, text: crate::Text) {
         if text.text.is_empty() {
             return;
-        };
+        }
 
         self.items.push(Box::new(text));
     }
@@ -184,7 +184,7 @@ impl<'a> PlotUi<'a> {
     pub fn points(&mut self, mut points: crate::Points<'a>) {
         if points.series.is_empty() {
             return;
-        };
+        }
 
         // Give the points an automatic color if no color has been assigned.
         if points.color == Color32::TRANSPARENT {
@@ -197,7 +197,7 @@ impl<'a> PlotUi<'a> {
     pub fn arrows(&mut self, mut arrows: crate::Arrows<'a>) {
         if arrows.origins.is_empty() || arrows.tips.is_empty() {
             return;
-        };
+        }
 
         // Give the arrows an automatic color if no color has been assigned.
         if arrows.color == Color32::TRANSPARENT {
