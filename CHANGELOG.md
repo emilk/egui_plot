@@ -4,11 +4,15 @@ All notable changes to the `egui_plot` integration will be noted in this file.
 This file is updated upon each release.
 Changes since the last release can be found at <https://github.com/emilk/egui_plot/compare/latest...HEAD> or by running the `scripts/generate_changelog.py` script.
 
+
+## 0.34.0 - 2025-10-10
+* Update to egui 0.33.0 [#140](https://github.com/emilk/egui_plot/pull/140) by [@lucasmerlin](https://github.com/lucasmerlin)
+* Update MSRV to 1.88 [#139](https://github.com/emilk/egui_plot/pull/139) by [@lucasmerlin](https://github.com/lucasmerlin)
+* Add the ability invert the X and/or Y axis [#125](https://github.com/emilk/egui_plot/pull/125) by [@CattleProdigy](https://github.com/CattleProdigy)
+* Fix offset by 1 when computing gradient fill color [#130](https://github.com/emilk/egui_plot/pull/130) by [@Yohsi](https://github.com/Yohsi)
+
+
 ## 0.33.0 - 2025-07-11
-
-Full diff at https://github.com/emilk/egui_plot/compare/0.32.0..HEAD
-
-#### PRs
 * Update egui to 0.32 [#124](https://github.com/emilk/egui_plot/pull/124) by [@lucasmerlin](https://github.com/lucasmerlin)
 * Fix dynamic bounds modifications [#96](https://github.com/emilk/egui_plot/pull/96) by [@emilk](https://github.com/emilk)
 * Add `PlotUi::set_plot_bounds_x` and `set_plot_bounds_y` [#110](https://github.com/emilk/egui_plot/pull/110) by [@emilk](https://github.com/emilk)
@@ -29,18 +33,10 @@ Full diff at https://github.com/emilk/egui_plot/compare/0.32.0..HEAD
 
 
 ## 0.32.1 - 2025-04-07
-
-Full diff at https://github.com/emilk/egui_plot/compare/0.32.0..HEAD
-
-#### PRs
 * Fix dynamic bounds modifications [#96](https://github.com/emilk/egui_plot/pull/96) by [@emilk](https://github.com/emilk)
 
 
 ## 0.32.0 - 2025-04-07
-
-Full diff at https://github.com/emilk/egui_plot/compare/0.31.0..HEAD
-
-#### PRs
 * `PlotResponse::hovered_plot_item` also set when hovering the legend [#81](https://github.com/emilk/egui_plot/pull/81) by [@Wumpf](https://github.com/Wumpf)
 * Plot items now require an id [#82](https://github.com/emilk/egui_plot/pull/82) by [@Wumpf](https://github.com/Wumpf)
 * Fix include_{xy} issue when auto bounds is off [#74](https://github.com/emilk/egui_plot/pull/74) by [@joaofl](https://github.com/joaofl)
@@ -49,10 +45,6 @@ Full diff at https://github.com/emilk/egui_plot/compare/0.31.0..HEAD
 
 
 ## 0.31.0 - 2025-02-05
-
-Full diff at https://github.com/emilk/egui_plot/compare/0.30.0..HEAD
-
-#### PRs
 * Allow borrowing plot points via `PlotPoints::Borrowed` [#64](https://github.com/emilk/egui_plot/pull/64) by [@mo8it](https://github.com/mo8it) and [@bircni](https://github.com/bircni)
 * Add `insertion_order` and `color_conflict_handling` to `Legend` [#65](https://github.com/emilk/egui_plot/pull/65) by [@Zoxc](https://github.com/Zoxc) and [@bircni](https://github.com/bircni)
 * Allow Plot::link_cursor to accept `impl Into<Vec2b>` [#66](https://github.com/emilk/egui_plot/pull/66) by [@jetuk](https://github.com/jetuk)
@@ -60,11 +52,8 @@ Full diff at https://github.com/emilk/egui_plot/compare/0.30.0..HEAD
 * Update to egui 0.31.0 [#72](https://github.com/emilk/egui_plot/pull/72) by [@Wumpf](https://github.com/Wumpf)
 * Update MSRV to Rust 1.81 [#69](https://github.com/emilk/egui_plot/pull/69) by [@emilk](https://github.com/emilk)
 
+
 ## 0.30.0 - 2024-12-17
-
-Full diff at https://github.com/emilk/egui_plot/compare/0.29.0..HEAD
-
-#### PRs
 * Update to egui `0.30.0`, MSRV to 1.80 [#59](https://github.com/emilk/egui_plot/pull/59) by [@bircni](https://github.com/bircni)
 * Allow setting a line's fill area's alpha channel [#34](https://github.com/emilk/egui_plot/pull/34) by [@maxded](https://github.com/maxded)
 * Use `Vec2b` in parameters [#43](https://github.com/emilk/egui_plot/pull/43) by [@bircni](https://github.com/bircni)
