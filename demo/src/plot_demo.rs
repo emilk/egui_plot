@@ -113,25 +113,17 @@ impl PlotDemo {
             // We give the ui a label so we can easily enumerate all demos in the tests
             // The actual accessibility benefit is questionable considering the plot itself isn't
             // accessible at all
-            let container_response = ui.response();
-            container_response
+            ui.response()
                 .widget_info(|| WidgetInfo::labeled(WidgetType::RadioGroup, true, "Select Demo"));
 
-            // TODO(lucasmerlin): The parent ui should ideally be automatically set as AccessKit parent
-            // or at least, with an opt in via UiBuilder, making this much more readable
-            // See https://github.com/emilk/egui/issues/5674
-            ui.ctx()
-                .clone()
-                .with_accessibility_parent(container_response.id, || {
-                    ui.selectable_value(&mut self.open_panel, Panel::Lines, "Lines");
-                    ui.selectable_value(&mut self.open_panel, Panel::Markers, "Markers");
-                    ui.selectable_value(&mut self.open_panel, Panel::Legend, "Legend");
-                    ui.selectable_value(&mut self.open_panel, Panel::Charts, "Charts");
-                    ui.selectable_value(&mut self.open_panel, Panel::Items, "Items");
-                    ui.selectable_value(&mut self.open_panel, Panel::Interaction, "Interaction");
-                    ui.selectable_value(&mut self.open_panel, Panel::CustomAxes, "Custom Axes");
-                    ui.selectable_value(&mut self.open_panel, Panel::LinkedAxes, "Linked Axes");
-                });
+            ui.selectable_value(&mut self.open_panel, Panel::Lines, "Lines");
+            ui.selectable_value(&mut self.open_panel, Panel::Markers, "Markers");
+            ui.selectable_value(&mut self.open_panel, Panel::Legend, "Legend");
+            ui.selectable_value(&mut self.open_panel, Panel::Charts, "Charts");
+            ui.selectable_value(&mut self.open_panel, Panel::Items, "Items");
+            ui.selectable_value(&mut self.open_panel, Panel::Interaction, "Interaction");
+            ui.selectable_value(&mut self.open_panel, Panel::CustomAxes, "Custom Axes");
+            ui.selectable_value(&mut self.open_panel, Panel::LinkedAxes, "Linked Axes");
         });
         ui.separator();
 
