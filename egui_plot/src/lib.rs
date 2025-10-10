@@ -777,8 +777,8 @@ impl<'a> Plot<'a> {
         self.show_dyn(ui, Box::new(build_fn))
     }
 
-    #[allow(clippy::too_many_lines)] // TODO(emilk): shorten this function
-    #[allow(clippy::type_complexity)] // build_fn
+    #[expect(clippy::too_many_lines)] // TODO(emilk): shorten this function
+    #[expect(clippy::type_complexity)] // build_fn
     fn show_dyn<'b, R>(
         self,
         ui: &mut Ui,
@@ -911,7 +911,7 @@ impl<'a> Plot<'a> {
                     let link_groups: &mut BoundsLinkGroups = data.get_temp_mut_or_default(Id::NULL);
                     link_groups.0.remove(name);
                 });
-            };
+            }
             None
         } else {
             PlotMemory::load(ui.ctx(), plot_id)
@@ -1024,9 +1024,9 @@ impl<'a> Plot<'a> {
                         bounds.set_y(&linked_bounds.bounds);
                         mem.auto_bounds.y = linked_bounds.auto_bounds.y;
                     }
-                };
+                }
             });
-        };
+        }
 
         // Allow double-clicking to reset to the initial bounds.
         if allow_double_click_reset && response.double_clicked() {
@@ -1752,12 +1752,12 @@ impl PreparedPlot<'_> {
                     Axis::X => {
                         if !clamp_range.range_x().contains(&value_main) {
                             continue;
-                        };
+                        }
                     }
                     Axis::Y => {
                         if !clamp_range.range_y().contains(&value_main) {
                             continue;
-                        };
+                        }
                     }
                 }
             }

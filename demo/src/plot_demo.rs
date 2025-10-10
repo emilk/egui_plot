@@ -348,7 +348,7 @@ impl LineDemo {
         if self.animate {
             ui.ctx().request_repaint();
             self.time += ui.input(|i| i.unstable_dt).at_most(1.0 / 30.0) as f64;
-        };
+        }
         let mut plot = Plot::new("lines_demo")
             .legend(Legend::default().title("Lines"))
             .show_axes(self.show_axes)
@@ -554,7 +554,7 @@ impl CustomAxesDemo {
         Line::new("logistic fn", values)
     }
 
-    #[allow(clippy::needless_pass_by_value)]
+    #[expect(clippy::needless_pass_by_value)]
     fn x_grid(input: GridInput) -> Vec<GridMark> {
         // Note: this always fills all possible marks. For optimization, `input.bounds`
         // could be used to decide when the low-interval grids (minutes) should be added.
@@ -589,7 +589,7 @@ impl CustomAxesDemo {
         marks
     }
 
-    #[allow(clippy::unused_self)]
+    #[expect(clippy::unused_self)]
     fn ui(&self, ui: &mut egui::Ui) -> Response {
         const MINS_PER_DAY: f64 = CustomAxesDemo::MINS_PER_DAY;
         const MINS_PER_H: f64 = CustomAxesDemo::MINS_PER_H;
@@ -862,7 +862,7 @@ impl ItemsDemo {
 struct InteractionDemo {}
 
 impl InteractionDemo {
-    #[allow(clippy::unused_self)]
+    #[expect(clippy::unused_self)]
     fn ui(&self, ui: &mut egui::Ui) -> Response {
         let id = ui.make_persistent_id("interaction_demo");
 

@@ -54,7 +54,7 @@ macro_rules! builder_methods_for_base {
         /// Name of this plot item.
         ///
         /// This name will show up in the plot legend, if legends are turned on.
-        #[allow(clippy::needless_pass_by_value)]
+        #[expect(clippy::needless_pass_by_value)]
         #[inline]
         pub fn name(mut self, name: impl ToString) -> Self {
             self.base_mut().name = name.to_string();
@@ -873,7 +873,7 @@ impl<'a> Points<'a> {
 }
 
 impl PlotItem for Points<'_> {
-    #[allow(clippy::too_many_lines)] // TODO(emilk): shorten this function
+    #[expect(clippy::too_many_lines)] // TODO(emilk): shorten this function
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let sqrt_3 = 3_f32.sqrt();
         let frac_sqrt_3_2 = 3_f32.sqrt() / 2.0;
@@ -1690,7 +1690,7 @@ fn add_rulers_and_text(
 /// and a label describing the coordinate.
 ///
 /// `value` is used to for text displaying X/Y coordinates.
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 pub(super) fn rulers_and_tooltip_at_value(
     plot_area_response: &egui::Response,
     value: PlotPoint,
