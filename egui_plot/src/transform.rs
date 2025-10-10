@@ -91,8 +91,8 @@ impl PlotBounds {
     #[inline]
     pub fn center(&self) -> PlotPoint {
         [
-            (self.min[0] + self.max[0]) / 2.0,
-            (self.min[1] + self.max[1]) / 2.0,
+            emath::fast_midpoint(self.min[0], self.max[0]),
+            emath::fast_midpoint(self.min[1], self.max[1]),
         ]
         .into()
     }
