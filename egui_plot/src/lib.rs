@@ -1088,14 +1088,6 @@ impl<'a> Plot<'a> {
             }
         }
 
-        // Reset bounds to initial bounds if they haven't been modified.
-        if (!default_auto_bounds.x && !any_dynamic_modifications) || mem.auto_bounds.x {
-            bounds.set_x(&min_auto_bounds);
-        }
-        if (!default_auto_bounds.y && !any_dynamic_modifications) || mem.auto_bounds.y {
-            bounds.set_y(&min_auto_bounds);
-        }
-
         let auto_x = mem.auto_bounds.x && (!min_auto_bounds.is_valid_x() || default_auto_bounds.x);
         let auto_y = mem.auto_bounds.y && (!min_auto_bounds.is_valid_y() || default_auto_bounds.y);
 
@@ -1196,6 +1188,7 @@ impl<'a> Plot<'a> {
 
         // Zooming
         let mut boxed_zoom_rect = None;
+        let mut cancel_auto_bounds = false;
         if allow_boxed_zoom {
             // Save last click to allow boxed zooming
             if response.drag_started() && response.dragged_by(boxed_zoom_pointer_button) {
@@ -1205,6 +1198,7 @@ impl<'a> Plot<'a> {
             let box_start_pos = mem.last_click_pos_for_zoom;
             let box_end_pos = response.hover_pos();
             if let (Some(box_start_pos), Some(box_end_pos)) = (box_start_pos, box_end_pos) {
+                cancel_auto_bounds = true;
                 // while dragging prepare a Shape and draw it later on top of the plot
                 if response.dragged_by(boxed_zoom_pointer_button) {
                     response = response.on_hover_cursor(CursorIcon::ZoomIn);
@@ -1245,6 +1239,17 @@ impl<'a> Plot<'a> {
                     // reset the boxed zoom state
                     mem.last_click_pos_for_zoom = None;
                 }
+            }
+        }
+
+
+        // Reset bounds to initial bounds if they haven't been modified.
+        if !cancel_auto_bounds {
+            if mem.auto_bounds.x || (!default_auto_bounds.x && !any_dynamic_modifications) {
+                bounds.set_x(&min_auto_bounds);
+            }
+            if mem.auto_bounds.y || (!default_auto_bounds.y && !any_dynamic_modifications) {
+                bounds.set_y(&min_auto_bounds);
             }
         }
 
