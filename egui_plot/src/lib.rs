@@ -1102,6 +1102,9 @@ impl<'a> Plot<'a> {
         // Set bounds automatically based on content.
         if auto_x || auto_y {
             for item in &items {
+                if item.is_overlay() {
+                    continue;
+                }
                 let item_bounds = item.bounds();
                 if auto_x {
                     bounds.merge_x(&item_bounds);

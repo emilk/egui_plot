@@ -35,6 +35,7 @@ pub struct PlotItemBase {
     id: Id,
     highlight: bool,
     allow_hover: bool,
+    is_overlay: bool,
 }
 
 impl PlotItemBase {
@@ -45,6 +46,7 @@ impl PlotItemBase {
             id,
             highlight: false,
             allow_hover: true,
+            is_overlay: false,
         }
     }
 }
@@ -88,6 +90,14 @@ macro_rules! builder_methods_for_base {
         #[inline]
         pub fn id(mut self, id: impl Into<Id>) -> Self {
             self.base_mut().id = id.into();
+            self
+        }
+
+        /// Places this element in the overlay layer, exempting it from automatic bounds calculation.
+        /// Default: `false`.
+        #[inline]
+        pub fn overlay(mut self, is_overlay: bool) -> Self {
+            self.base_mut().is_overlay = is_overlay;
             self
         }
     };
@@ -198,6 +208,7 @@ pub trait PlotItem {
             label_formatter,
         );
     }
+    fn is_overlay(&self) -> bool;
 }
 
 // ----------------------------------------------------------------------------
@@ -298,6 +309,10 @@ impl PlotItem for HLine {
         bounds.max[1] = self.y;
         bounds
     }
+
+    fn is_overlay(&self) -> bool {
+        self.base().is_overlay
+    }
 }
 
 /// A vertical line in a plot, filling the full width
@@ -396,6 +411,10 @@ impl PlotItem for VLine {
         bounds.max[0] = self.x;
         bounds
     }
+
+    fn is_overlay(&self) -> bool {
+        self.base().is_overlay
+    }
 }
 
 /// A series of values forming a path.
@@ -423,6 +442,9 @@ impl<'a> Line<'a> {
             style: LineStyle::Solid,
         }
     }
+
+    /// Places this element in the overlay layer, exempting it from automatic bounds calculation.
+    /// Default: `false`.
 
     /// Add a stroke.
     #[inline]
@@ -609,6 +631,10 @@ impl PlotItem for Line<'_> {
     fn bounds(&self) -> PlotBounds {
         self.series.bounds()
     }
+
+    fn is_overlay(&self) -> bool {
+        self.base().is_overlay
+    }
 }
 
 /// A convex polygon.
@@ -719,6 +745,10 @@ impl PlotItem for Polygon<'_> {
     fn base_mut(&mut self) -> &mut PlotItemBase {
         &mut self.base
     }
+
+    fn is_overlay(&self) -> bool {
+        self.base().is_overlay
+    }
 }
 
 /// Text inside the plot.
@@ -811,6 +841,10 @@ impl PlotItem for Text {
 
     fn base_mut(&mut self) -> &mut PlotItemBase {
         &mut self.base
+    }
+
+    fn is_overlay(&self) -> bool {
+        self.base().is_overlay
     }
 }
 
@@ -1039,6 +1073,10 @@ impl PlotItem for Points<'_> {
     fn base_mut(&mut self) -> &mut PlotItemBase {
         &mut self.base
     }
+
+    fn is_overlay(&self) -> bool {
+        self.base().is_overlay
+    }
 }
 
 /// A set of arrows.
@@ -1149,6 +1187,10 @@ impl PlotItem for Arrows<'_> {
 
     fn base_mut(&mut self) -> &mut PlotItemBase {
         &mut self.base
+    }
+
+    fn is_overlay(&self) -> bool {
+        self.base().is_overlay
     }
 }
 
@@ -1306,6 +1348,10 @@ impl PlotItem for PlotImage {
 
     fn base_mut(&mut self) -> &mut PlotItemBase {
         &mut self.base
+    }
+
+    fn is_overlay(&self) -> bool {
+        self.base().is_overlay
     }
 }
 
@@ -1468,6 +1514,10 @@ impl PlotItem for BarChart {
     fn base_mut(&mut self) -> &mut PlotItemBase {
         &mut self.base
     }
+
+    fn is_overlay(&self) -> bool {
+        self.base().is_overlay
+    }
 }
 
 /// A diagram containing a series of [`BoxElem`] elements.
@@ -1594,6 +1644,10 @@ impl PlotItem for BoxPlot {
 
     fn base_mut(&mut self) -> &mut PlotItemBase {
         &mut self.base
+    }
+
+    fn is_overlay(&self) -> bool {
+        self.base().is_overlay
     }
 }
 
