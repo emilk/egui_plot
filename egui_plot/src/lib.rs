@@ -1861,8 +1861,8 @@ impl PreparedPlot<'_> {
             });
 
         let closest = candidates
-            .min_by_key(|(_, elem)| elem.dist_sq.ord())
-            .filter(|(_, elem)| elem.dist_sq <= interact_radius_sq);
+            .filter(|(_, elem)| elem.dist_sq <= interact_radius_sq)
+            .next_back();
 
         let plot = items::PlotConfig {
             ui,
