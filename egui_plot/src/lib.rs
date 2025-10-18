@@ -23,7 +23,6 @@ use egui::{
     Response, Sense, Shape, Stroke, TextStyle, Ui, Vec2, Vec2b, WidgetText, epaint, remap_clamp,
     vec2,
 };
-use emath::Float as _;
 
 pub use crate::{
     axis::{Axis, AxisHints, HPlacement, Placement, VPlacement},
