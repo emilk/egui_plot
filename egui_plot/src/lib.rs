@@ -23,7 +23,6 @@ use egui::{
     Response, Sense, Shape, Stroke, TextStyle, Ui, Vec2, Vec2b, WidgetText, epaint, remap_clamp,
     vec2,
 };
-use emath::Float as _;
 
 pub use crate::{
     axis::{Axis, AxisHints, HPlacement, Placement, VPlacement},
@@ -1861,8 +1860,8 @@ impl PreparedPlot<'_> {
             });
 
         let closest = candidates
-            .min_by_key(|(_, elem)| elem.dist_sq.ord())
-            .filter(|(_, elem)| elem.dist_sq <= interact_radius_sq);
+            .filter(|(_, elem)| elem.dist_sq <= interact_radius_sq)
+            .next_back();
 
         let plot = items::PlotConfig {
             ui,
