@@ -18,6 +18,7 @@ use super::{Cursor, LabelFormatter, PlotBounds, PlotTransform};
 
 pub use bar::Bar;
 pub use box_elem::{BoxElem, BoxSpread};
+pub use span::Span;
 pub use values::{
     ClosestElem, LineStyle, MarkerShape, Orientation, PlotGeometry, PlotPoint, PlotPoints,
 };
@@ -25,6 +26,7 @@ pub use values::{
 mod bar;
 mod box_elem;
 mod rect_elem;
+mod span;
 mod values;
 
 const DEFAULT_FILL_ALPHA: f32 = 0.05;

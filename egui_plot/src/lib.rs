@@ -30,7 +30,7 @@ pub use crate::{
     items::{
         Arrows, Bar, BarChart, BoxElem, BoxPlot, BoxSpread, ClosestElem, HLine, Line, LineStyle,
         MarkerShape, Orientation, PlotConfig, PlotGeometry, PlotImage, PlotItem, PlotItemBase,
-        PlotPoint, PlotPoints, Points, Polygon, Text, VLine,
+        PlotPoint, PlotPoints, Points, Polygon, Span, Text, VLine,
     },
     legend::{ColorConflictHandling, Corner, Legend},
     memory::PlotMemory,
