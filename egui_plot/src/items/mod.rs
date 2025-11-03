@@ -28,6 +28,7 @@ pub use points::Points;
 pub use polygon::Polygon;
 use rect_elem::RectElement;
 pub use series::Line;
+pub use span::Span;
 pub use text::Text;
 pub use values::ClosestElem;
 pub use values::LineStyle;
@@ -51,6 +52,7 @@ mod points;
 mod polygon;
 mod rect_elem;
 mod series;
+mod span;
 mod text;
 mod values;
 
