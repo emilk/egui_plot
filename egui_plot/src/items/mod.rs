@@ -1718,7 +1718,11 @@ pub(super) fn rulers_and_tooltip_at_value(
     }
 
     let text = if let Some(custom_label) = label_formatter {
-        custom_label(name, &value)
+        let label = custom_label(name, &value);
+        if label.is_empty() {
+            return;
+        }
+        label
     } else {
         let prefix = if name.is_empty() {
             String::new()
