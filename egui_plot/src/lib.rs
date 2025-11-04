@@ -164,6 +164,7 @@ pub struct Plot<'a> {
     default_auto_bounds: Vec2b,
     min_auto_bounds: PlotBounds,
     margin_fraction: Vec2,
+    pan_pointer_button: PointerButton,
     boxed_zoom_pointer_button: PointerButton,
     linked_axes: Option<(Id, Vec2b)>,
     linked_cursors: Option<(Id, Vec2b)>,
@@ -214,6 +215,7 @@ impl<'a> Plot<'a> {
             default_auto_bounds: true.into(),
             min_auto_bounds: PlotBounds::NOTHING,
             margin_fraction: Vec2::splat(0.05),
+            pan_pointer_button: PointerButton::Primary,
             boxed_zoom_pointer_button: PointerButton::Secondary,
             linked_axes: None,
             linked_cursors: None,
@@ -391,6 +393,13 @@ impl<'a> Plot<'a> {
     #[inline]
     pub fn allow_boxed_zoom(mut self, on: bool) -> Self {
         self.allow_boxed_zoom = on;
+        self
+    }
+
+    /// Config the button pointer to use for drag-to-pan. Default: [`Secondary`](PointerButton::Primary)
+    #[inline]
+    pub fn pan_pointer_button(mut self, pan_pointer_button: PointerButton) -> Self {
+        self.pan_pointer_button = pan_pointer_button;
         self
     }
 
@@ -813,6 +822,7 @@ impl<'a> Plot<'a> {
             allow_scroll,
             allow_double_click_reset,
             allow_boxed_zoom,
+            pan_pointer_button,
             boxed_zoom_pointer_button,
             default_auto_bounds,
             min_auto_bounds,
@@ -1144,7 +1154,7 @@ impl<'a> Plot<'a> {
         }
 
         // Dragging
-        if allow_drag.any() && response.dragged_by(PointerButton::Primary) {
+        if allow_drag.any() && response.dragged_by(pan_pointer_button) {
             response = response.on_hover_cursor(CursorIcon::Grabbing);
             let mut delta = -response.drag_delta();
             if !allow_drag.x {
