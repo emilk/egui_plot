@@ -390,6 +390,8 @@ impl<'a> Plot<'a> {
     /// Whether to allow zooming in the plot by dragging out a box with the secondary mouse button.
     ///
     /// Default: `true`.
+    ///
+    /// The button to use is specified by [`Self::boxed_zoom_pointer_button`].
     #[inline]
     pub fn allow_boxed_zoom(mut self, on: bool) -> Self {
         self.allow_boxed_zoom = on;
@@ -411,6 +413,8 @@ impl<'a> Plot<'a> {
     }
 
     /// Whether to allow dragging in the plot to move the bounds. Default: `true`.
+    ///
+    /// The button to use is specified by [`Self::pan_pointer_button`].
     #[inline]
     pub fn allow_drag<T>(mut self, on: T) -> Self
     where
