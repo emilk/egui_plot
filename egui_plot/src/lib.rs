@@ -1859,7 +1859,10 @@ impl PreparedPlot<'_> {
                 Some(item).zip(closest)
             });
 
-        let closest = candidates
+        // Since many items can have same distance,
+        // and dist_sq can be zero for some items (e.g. rectangle)
+        // we pick topmost item within interact radius
+        let topmost = candidates
             .filter(|(_, elem)| elem.dist_sq <= interact_radius_sq)
             .next_back();
 
@@ -1872,7 +1875,7 @@ impl PreparedPlot<'_> {
 
         let mut cursors = Vec::new();
 
-        let hovered_plot_item_id = if let Some((item, elem)) = closest {
+        let hovered_plot_item_id = if let Some((item, elem)) = topmost {
             item.on_hover(
                 plot_area_response,
                 elem,
