@@ -143,7 +143,7 @@ pub trait PlotItem {
         match self.geometry() {
             PlotGeometry::None => None,
 
-            PlotGeometry::Points(points) => points
+            PlotGeometry::Points(points, _) => points
                 .iter()
                 .enumerate()
                 .map(|(index, value)| {
@@ -168,8 +168,8 @@ pub trait PlotItem {
         plot: &PlotConfig<'_>,
         label_formatter: &LabelFormatter<'_>,
     ) {
-        let points = match self.geometry() {
-            PlotGeometry::Points(points) => points,
+        let (points, id) = match self.geometry() {
+            PlotGeometry::Points(points, id) => (points, id),
             PlotGeometry::None => {
                 panic!("If the PlotItem has no geometry, on_hover() must not be called")
             }
@@ -192,6 +192,7 @@ pub trait PlotItem {
         rulers_and_tooltip_at_value(
             plot_area_response,
             value,
+            id.map(|id| (id, elem.index)),
             self.name(),
             plot,
             cursors,
@@ -603,7 +604,7 @@ impl PlotItem for Line<'_> {
     }
 
     fn geometry(&self) -> PlotGeometry<'_> {
-        PlotGeometry::Points(self.series.points())
+        PlotGeometry::Points(self.series.points(), Some(self.id()))
     }
 
     fn bounds(&self) -> PlotBounds {
@@ -705,7 +706,7 @@ impl PlotItem for Polygon<'_> {
     }
 
     fn geometry(&self) -> PlotGeometry<'_> {
-        PlotGeometry::Points(self.series.points())
+        PlotGeometry::Points(self.series.points(), Some(self.id()))
     }
 
     fn bounds(&self) -> PlotBounds {
@@ -1025,7 +1026,7 @@ impl PlotItem for Points<'_> {
     }
 
     fn geometry(&self) -> PlotGeometry<'_> {
-        PlotGeometry::Points(self.series.points())
+        PlotGeometry::Points(self.series.points(), Some(self.id()))
     }
 
     fn bounds(&self) -> PlotBounds {
@@ -1136,7 +1137,7 @@ impl PlotItem for Arrows<'_> {
     }
 
     fn geometry(&self) -> PlotGeometry<'_> {
-        PlotGeometry::Points(self.origins.points())
+        PlotGeometry::Points(self.origins.points(), Some(self.id()))
     }
 
     fn bounds(&self) -> PlotBounds {
@@ -1705,6 +1706,7 @@ fn add_rulers_and_text(
 pub(super) fn rulers_and_tooltip_at_value(
     plot_area_response: &egui::Response,
     value: PlotPoint,
+    item: Option<(Id, usize)>,
     name: &str,
     plot: &PlotConfig<'_>,
     cursors: &mut Vec<Cursor>,
@@ -1718,7 +1720,7 @@ pub(super) fn rulers_and_tooltip_at_value(
     }
 
     let text = if let Some(custom_label) = label_formatter {
-        let label = custom_label(name, &value);
+        let label = custom_label(name, &value, None);
         if label.is_empty() {
             return;
         }
@@ -1732,7 +1734,9 @@ pub(super) fn rulers_and_tooltip_at_value(
         let scale = plot.transform.dvalue_dpos();
         let x_decimals = ((-scale[0].abs().log10()).ceil().at_least(0.0) as usize).clamp(1, 6);
         let y_decimals = ((-scale[1].abs().log10()).ceil().at_least(0.0) as usize).clamp(1, 6);
-        if plot.show_x && plot.show_y {
+        if let Some(custom_label) = label_formatter {
+            custom_label(name, &value, item)
+        } else if plot.show_x && plot.show_y {
             format!(
                 "{}x = {:.*}\ny = {:.*}",
                 prefix, x_decimals, value.x, y_decimals, value.y

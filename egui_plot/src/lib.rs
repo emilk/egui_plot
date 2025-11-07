@@ -41,7 +41,7 @@ use axis::AxisWidget;
 use items::{horizontal_line, rulers_color, vertical_line};
 use legend::LegendWidget;
 
-type LabelFormatterFn<'a> = dyn Fn(&str, &PlotPoint) -> String + 'a;
+type LabelFormatterFn<'a> = dyn Fn(&str, &PlotPoint, Option<(Id, usize)>) -> String + 'a;
 pub type LabelFormatter<'a> = Option<Box<LabelFormatterFn<'a>>>;
 
 type GridSpacerFn<'a> = dyn Fn(GridInput) -> Vec<GridMark> + 'a;
@@ -434,6 +434,10 @@ impl<'a> Plot<'a> {
     }
 
     /// Provide a function to customize the on-hover label for the x and y axis
+    /// ## `build_fn` parameter
+    /// The third parameter, `build_fn`, is a closure that is called with a mutable reference to a [`PlotUi`] instance.
+    /// Within this closure, you can add items (such as lines, points, bars, etc.) to the plot and interact with the plot UI.
+    /// The closure should return any value you wish to propagate from the plot construction (for example, a reference to a plot item, or a custom result).
     ///
     /// ```
     /// # egui::__run_test_ui(|ui| {
@@ -444,7 +448,7 @@ impl<'a> Plot<'a> {
     /// }).collect();
     /// let line = Line::new("sin", sin);
     /// Plot::new("my_plot").view_aspect(2.0)
-    /// .label_formatter(|name, value| {
+    /// .label_formatter(|name, value, _| {
     ///     if !name.is_empty() {
     ///         format!("{}: {:.*}%", name, 1, value.y)
     ///     } else {
@@ -456,7 +460,7 @@ impl<'a> Plot<'a> {
     /// ```
     pub fn label_formatter(
         mut self,
-        label_formatter: impl Fn(&str, &PlotPoint) -> String + 'a,
+        label_formatter: impl Fn(&str, &PlotPoint, Option<(Id, usize)>) -> String + 'a,
     ) -> Self {
         self.label_formatter = Some(Box::new(label_formatter));
         self
@@ -1904,6 +1908,7 @@ impl PreparedPlot<'_> {
             items::rulers_and_tooltip_at_value(
                 plot_area_response,
                 value,
+                None,
                 "",
                 &plot,
                 &mut cursors,
