@@ -56,6 +56,8 @@ pub use crate::items::Points;
 pub use crate::items::Polygon;
 pub use crate::items::Text;
 pub use crate::items::VLine;
+pub use crate::items::Heatmap;
+pub use crate::items::HeatmapErr;
 pub use crate::legend::ColorConflictHandling;
 pub use crate::legend::Corner;
 pub use crate::legend::Legend;
