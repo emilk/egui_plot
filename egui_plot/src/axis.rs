@@ -212,8 +212,8 @@ impl<'a> AxisHints<'a> {
     ///
     /// To change the font of the tick labels see [`Self::tick_label_font`].
     #[inline]
-    pub fn tick_label_color(mut self, color: egui::Color32) -> Self {
-        self.tick_label_color = Some(color);
+    pub fn tick_label_color(mut self, color: impl Into<egui::Color32>) -> Self {
+        self.tick_label_color = Some(color.into());
         self
     }
 
