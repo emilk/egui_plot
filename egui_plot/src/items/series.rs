@@ -1,7 +1,10 @@
+use super::DEFAULT_FILL_ALPHA;
+use super::y_intersection;
+use crate::builder_methods_for_base;
 use crate::items::DEFAULT_FILL_ALPHA;
 use crate::{
     Id, LineStyle, PlotBounds, PlotGeometry, PlotItem, PlotItemBase, PlotPoint, PlotPoints,
-    PlotTransform, items,
+    PlotTransform,
 };
 use egui::epaint::PathStroke;
 use egui::{Color32, Mesh, Rgba, Shape, Stroke, Ui};
@@ -210,7 +213,7 @@ impl PlotItem for Line<'_> {
                 let i = mesh.vertices.len() as u32;
                 mesh.colored_vertex(w[0], fill_color);
                 mesh.colored_vertex(pos2(w[0].x, y), fill_color);
-                if let Some(x) = items::y_intersection(&w[0], &w[1], y) {
+                if let Some(x) = y_intersection(&w[0], &w[1], y) {
                     let point = pos2(x, y);
                     mesh.colored_vertex(point, fill_color_for_point(point));
                     mesh.add_triangle(i, i + 1, i + 2);

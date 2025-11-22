@@ -42,7 +42,6 @@ pub(super) trait RectElement {
 
     /// Right top of the rectangle (position of text)
     fn corner_value(&self) -> PlotPoint {
-        //self.point_at(self.position + self.width / 2.0, value)
         PlotPoint {
             x: self.bounds_max().x,
             y: self.bounds_max().y,
