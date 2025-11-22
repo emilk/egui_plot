@@ -1,16 +1,46 @@
+use std::f64::consts::TAU;
 use std::ops::RangeInclusive;
-use std::{f64::consts::TAU, sync::Arc};
+use std::sync::Arc;
 
-use egui::{
-    Checkbox, Color32, ComboBox, NumExt as _, Pos2, Response, ScrollArea, Stroke, TextWrapMode,
-    Vec2b, WidgetInfo, WidgetType, remap, vec2,
-};
-
-use egui_plot::{
-    Arrows, AxisHints, Bar, BarChart, BoxElem, BoxPlot, BoxSpread, CoordinatesFormatter, Corner,
-    GridInput, GridMark, HLine, Legend, Line, LineStyle, MarkerShape, Plot, PlotImage, PlotPoint,
-    PlotPoints, PlotResponse, Points, Polygon, Text, VLine,
-};
+use egui::Checkbox;
+use egui::Color32;
+use egui::ComboBox;
+use egui::NumExt as _;
+use egui::Pos2;
+use egui::Response;
+use egui::ScrollArea;
+use egui::Stroke;
+use egui::TextWrapMode;
+use egui::Vec2b;
+use egui::WidgetInfo;
+use egui::WidgetType;
+use egui::remap;
+use egui::vec2;
+use egui_plot::Arrows;
+use egui_plot::AxisHints;
+use egui_plot::Bar;
+use egui_plot::BarChart;
+use egui_plot::BoxElem;
+use egui_plot::BoxPlot;
+use egui_plot::BoxSpread;
+use egui_plot::CoordinatesFormatter;
+use egui_plot::Corner;
+use egui_plot::GridInput;
+use egui_plot::GridMark;
+use egui_plot::HLine;
+use egui_plot::Legend;
+use egui_plot::Line;
+use egui_plot::LineStyle;
+use egui_plot::MarkerShape;
+use egui_plot::Plot;
+use egui_plot::PlotImage;
+use egui_plot::PlotPoint;
+use egui_plot::PlotPoints;
+use egui_plot::PlotResponse;
+use egui_plot::Points;
+use egui_plot::Polygon;
+use egui_plot::Text;
+use egui_plot::VLine;
 
 // ----------------------------------------------------------------------------
 
@@ -75,25 +105,20 @@ impl PlotDemo {
                         ui.end_row();
 
                         ui.label("Zoom");
-                        ui.label(format!(
-                            "{} + Scroll",
-                            ui.ctx().format_modifiers(zoom_modifier)
-                        ));
+                        ui.label(format!("{} + Scroll", ui.ctx().format_modifiers(zoom_modifier)));
                         ui.end_row();
 
                         ui.label("Horizontal zoom");
                         ui.label(format!(
                             "{} + Scroll",
-                            ui.ctx()
-                                .format_modifiers(zoom_modifier | horizontal_scroll_modifier)
+                            ui.ctx().format_modifiers(zoom_modifier | horizontal_scroll_modifier)
                         ));
                         ui.end_row();
 
                         ui.label("Vertical zoom");
                         ui.label(format!(
                             "{} + Scroll",
-                            ui.ctx()
-                                .format_modifiers(zoom_modifier | vertical_scroll_modifier)
+                            ui.ctx().format_modifiers(zoom_modifier | vertical_scroll_modifier)
                         ));
                         ui.end_row();
 
@@ -111,8 +136,8 @@ impl PlotDemo {
         ui.separator();
         ui.horizontal_wrapped(|ui| {
             // We give the ui a label so we can easily enumerate all demos in the tests
-            // The actual accessibility benefit is questionable considering the plot itself isn't
-            // accessible at all
+            // The actual accessibility benefit is questionable considering the plot itself
+            // isn't accessible at all
             ui.response()
                 .widget_info(|| WidgetInfo::labeled(WidgetType::RadioGroup, true, "Select Demo"));
 
@@ -227,16 +252,8 @@ impl LineDemo {
                             .prefix("r: "),
                     );
                     ui.horizontal(|ui| {
-                        ui.add(
-                            egui::DragValue::new(&mut circle_center.x)
-                                .speed(0.1)
-                                .prefix("x: "),
-                        );
-                        ui.add(
-                            egui::DragValue::new(&mut circle_center.y)
-                                .speed(1.0)
-                                .prefix("y: "),
-                        );
+                        ui.add(egui::DragValue::new(&mut circle_center.x).speed(0.1).prefix("x: "));
+                        ui.add(egui::DragValue::new(&mut circle_center.y).speed(1.0).prefix("y: "));
                     });
                 });
             });
@@ -304,11 +321,7 @@ impl LineDemo {
         let time = self.time;
         Line::new(
             "wave",
-            PlotPoints::from_explicit_callback(
-                move |x| 0.5 * (2.0 * x).sin() * time.sin(),
-                ..,
-                512,
-            ),
+            PlotPoints::from_explicit_callback(move |x| 0.5 * (2.0 * x).sin() * time.sin(), .., 512),
         )
         .color(Color32::from_rgb(200, 100, 100))
         .style(self.line_style)
@@ -318,18 +331,12 @@ impl LineDemo {
         let time = self.time;
         let mut thingy_line = Line::new(
             "x = sin(2t), y = sin(3t)",
-            PlotPoints::from_parametric_callback(
-                move |t| ((2.0 * t + time).sin(), (3. * t).sin()),
-                0.0..=TAU,
-                256,
-            ),
+            PlotPoints::from_parametric_callback(move |t| ((2.0 * t + time).sin(), (3. * t).sin()), 0.0..=TAU, 256),
         )
         .style(self.line_style);
         if self.gradient {
             thingy_line = thingy_line.gradient_color(
-                Arc::new(|point| {
-                    Color32::BLUE.lerp_to_gamma(Color32::ORANGE, point.x.abs().clamp(0., 1.) as f32)
-                }),
+                Arc::new(|point| Color32::BLUE.lerp_to_gamma(Color32::ORANGE, point.x.abs().clamp(0., 1.) as f32)),
                 self.gradient_fill,
             );
             if self.gradient_fill {
@@ -474,17 +481,11 @@ impl LegendDemo {
     }
 
     fn sin<'a>() -> Line<'a> {
-        Line::new(
-            "sin(x)",
-            PlotPoints::from_explicit_callback(move |x| x.sin(), .., 100),
-        )
+        Line::new("sin(x)", PlotPoints::from_explicit_callback(move |x| x.sin(), .., 100))
     }
 
     fn cos<'a>() -> Line<'a> {
-        Line::new(
-            "cos(x)",
-            PlotPoints::from_explicit_callback(move |x| x.cos(), .., 100),
-        )
+        Line::new("cos(x)", PlotPoints::from_explicit_callback(move |x| x.cos(), .., 100))
     }
 
     fn ui(&mut self, ui: &mut egui::Ui) -> Response {
@@ -493,9 +494,7 @@ impl LegendDemo {
         });
 
         let Self { config } = self;
-        let legend_plot = Plot::new("legend_demo")
-            .legend(config.clone())
-            .data_aspect(1.0);
+        let legend_plot = Plot::new("legend_demo").legend(config.clone()).data_aspect(1.0);
         legend_plot
             .show(ui, |plot_ui| {
                 plot_ui.line(Self::line_with_slope(0.5).name("lines"));
@@ -563,7 +562,8 @@ impl CustomAxesDemo {
     #[expect(clippy::needless_pass_by_value)]
     fn x_grid(input: GridInput) -> Vec<GridMark> {
         // Note: this always fills all possible marks. For optimization, `input.bounds`
-        // could be used to decide when the low-interval grids (minutes) should be added.
+        // could be used to decide when the low-interval grids (minutes) should be
+        // added.
 
         let mut marks = vec![];
 
@@ -663,9 +663,7 @@ impl CustomAxesDemo {
             AxisHints::new_x().label("Value"),
         ];
         let y_axes = vec![
-            AxisHints::new_y()
-                .label("Percent")
-                .formatter(percentage_formatter),
+            AxisHints::new_y().label("Percent").formatter(percentage_formatter),
             AxisHints::new_y()
                 .label("Absolute")
                 .placement(egui_plot::HPlacement::Right),
@@ -709,17 +707,11 @@ impl LinkedAxesDemo {
     }
 
     fn sin<'a>() -> Line<'a> {
-        Line::new(
-            "sin(x)",
-            PlotPoints::from_explicit_callback(move |x| x.sin(), .., 100),
-        )
+        Line::new("sin(x)", PlotPoints::from_explicit_callback(move |x| x.sin(), .., 100))
     }
 
     fn cos<'a>() -> Line<'a> {
-        Line::new(
-            "cos(x)",
-            PlotPoints::from_explicit_callback(move |x| x.cos(), .., 100),
-        )
+        Line::new("cos(x)", PlotPoints::from_explicit_callback(move |x| x.cos(), .., 100))
     }
 
     fn configure_plot(plot_ui: &mut egui_plot::PlotUi<'_>) {
@@ -742,9 +734,7 @@ impl LinkedAxesDemo {
             ui.checkbox(&mut self.link_cursor.y, "Y");
         });
 
-        ScrollArea::horizontal()
-            .show(ui, |ui| self.plots_ui(ui))
-            .inner
+        ScrollArea::horizontal().show(ui, |ui| self.plots_ui(ui)).inner
     }
 
     fn plots_ui(&self, ui: &mut egui::Ui) -> Response {
@@ -810,16 +800,10 @@ impl ItemsDemo {
         let arrows = {
             let pos_radius = 8.0;
             let tip_radius = 7.0;
-            let arrow_origins = PlotPoints::from_parametric_callback(
-                |t| (pos_radius * t.sin(), pos_radius * t.cos()),
-                0.0..TAU,
-                36,
-            );
-            let arrow_tips = PlotPoints::from_parametric_callback(
-                |t| (tip_radius * t.sin(), tip_radius * t.cos()),
-                0.0..TAU,
-                36,
-            );
+            let arrow_origins =
+                PlotPoints::from_parametric_callback(|t| (pos_radius * t.sin(), pos_radius * t.cos()), 0.0..TAU, 36);
+            let arrow_tips =
+                PlotPoints::from_parametric_callback(|t| (tip_radius * t.sin(), tip_radius * t.cos()), 0.0..TAU, 36);
             Arrows::new("arrows", arrow_origins, arrow_tips)
         };
 
@@ -835,11 +819,7 @@ impl ItemsDemo {
         );
 
         let plot = Plot::new("items_demo")
-            .legend(
-                Legend::default()
-                    .position(Corner::RightBottom)
-                    .title("Items"),
-            )
+            .legend(Legend::default().position(Corner::RightBottom).title("Items"))
             .show_x(false)
             .show_y(false)
             .data_aspect(1.0);
@@ -892,18 +872,10 @@ impl InteractionDemo {
             ..
         } = plot.show(ui, |plot_ui| {
             plot_ui.line(
-                Line::new(
-                    "sin",
-                    PlotPoints::from_explicit_callback(move |x| x.sin(), .., 100),
-                )
-                .color(Color32::RED),
+                Line::new("sin", PlotPoints::from_explicit_callback(move |x| x.sin(), .., 100)).color(Color32::RED),
             );
             plot_ui.line(
-                Line::new(
-                    "cos",
-                    PlotPoints::from_explicit_callback(move |x| x.cos(), .., 100),
-                )
-                .color(Color32::BLUE),
+                Line::new("cos", PlotPoints::from_explicit_callback(move |x| x.cos(), .., 100)).color(Color32::BLUE),
             );
 
             (
@@ -1044,12 +1016,7 @@ impl ChartsDemo {
             (-395..=395)
                 .step_by(10)
                 .map(|x| x as f64 * 0.01)
-                .map(|x| {
-                    (
-                        x,
-                        (-x * x / 2.0).exp() / (2.0 * std::f64::consts::PI).sqrt(),
-                    )
-                })
+                .map(|x| (x, (-x * x / 2.0).exp() / (2.0 * std::f64::consts::PI).sqrt()))
                 // The 10 factor here is purely for a nice 1:1 aspect ratio
                 .map(|(x, f)| Bar::new(x, f * 10.0).width(0.1))
                 .collect(),

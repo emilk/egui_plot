@@ -1,10 +1,14 @@
 use std::ops::RangeInclusive;
 
-use egui::{Pos2, Rect, Vec2, Vec2b, pos2, remap};
-
-use crate::Axis;
+use egui::Pos2;
+use egui::Rect;
+use egui::Vec2;
+use egui::Vec2b;
+use egui::pos2;
+use egui::remap;
 
 use super::PlotPoint;
+use crate::Axis;
 
 /// 2D bounding box of f64 precision.
 ///
@@ -47,10 +51,7 @@ impl PlotBounds {
 
     #[inline]
     pub fn is_finite(&self) -> bool {
-        self.min[0].is_finite()
-            && self.min[1].is_finite()
-            && self.max[0].is_finite()
-            && self.max[1].is_finite()
+        self.min[0].is_finite() && self.min[1].is_finite() && self.max[0].is_finite() && self.max[1].is_finite()
     }
 
     #[inline]
@@ -264,7 +265,8 @@ impl PlotBounds {
     }
 }
 
-/// Contains the screen rectangle and the plot bounds and provides methods to transform between them.
+/// Contains the screen rectangle and the plot bounds and provides methods to
+/// transform between them.
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[derive(Clone, Copy, Debug)]
 pub struct PlotTransform {
@@ -289,25 +291,22 @@ impl PlotTransform {
         );
         let center_axis = center_axis.into();
 
-        // Since the current Y bounds an affect the final X bounds and vice versa, we need to keep
-        // the original version of the `bounds` before we start modifying it.
+        // Since the current Y bounds an affect the final X bounds and vice versa, we
+        // need to keep the original version of the `bounds` before we start
+        // modifying it.
         let mut new_bounds = bounds;
 
         // Sanitize bounds.
         //
-        // When a given bound axis is "thin" (e.g. width or height is 0) but finite, we center the
-        // bounds around that value. If the other axis is "fat", we reuse its extent for the thin
-        // axis, and default to +/- 1.0 otherwise.
+        // When a given bound axis is "thin" (e.g. width or height is 0) but finite, we
+        // center the bounds around that value. If the other axis is "fat", we
+        // reuse its extent for the thin axis, and default to +/- 1.0 otherwise.
         if !bounds.is_finite_x() {
             new_bounds.set_x(&PlotBounds::new_symmetrical(1.0));
         } else if bounds.width() <= 0.0 {
             new_bounds.set_x_center_width(
                 bounds.center().x,
-                if bounds.is_valid_y() {
-                    bounds.height()
-                } else {
-                    1.0
-                },
+                if bounds.is_valid_y() { bounds.height() } else { 1.0 },
             );
         }
 
@@ -316,11 +315,7 @@ impl PlotTransform {
         } else if bounds.height() <= 0.0 {
             new_bounds.set_y_center_height(
                 bounds.center().y,
-                if bounds.is_valid_x() {
-                    bounds.width()
-                } else {
-                    1.0
-                },
+                if bounds.is_valid_x() { bounds.width() } else { 1.0 },
             );
         }
 
@@ -332,10 +327,7 @@ impl PlotTransform {
             new_bounds.make_y_symmetrical();
         }
 
-        debug_assert!(
-            new_bounds.is_valid(),
-            "Bad final plot bounds: {new_bounds:?}"
-        );
+        debug_assert!(new_bounds.is_valid(), "Bad final plot bounds: {new_bounds:?}");
 
         Self {
             frame,
@@ -424,10 +416,7 @@ impl PlotTransform {
 
     /// Screen/ui position from point on plot.
     pub fn position_from_point(&self, value: &PlotPoint) -> Pos2 {
-        pos2(
-            self.position_from_point_x(value.x),
-            self.position_from_point_y(value.y),
-        )
+        pos2(self.position_from_point_x(value.x), self.position_from_point_y(value.y))
     }
 
     /// Plot point from screen/ui position.
@@ -457,8 +446,9 @@ impl PlotTransform {
 
     /// Transform a rectangle of plot values to a screen-coordinate rectangle.
     ///
-    /// This typically means that the rect is mirrored vertically (top becomes bottom and vice versa),
-    /// since the plot's coordinate system has +Y up, while egui has +Y down.
+    /// This typically means that the rect is mirrored vertically (top becomes
+    /// bottom and vice versa), since the plot's coordinate system has +Y
+    /// up, while egui has +Y down.
     pub fn rect_from_values(&self, value1: &PlotPoint, value2: &PlotPoint) -> Rect {
         let pos1 = self.position_from_point(value1);
         let pos2 = self.position_from_point(value2);
@@ -469,24 +459,28 @@ impl PlotTransform {
         rect
     }
 
-    /// delta position / delta value = how many ui points per step in the X axis in "plot space"
+    /// delta position / delta value = how many ui points per step in the X axis
+    /// in "plot space"
     pub fn dpos_dvalue_x(&self) -> f64 {
         let flip = if self.inverted_axis[0] { -1.0 } else { 1.0 };
         flip * (self.frame.width() as f64) / self.bounds.width()
     }
 
-    /// delta position / delta value = how many ui points per step in the Y axis in "plot space"
+    /// delta position / delta value = how many ui points per step in the Y axis
+    /// in "plot space"
     pub fn dpos_dvalue_y(&self) -> f64 {
         let flip = if self.inverted_axis[1] { 1.0 } else { -1.0 };
         flip * (self.frame.height() as f64) / self.bounds.height()
     }
 
-    /// delta position / delta value = how many ui points per step in "plot space"
+    /// delta position / delta value = how many ui points per step in "plot
+    /// space"
     pub fn dpos_dvalue(&self) -> [f64; 2] {
         [self.dpos_dvalue_x(), self.dpos_dvalue_y()]
     }
 
-    /// delta value / delta position = how much ground do we cover in "plot space" per ui point?
+    /// delta value / delta position = how much ground do we cover in "plot
+    /// space" per ui point?
     pub fn dvalue_dpos(&self) -> [f64; 2] {
         [1.0 / self.dpos_dvalue_x(), 1.0 / self.dpos_dvalue_y()]
     }
@@ -521,7 +515,8 @@ impl PlotTransform {
         }
     }
 
-    /// Sets the aspect ratio by changing either the X or Y axis (callers choice).
+    /// Sets the aspect ratio by changing either the X or Y axis (callers
+    /// choice).
     pub(crate) fn set_aspect_by_changing_axis(&mut self, aspect: f64, axis: Axis) {
         let current_aspect = self.aspect();
 
