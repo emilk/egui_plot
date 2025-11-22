@@ -155,7 +155,7 @@ check_cycles:
 checks_no_unfinished: check_todos_have_issues check_no_fixme check_no_unimplemented
 
 check_git_clean_status:
-	# Check there are no uncommited files, if there are, exit
+	# Check there are no uncommitted files, if there are, exit
 	git status | grep -q 'nothing to commit' || (echo "There are uncommitted files, please commit or stash them" &&  git status && exit 1)
 
 # Checks that the current branch is not main and has a valid name in the format of xyz/abc
