@@ -1221,40 +1221,67 @@ impl<'a> Plot<'a> {
                 // while dragging prepare a Shape and draw it later on top of the plot
                 if response.dragged_by(boxed_zoom_pointer_button) {
                     response = response.on_hover_cursor(CursorIcon::ZoomIn);
-                    let rect = epaint::Rect::from_two_pos(box_start_pos, box_end_pos);
-                    boxed_zoom_rect = Some((
-                        epaint::RectShape::stroke(
-                            rect,
-                            0.0,
-                            epaint::Stroke::new(4., Color32::DARK_BLUE),
-                            egui::StrokeKind::Middle,
-                        ), // Outer stroke
-                        epaint::RectShape::stroke(
-                            rect,
-                            0.0,
-                            epaint::Stroke::new(2., Color32::WHITE),
-                            egui::StrokeKind::Middle,
-                        ), // Inner stroke
+                    boxed_zoom_rect = Some(ZoomType::new_from_corners(
+                        box_start_pos,
+                        box_end_pos,
+                        data_aspect.is_none(),
                     ));
                 }
                 // when the click is release perform the zoom
                 if response.drag_stopped() {
-                    let box_start_pos = mem.transform.value_from_position(box_start_pos);
-                    let box_end_pos = mem.transform.value_from_position(box_end_pos);
-                    let new_bounds = PlotBounds {
-                        min: [
-                            box_start_pos.x.min(box_end_pos.x),
-                            box_start_pos.y.min(box_end_pos.y),
-                        ],
-                        max: [
-                            box_start_pos.x.max(box_end_pos.x),
-                            box_start_pos.y.max(box_end_pos.y),
-                        ],
-                    };
-                    if new_bounds.is_valid() {
-                        mem.transform.set_bounds(new_bounds);
-                        mem.auto_bounds = false.into();
+                    // TODO(Mick): not a fan of the recalculate
+                    match ZoomType::new_from_corners(
+                        box_start_pos,
+                        box_end_pos,
+                        data_aspect.is_none(),
+                    ) {
+                        ZoomType::Rect(rect) => {
+                            let top_left = mem.transform.value_from_position(rect.left_top());
+                            let bottom_right =
+                                mem.transform.value_from_position(rect.right_bottom());
+                            let new_bounds = PlotBounds {
+                                min: [top_left.x, bottom_right.y],
+                                max: [bottom_right.x, top_left.y],
+                            };
+                            if new_bounds.is_valid() {
+                                mem.transform.set_bounds(new_bounds);
+                                mem.auto_bounds = false.into();
+                            }
+                        }
+                        ZoomType::Horizontal(rect) => {
+                            let top_left = mem.transform.value_from_position(rect.left_top());
+                            let bottom_right =
+                                mem.transform.value_from_position(rect.right_bottom());
+                            let selected_bounds = PlotBounds {
+                                min: [top_left.x, bottom_right.y],
+                                max: [bottom_right.x, top_left.y],
+                            };
+
+                            let mut new_bounds = *mem.transform.bounds();
+                            new_bounds.set_x(&selected_bounds);
+                            if new_bounds.is_valid() {
+                                mem.transform.set_bounds(new_bounds);
+                                mem.auto_bounds = false.into();
+                            }
+                        }
+                        ZoomType::Vertical(rect) => {
+                            let top_left = mem.transform.value_from_position(rect.left_top());
+                            let bottom_right =
+                                mem.transform.value_from_position(rect.right_bottom());
+                            let selected_bounds = PlotBounds {
+                                min: [top_left.x, bottom_right.y],
+                                max: [bottom_right.x, top_left.y],
+                            };
+
+                            let mut new_bounds = *mem.transform.bounds();
+                            new_bounds.set_y(&selected_bounds);
+                            if new_bounds.is_valid() {
+                                mem.transform.set_bounds(new_bounds);
+                                mem.auto_bounds = false.into();
+                            }
+                        }
                     }
+
                     // reset the boxed zoom state
                     mem.last_click_pos_for_zoom = None;
                 }
@@ -1362,12 +1389,7 @@ impl<'a> Plot<'a> {
         let (plot_cursors, mut hovered_plot_item) = prepared.ui(ui, &response);
 
         if let Some(boxed_zoom_rect) = boxed_zoom_rect {
-            ui.painter()
-                .with_clip_rect(plot_rect)
-                .add(boxed_zoom_rect.0);
-            ui.painter()
-                .with_clip_rect(plot_rect)
-                .add(boxed_zoom_rect.1);
+            boxed_zoom_rect.paint(ui, plot_rect);
         }
 
         if let Some(mut legend) = legend {
@@ -1422,6 +1444,131 @@ impl<'a> Plot<'a> {
             response,
             transform,
             hovered_plot_item,
+        }
+    }
+}
+
+enum ZoomType {
+    Rect(Rect),
+    Horizontal(Rect),
+    Vertical(Rect),
+}
+
+impl ZoomType {
+    // "buffer" on `min` before rect should be used
+    // NOTE: May want to be based on the axes?
+    pub const BUFFER: f32 = 100.0;
+    // if the ratio between `min` and `max` is about 10% different or less, its "square"
+    pub const SQUARENESS_THRESHOLD: f32 = 0.1;
+
+    // NOTE(Mick): non-Rect zooming is only supported if proportional axes is off.
+    fn new_from_corners(start: Pos2, end: Pos2, supports_single_dimension_zoom: bool) -> Self {
+        let rect = epaint::Rect::from_two_pos(start, end);
+
+        let (min, is_vertical) = {
+            let Vec2 { x, y } = rect.size();
+            if x < y { (x, true) } else { (y, false) }
+        };
+
+        let height = egui::vec2(0.0, rect.height());
+        let width = egui::vec2(rect.width(), 0.0);
+        let half_buffer_x = egui::vec2(Self::BUFFER / 2.0, 0.0);
+        let half_buffer_y = egui::vec2(0.0, Self::BUFFER / 2.0);
+
+        if !supports_single_dimension_zoom {
+            return Self::Rect(rect);
+        }
+
+        if min > (Self::BUFFER / 2.0)
+            || (rect.aspect_ratio() - 1.0).abs() < Self::SQUARENESS_THRESHOLD
+        {
+            Self::Rect(rect)
+        } else if is_vertical {
+            let (top_center, bottom_center) = if start.y > end.y {
+                (start, start - height)
+            } else {
+                (start + height, start)
+            };
+            let top_left = top_center - half_buffer_x;
+            let bottom_right = bottom_center + half_buffer_x;
+
+            Self::Vertical(Rect::from_two_pos(top_left, bottom_right))
+        } else {
+            let (left_center, right_center) = if start.x > end.x {
+                (start - width, start)
+            } else {
+                (start, start + width)
+            };
+            let top_left = left_center + half_buffer_y;
+            let bottom_right = right_center - half_buffer_y;
+
+            Self::Horizontal(Rect::from_two_pos(top_left, bottom_right))
+        }
+    }
+
+    fn paint(&self, ui: &Ui, clip_rect: Rect) {
+        let painter = ui.painter().with_clip_rect(clip_rect);
+        match self {
+            Self::Rect(rect) => {
+                // Outer stroke
+                painter.add(epaint::RectShape::stroke(
+                    *rect,
+                    0.0,
+                    epaint::Stroke::new(4., Color32::DARK_BLUE),
+                    egui::StrokeKind::Middle,
+                ));
+                // Inner stroke
+                painter.add(epaint::RectShape::stroke(
+                    *rect,
+                    0.0,
+                    epaint::Stroke::new(2., Color32::WHITE),
+                    egui::StrokeKind::Middle,
+                ));
+            }
+            Self::Horizontal(rect) => {
+                // Left Outer stroke
+                painter.add(epaint::Shape::line_segment(
+                    [rect.left_top(), rect.left_bottom()],
+                    epaint::Stroke::new(4., Color32::DARK_BLUE),
+                ));
+                // Right Outer stroke
+                painter.add(epaint::Shape::line_segment(
+                    [rect.right_top(), rect.right_bottom()],
+                    epaint::Stroke::new(4., Color32::DARK_BLUE),
+                ));
+                // Left Inner stroke
+                painter.add(epaint::Shape::line_segment(
+                    [rect.left_top(), rect.left_bottom()],
+                    epaint::Stroke::new(2., Color32::WHITE),
+                ));
+                // Right Inner stroke
+                painter.add(epaint::Shape::line_segment(
+                    [rect.right_top(), rect.right_bottom()],
+                    epaint::Stroke::new(2., Color32::WHITE),
+                ));
+            }
+            Self::Vertical(rect) => {
+                // Top Outer stroke
+                painter.add(epaint::Shape::line_segment(
+                    [rect.left_top(), rect.right_top()],
+                    epaint::Stroke::new(4., Color32::DARK_BLUE),
+                ));
+                // Bottom Outer stroke
+                painter.add(epaint::Shape::line_segment(
+                    [rect.left_bottom(), rect.right_bottom()],
+                    epaint::Stroke::new(4., Color32::DARK_BLUE),
+                ));
+                // Top Inner stroke
+                painter.add(epaint::Shape::line_segment(
+                    [rect.left_top(), rect.right_top()],
+                    epaint::Stroke::new(2., Color32::WHITE),
+                ));
+                // Bottom Inner stroke
+                painter.add(epaint::Shape::line_segment(
+                    [rect.left_bottom(), rect.right_bottom()],
+                    epaint::Stroke::new(2., Color32::WHITE),
+                ));
+            }
         }
     }
 }
