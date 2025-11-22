@@ -1,12 +1,21 @@
-use crate::items::DEFAULT_FILL_ALPHA;
-use super::DEFAULT_FILL_ALPHA;
-use crate::builder_methods_for_base;
-use crate::{
-    LineStyle, PlotBounds, PlotGeometry, PlotItem, PlotItemBase, PlotPoints, PlotTransform,
-};
-use egui::epaint::PathStroke;
-use egui::{Color32, Id, Shape, Stroke, Ui};
 use std::ops::RangeInclusive;
+
+use egui::Color32;
+use egui::Id;
+use egui::Shape;
+use egui::Stroke;
+use egui::Ui;
+use egui::epaint::PathStroke;
+
+use super::DEFAULT_FILL_ALPHA;
+use crate::LineStyle;
+use crate::PlotBounds;
+use crate::PlotGeometry;
+use crate::PlotItem;
+use crate::PlotItemBase;
+use crate::PlotPoints;
+use crate::PlotTransform;
+use crate::builder_methods_for_base;
 
 /// A convex polygon.
 pub struct Polygon<'a> {

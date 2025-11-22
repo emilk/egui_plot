@@ -1,12 +1,23 @@
-use std::{fmt::Debug, ops::RangeInclusive, sync::Arc};
+use std::fmt::Debug;
+use std::ops::RangeInclusive;
+use std::sync::Arc;
 
-use egui::{
-    Pos2, Rangef, Rect, Response, Sense, TextStyle, TextWrapMode, Ui, Vec2, WidgetText,
-    emath::{Rot2, remap_clamp},
-    epaint::TextShape,
-};
+use egui::Pos2;
+use egui::Rangef;
+use egui::Rect;
+use egui::Response;
+use egui::Sense;
+use egui::TextStyle;
+use egui::TextWrapMode;
+use egui::Ui;
+use egui::Vec2;
+use egui::WidgetText;
+use egui::emath::Rot2;
+use egui::emath::remap_clamp;
+use egui::epaint::TextShape;
 
-use super::{GridMark, transform::PlotTransform};
+use super::GridMark;
+use super::transform::PlotTransform;
 
 // Gap between tick labels and axis label in units of the axis label height
 const AXIS_LABEL_GAP: f32 = 0.25;
@@ -140,17 +151,16 @@ impl<'a> AxisHints<'a> {
     /// Specify custom formatter for ticks.
     ///
     /// The first parameter of `formatter` is the raw tick value as `f64`.
-    /// The second parameter of `formatter` is the currently shown range on this axis.
-    pub fn formatter(
-        mut self,
-        fmt: impl Fn(GridMark, &RangeInclusive<f64>) -> String + 'a,
-    ) -> Self {
+    /// The second parameter of `formatter` is the currently shown range on this
+    /// axis.
+    pub fn formatter(mut self, fmt: impl Fn(GridMark, &RangeInclusive<f64>) -> String + 'a) -> Self {
         self.formatter = Arc::new(fmt);
         self
     }
 
     fn default_formatter(mark: GridMark, _range: &RangeInclusive<f64>) -> String {
-        // Example: If the step to the next tick is `0.01`, we should use 2 decimals of precision:
+        // Example: If the step to the next tick is `0.01`, we should use 2 decimals of
+        // precision:
         let num_decimals = -mark.step_size.log10().round() as usize;
 
         emath::format_with_decimals_in_range(mark.value, num_decimals..=num_decimals)
@@ -191,10 +201,12 @@ impl<'a> AxisHints<'a> {
 
     /// Set the minimum spacing between labels
     ///
-    /// When labels get closer together than the given minimum, then they become invisible.
-    /// When they get further apart than the max, they are at full opacity.
+    /// When labels get closer together than the given minimum, then they become
+    /// invisible. When they get further apart than the max, they are at
+    /// full opacity.
     ///
-    /// Labels can never be closer together than the [`crate::Plot::grid_spacing`] setting.
+    /// Labels can never be closer together than the
+    /// [`crate::Plot::grid_spacing`] setting.
     #[inline]
     pub fn label_spacing(mut self, range: impl Into<Rangef>) -> Self {
         self.label_spacing = range.into();
@@ -214,7 +226,8 @@ pub(super) struct AxisWidget<'a> {
 }
 
 impl<'a> AxisWidget<'a> {
-    /// if `rect` has width or height == 0, it will be automatically calculated from ticks and text.
+    /// if `rect` has width or height == 0, it will be automatically calculated
+    /// from ticks and text.
     pub fn new(hints: AxisHints<'a>, rect: Rect) -> Self {
         Self {
             range: (0.0..=0.0),
@@ -242,12 +255,10 @@ impl<'a> AxisWidget<'a> {
             return (response, tick_labels_thickness);
         }
 
-        let galley = self.hints.label.into_galley(
-            ui,
-            Some(TextWrapMode::Extend),
-            f32::INFINITY,
-            TextStyle::Body,
-        );
+        let galley = self
+            .hints
+            .label
+            .into_galley(ui, Some(TextWrapMode::Extend), f32::INFINITY, TextStyle::Body);
 
         let text_pos = match self.hints.placement {
             Placement::LeftBottom => match axis {
@@ -308,8 +319,7 @@ impl<'a> AxisWidget<'a> {
         for step in self.steps.iter() {
             let text = (self.hints.formatter)(*step, &self.range);
             if !text.is_empty() {
-                let spacing_in_points =
-                    (transform.dpos_dvalue()[usize::from(axis)] * step.step_size).abs() as f32;
+                let spacing_in_points = (transform.dpos_dvalue()[usize::from(axis)] * step.step_size).abs() as f32;
 
                 if spacing_in_points <= label_spacing.min {
                     // Labels are too close together - don't paint them.
@@ -358,15 +368,11 @@ impl<'a> AxisWidget<'a> {
                                     let pos = Pos2::new(x, center_y - galley_size.y / 2.0);
                                     painter.add(TextShape::new(pos, galley, text_color));
                                 } else {
-                                    let right =
-                                        Pos2::new(self.rect.max.x, center_y - galley_size.y / 2.0);
+                                    let right = Pos2::new(self.rect.max.x, center_y - galley_size.y / 2.0);
                                     let width = galley_size.x;
-                                    let left =
-                                        right - Rot2::from_angle(angle) * Vec2::new(width, 0.0);
+                                    let left = right - Rot2::from_angle(angle) * Vec2::new(width, 0.0);
 
-                                    painter.add(
-                                        TextShape::new(left, galley, text_color).with_angle(angle),
-                                    );
+                                    painter.add(TextShape::new(left, galley, text_color).with_angle(angle));
                                 }
                             }
                             HPlacement::Right => {

@@ -1,8 +1,22 @@
-use crate::{Id, PlotBounds, PlotGeometry, PlotItem, PlotItemBase, PlotPoint, PlotTransform};
-use egui::epaint::TextShape;
-use egui::{Color32, Shape, Stroke, TextStyle, Ui, WidgetText};
-use emath::Align2;
 use std::ops::RangeInclusive;
+
+use egui::Color32;
+use egui::Shape;
+use egui::Stroke;
+use egui::TextStyle;
+use egui::Ui;
+use egui::WidgetText;
+use egui::epaint::TextShape;
+use emath::Align2;
+
+use crate::Id;
+use crate::PlotBounds;
+use crate::PlotGeometry;
+use crate::PlotItem;
+use crate::PlotItemBase;
+use crate::PlotPoint;
+use crate::PlotTransform;
+use crate::builder_methods_for_base;
 
 impl Text {
     pub fn new(name: impl Into<String>, position: PlotPoint, text: impl Into<WidgetText>) -> Self {
@@ -79,12 +93,10 @@ impl PlotItem for Text {
             self.color
         };
 
-        let galley = self.text.clone().into_galley(
-            ui,
-            Some(egui::TextWrapMode::Extend),
-            f32::INFINITY,
-            TextStyle::Small,
-        );
+        let galley =
+            self.text
+                .clone()
+                .into_galley(ui, Some(egui::TextWrapMode::Extend), f32::INFINITY, TextStyle::Small);
 
         let pos = transform.position_from_point(&self.position);
         let rect = self.anchor.anchor_size(pos, galley.size());

@@ -1,16 +1,30 @@
-use super::DEFAULT_FILL_ALPHA;
-use super::y_intersection;
-use crate::builder_methods_for_base;
-use crate::items::DEFAULT_FILL_ALPHA;
-use crate::{
-    Id, LineStyle, PlotBounds, PlotGeometry, PlotItem, PlotItemBase, PlotPoint, PlotPoints,
-    PlotTransform,
-};
-use egui::epaint::PathStroke;
-use egui::{Color32, Mesh, Rgba, Shape, Stroke, Ui};
-use emath::{NumExt as _, Pos2, Rect, pos2};
 use std::ops::RangeInclusive;
 use std::sync::Arc;
+
+use egui::Color32;
+use egui::Mesh;
+use egui::Rgba;
+use egui::Shape;
+use egui::Stroke;
+use egui::Ui;
+use egui::epaint::PathStroke;
+use emath::NumExt as _;
+use emath::Pos2;
+use emath::Rect;
+use emath::pos2;
+
+use super::DEFAULT_FILL_ALPHA;
+use super::y_intersection;
+use crate::Id;
+use crate::LineStyle;
+use crate::PlotBounds;
+use crate::PlotGeometry;
+use crate::PlotItem;
+use crate::PlotItemBase;
+use crate::PlotPoint;
+use crate::PlotPoints;
+use crate::PlotTransform;
+use crate::builder_methods_for_base;
 
 /// A series of values forming a path.
 pub struct Line<'a> {
@@ -29,7 +43,8 @@ impl<'a> Line<'a> {
         Self {
             base: PlotItemBase::new(name.into()),
             series: series.into(),
-            stroke: Stroke::new(1.5, Color32::TRANSPARENT), // Note: a stroke of 1.0 (or less) can look bad on low-dpi-screens
+            stroke: Stroke::new(1.5, Color32::TRANSPARENT), /* Note: a stroke of 1.0 (or less) can look bad on
+                                                             * low-dpi-screens */
             fill: None,
             fill_alpha: DEFAULT_FILL_ALPHA,
             gradient_color: None,
@@ -45,9 +60,10 @@ impl<'a> Line<'a> {
         self
     }
 
-    /// Add an optional gradient color to the stroke using a callback. The callback
-    /// receives a `PlotPoint` as input with the current X and Y values and should
-    /// return a `Color32` to be used as the stroke color for that point.
+    /// Add an optional gradient color to the stroke using a callback. The
+    /// callback receives a `PlotPoint` as input with the current X and Y
+    /// values and should return a `Color32` to be used as the stroke color
+    /// for that point.
     ///
     /// Setting the `gradient_fill` parameter to `true` will use the gradient
     /// color callback for the fill area as well when `fill()` is set.
@@ -69,7 +85,8 @@ impl<'a> Line<'a> {
         self
     }
 
-    /// Stroke color. Default is `Color32::TRANSPARENT` which means a color will be auto-assigned.
+    /// Stroke color. Default is `Color32::TRANSPARENT` which means a color will
+    /// be auto-assigned.
     #[inline]
     pub fn color(mut self, color: impl Into<Color32>) -> Self {
         self.stroke.color = color.into();
@@ -153,8 +170,8 @@ impl PlotItem for Line<'_> {
         let mut fill = *fill;
 
         let mut final_stroke: PathStroke = (*stroke).into();
-        // if we have a gradient color, we need to wrap the stroke callback to transpose the position to a value
-        // the caller can reason about
+        // if we have a gradient color, we need to wrap the stroke callback to transpose
+        // the position to a value the caller can reason about
         if let Some(gradient_callback) = self.gradient_color.clone() {
             let local_transform = *transform;
             let wrapped_callback = move |_rec: Rect, pos: Pos2| -> Color32 {
@@ -180,13 +197,8 @@ impl PlotItem for Line<'_> {
             if base.highlight {
                 fill_alpha = (2.0 * fill_alpha).at_most(1.0);
             }
-            let y = transform
-                .position_from_point(&PlotPoint::new(0.0, y_reference))
-                .y;
-            let default_fill_color = Rgba::from(stroke.color)
-                .to_opaque()
-                .multiply(fill_alpha)
-                .into();
+            let y = transform.position_from_point(&PlotPoint::new(0.0, y_reference)).y;
+            let default_fill_color = Rgba::from(stroke.color).to_opaque().multiply(fill_alpha).into();
 
             let fill_color_for_point = |pos| {
                 if *gradient_fill && self.gradient_color.is_some() {

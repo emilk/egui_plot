@@ -122,7 +122,7 @@ check_cargo: check_cargo_linux check_cargo_wasm
 check_cargo_linux:
 	cargo check --workspace --all-features --tests --target $(TARGET_LINUX) -j $(THREADS) $(BUILD_PROFILE)
 check_cargo_wasm:
-	cargo check --workspace --tests --target $(TARGET_WASM) -j $(THREADS) $(BUILD_PROFILE)
+	cargo check -p egui_plot -p demo --tests --target $(TARGET_WASM) -j $(THREADS) $(BUILD_PROFILE)
 check_fmt:  #  Only checks.
 	cargo fmt --all -- --check
 # Checks that all files have a newline at the end.

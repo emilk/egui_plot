@@ -1,13 +1,7 @@
 //! Contains items that can be added to a plot.
 #![expect(clippy::type_complexity)] // TODO(emilk): simplify some of the callback types with type aliases
 
-use egui::{Align2, Color32, Id, NumExt as _, PopupAnchor, Pos2, Shape, TextStyle, Ui, pos2, vec2};
 use std::ops::RangeInclusive;
-
-use emath::Float as _;
-use rect_elem::RectElement;
-
-use super::{Cursor, LabelFormatter, PlotBounds, PlotTransform};
 
 pub use arrows::Arrows;
 pub use bar_chart::Bar;
@@ -15,16 +9,38 @@ pub use bar_chart::BarChart;
 pub use box_plot::BoxElem;
 pub use box_plot::BoxPlot;
 pub use box_plot::BoxSpread;
-pub use line::{HLine, VLine};
+use egui::Align2;
+use egui::Color32;
+use egui::Id;
+use egui::NumExt as _;
+use egui::PopupAnchor;
+use egui::Pos2;
+use egui::Shape;
+use egui::TextStyle;
+use egui::Ui;
+use egui::pos2;
+use egui::vec2;
+use emath::Float as _;
+pub use line::HLine;
+pub use line::VLine;
 pub use plot_image::PlotImage;
 pub use points::Points;
 pub use polygon::Polygon;
+use rect_elem::RectElement;
 pub use series::Line;
 pub use text::Text;
+pub use values::ClosestElem;
+pub use values::LineStyle;
+pub use values::MarkerShape;
+pub use values::Orientation;
+pub use values::PlotGeometry;
+pub use values::PlotPoint;
+pub use values::PlotPoints;
 
-pub use values::{
-    ClosestElem, LineStyle, MarkerShape, Orientation, PlotGeometry, PlotPoint, PlotPoints,
-};
+use super::Cursor;
+use super::LabelFormatter;
+use super::PlotBounds;
+use super::PlotTransform;
 
 mod arrows;
 mod bar_chart;
@@ -79,7 +95,8 @@ pub trait PlotItem {
     /// Generate shapes to be drawn in the plot.
     fn shapes(&self, ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>);
 
-    /// For plot-items which are generated based on x values (plotting functions).
+    /// For plot-items which are generated based on x values (plotting
+    /// functions).
     fn initialize(&mut self, x_range: RangeInclusive<f64>);
 
     /// Returns the name of the plot item.
@@ -169,26 +186,20 @@ pub trait PlotItem {
             Color32::from_black_alpha(180)
         };
 
-        // this method is only called, if the value is in the result set of find_closest()
+        // this method is only called, if the value is in the result set of
+        // find_closest()
         let value = points[elem.index];
         let pointer = plot.transform.position_from_point(&value);
         shapes.push(Shape::circle_filled(pointer, 3.0, line_color));
 
-        rulers_and_tooltip_at_value(
-            plot_area_response,
-            value,
-            self.name(),
-            plot,
-            cursors,
-            label_formatter,
-        );
+        rulers_and_tooltip_at_value(plot_area_response, value, self.name(), plot, cursors, label_formatter);
     }
 }
 
 // ----------------------------------------------------------------------------
 
-/// Returns the x-coordinate of a possible intersection between a line segment from `p1` to `p2` and
-/// a horizontal line at the given y-coordinate.
+/// Returns the x-coordinate of a possible intersection between a line segment
+/// from `p1` to `p2` and a horizontal line at the given y-coordinate.
 fn y_intersection(p1: &Pos2, p2: &Pos2, y: f32) -> Option<f32> {
     ((p1.y > y && p2.y < y) || (p1.y < y && p2.y > y))
         .then_some(((y * (p1.x - p2.x)) - (p1.x * p2.y - p1.y * p2.x)) / (p1.y - p2.y))
@@ -205,32 +216,18 @@ pub(crate) fn rulers_color(ui: &Ui) -> Color32 {
     }
 }
 
-pub(crate) fn vertical_line(
-    pointer: Pos2,
-    transform: &PlotTransform,
-    line_color: Color32,
-) -> Shape {
+pub(crate) fn vertical_line(pointer: Pos2, transform: &PlotTransform, line_color: Color32) -> Shape {
     let frame = transform.frame();
     Shape::line_segment(
-        [
-            pos2(pointer.x, frame.top()),
-            pos2(pointer.x, frame.bottom()),
-        ],
+        [pos2(pointer.x, frame.top()), pos2(pointer.x, frame.bottom())],
         (1.0, line_color),
     )
 }
 
-pub(crate) fn horizontal_line(
-    pointer: Pos2,
-    transform: &PlotTransform,
-    line_color: Color32,
-) -> Shape {
+pub(crate) fn horizontal_line(pointer: Pos2, transform: &PlotTransform, line_color: Color32) -> Shape {
     let frame = transform.frame();
     Shape::line_segment(
-        [
-            pos2(frame.left(), pointer.y),
-            pos2(frame.right(), pointer.y),
-        ],
+        [pos2(frame.left(), pointer.y), pos2(frame.right(), pointer.y)],
         (1.0, line_color),
     )
 }
@@ -243,10 +240,10 @@ fn add_rulers_and_text(
     cursors: &mut Vec<Cursor>,
 ) {
     let orientation = elem.orientation();
-    let show_argument = plot.show_x && orientation == Orientation::Vertical
-        || plot.show_y && orientation == Orientation::Horizontal;
-    let show_values = plot.show_y && orientation == Orientation::Vertical
-        || plot.show_x && orientation == Orientation::Horizontal;
+    let show_argument =
+        plot.show_x && orientation == Orientation::Vertical || plot.show_y && orientation == Orientation::Horizontal;
+    let show_values =
+        plot.show_y && orientation == Orientation::Vertical || plot.show_x && orientation == Orientation::Horizontal;
 
     // Rulers for argument (usually vertical)
     if show_argument {

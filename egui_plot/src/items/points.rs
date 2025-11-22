@@ -1,11 +1,24 @@
-use crate::{
-    Id, MarkerShape, PlotBounds, PlotGeometry, PlotItem, PlotItemBase, PlotPoint, PlotPoints,
-    PlotTransform,
-};
-use egui::epaint::CircleShape;
-use egui::{Color32, Shape, Stroke, Ui};
-use emath::{Pos2, pos2, vec2};
 use std::ops::RangeInclusive;
+
+use egui::Color32;
+use egui::Shape;
+use egui::Stroke;
+use egui::Ui;
+use egui::epaint::CircleShape;
+use emath::Pos2;
+use emath::pos2;
+use emath::vec2;
+
+use crate::Id;
+use crate::MarkerShape;
+use crate::PlotBounds;
+use crate::PlotGeometry;
+use crate::PlotItem;
+use crate::PlotItemBase;
+use crate::PlotPoint;
+use crate::PlotPoints;
+use crate::PlotTransform;
+use crate::builder_methods_for_base;
 
 impl<'a> Points<'a> {
     pub fn new(name: impl Into<String>, series: impl Into<PlotPoints<'a>>) -> Self {
@@ -41,7 +54,8 @@ impl<'a> Points<'a> {
         self
     }
 
-    /// Whether to add stems between the markers and a horizontal reference line.
+    /// Whether to add stems between the markers and a horizontal reference
+    /// line.
     #[inline]
     pub fn stems(mut self, y_reference: impl Into<f32>) -> Self {
         self.stems = Some(y_reference.into());
@@ -105,7 +119,8 @@ pub struct Points<'a> {
 
     pub(crate) shape: MarkerShape,
 
-    /// Color of the marker. `Color32::TRANSPARENT` means that it will be picked automatically.
+    /// Color of the marker. `Color32::TRANSPARENT` means that it will be picked
+    /// automatically.
     pub(crate) color: Color32,
 
     /// Whether to fill the marker. Does not apply to all types.
@@ -193,14 +208,8 @@ impl PlotItem for Points<'_> {
                         shapes.push(Shape::convex_polygon(points, fill, stroke));
                     }
                     MarkerShape::Cross => {
-                        let diagonal1 = [
-                            tf(-frac_1_sqrt_2, -frac_1_sqrt_2),
-                            tf(frac_1_sqrt_2, frac_1_sqrt_2),
-                        ];
-                        let diagonal2 = [
-                            tf(frac_1_sqrt_2, -frac_1_sqrt_2),
-                            tf(-frac_1_sqrt_2, frac_1_sqrt_2),
-                        ];
+                        let diagonal1 = [tf(-frac_1_sqrt_2, -frac_1_sqrt_2), tf(frac_1_sqrt_2, frac_1_sqrt_2)];
+                        let diagonal2 = [tf(frac_1_sqrt_2, -frac_1_sqrt_2), tf(-frac_1_sqrt_2, frac_1_sqrt_2)];
                         shapes.push(Shape::line_segment(diagonal1, default_stroke));
                         shapes.push(Shape::line_segment(diagonal2, default_stroke));
                     }
@@ -211,29 +220,19 @@ impl PlotItem for Points<'_> {
                         shapes.push(Shape::line_segment(vertical, default_stroke));
                     }
                     MarkerShape::Up => {
-                        let points =
-                            vec![tf(0.0, -1.0), tf(0.5 * sqrt_3, 0.5), tf(-0.5 * sqrt_3, 0.5)];
+                        let points = vec![tf(0.0, -1.0), tf(0.5 * sqrt_3, 0.5), tf(-0.5 * sqrt_3, 0.5)];
                         shapes.push(Shape::convex_polygon(points, fill, stroke));
                     }
                     MarkerShape::Down => {
-                        let points = vec![
-                            tf(0.0, 1.0),
-                            tf(-0.5 * sqrt_3, -0.5),
-                            tf(0.5 * sqrt_3, -0.5),
-                        ];
+                        let points = vec![tf(0.0, 1.0), tf(-0.5 * sqrt_3, -0.5), tf(0.5 * sqrt_3, -0.5)];
                         shapes.push(Shape::convex_polygon(points, fill, stroke));
                     }
                     MarkerShape::Left => {
-                        let points =
-                            vec![tf(-1.0, 0.0), tf(0.5, -0.5 * sqrt_3), tf(0.5, 0.5 * sqrt_3)];
+                        let points = vec![tf(-1.0, 0.0), tf(0.5, -0.5 * sqrt_3), tf(0.5, 0.5 * sqrt_3)];
                         shapes.push(Shape::convex_polygon(points, fill, stroke));
                     }
                     MarkerShape::Right => {
-                        let points = vec![
-                            tf(1.0, 0.0),
-                            tf(-0.5, 0.5 * sqrt_3),
-                            tf(-0.5, -0.5 * sqrt_3),
-                        ];
+                        let points = vec![tf(1.0, 0.0), tf(-0.5, 0.5 * sqrt_3), tf(-0.5, -0.5 * sqrt_3)];
                         shapes.push(Shape::convex_polygon(points, fill, stroke));
                     }
                     MarkerShape::Asterisk => {

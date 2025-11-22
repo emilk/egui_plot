@@ -1,11 +1,20 @@
-use crate::Id;
-
-use crate::{
-    LineStyle, PlotBounds, PlotGeometry, PlotItem, PlotItemBase, PlotPoint, PlotTransform,
-};
-use egui::epaint::PathStroke;
-use egui::{Color32, Shape, Stroke, Ui};
 use std::ops::RangeInclusive;
+
+use egui::Color32;
+use egui::Shape;
+use egui::Stroke;
+use egui::Ui;
+use egui::epaint::PathStroke;
+
+use crate::Id;
+use crate::LineStyle;
+use crate::PlotBounds;
+use crate::PlotGeometry;
+use crate::PlotItem;
+use crate::PlotItemBase;
+use crate::PlotPoint;
+use crate::PlotTransform;
+use crate::builder_methods_for_base;
 
 /// A horizontal line in a plot, filling the full width
 #[derive(Clone, Debug, PartialEq)]
@@ -40,7 +49,8 @@ impl HLine {
         self
     }
 
-    /// Stroke color. Default is `Color32::TRANSPARENT` which means a color will be auto-assigned.
+    /// Stroke color. Default is `Color32::TRANSPARENT` which means a color will
+    /// be auto-assigned.
     #[inline]
     pub fn color(mut self, color: impl Into<Color32>) -> Self {
         self.stroke.color = color.into();
@@ -99,11 +109,7 @@ impl HLine {
 impl PlotItem for HLine {
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
-            base,
-            y,
-            stroke,
-            style,
-            ..
+            base, y, stroke, style, ..
         } = self;
 
         let points = vec![
@@ -177,7 +183,8 @@ impl VLine {
         self
     }
 
-    /// Stroke color. Default is `Color32::TRANSPARENT` which means a color will be auto-assigned.
+    /// Stroke color. Default is `Color32::TRANSPARENT` which means a color will
+    /// be auto-assigned.
     #[inline]
     pub fn color(mut self, color: impl Into<Color32>) -> Self {
         self.stroke.color = color.into();
@@ -236,11 +243,7 @@ impl VLine {
 impl PlotItem for VLine {
     fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
-            base,
-            x,
-            stroke,
-            style,
-            ..
+            base, x, stroke, style, ..
         } = self;
 
         let points = vec![

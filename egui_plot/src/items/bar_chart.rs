@@ -1,6 +1,34 @@
+use std::ops::RangeInclusive;
+
+use egui::Color32;
+use egui::CornerRadius;
+use egui::Shape;
+use egui::Stroke;
+use egui::Ui;
+use egui::epaint::RectShape;
+use emath::Float as _;
+use emath::NumExt as _;
+use emath::Pos2;
+
+use super::add_rulers_and_text;
  use crate::PlotPoint;
 use super::add_rulers_and_text;
 use super::find_closest_rect;
+use super::rect_elem::RectElement;
+use super::rect_elem::highlighted_color;
+use crate::ClosestElem;
+use crate::Cursor;
+use crate::Id;
+use crate::LabelFormatter;
+use crate::Orientation;
+use crate::PlotBounds;
+use crate::PlotConfig;
+use crate::PlotGeometry;
+use crate::PlotItem;
+use crate::PlotItemBase;
+use crate::PlotPoint;
+use crate::PlotTransform;
+use crate::builder_methods_for_base;
 use super::rect_elem::{RectElement, highlighted_color};
 use crate::{
     ClosestElem, Cursor, Id, LabelFormatter, Orientation, PlotBounds, PlotConfig, PlotGeometry,
@@ -33,10 +61,11 @@ impl BarChart {
         }
     }
 
-    /// Set the default color. It is set on all elements that do not already have a specific color.
-    /// This is the color that shows up in the legend.
-    /// It can be overridden at the bar level (see [[`Bar`]]).
-    /// Default is `Color32::TRANSPARENT` which means a color will be auto-assigned.
+    /// Set the default color. It is set on all elements that do not already
+    /// have a specific color. This is the color that shows up in the
+    /// legend. It can be overridden at the bar level (see [[`Bar`]]).
+    /// Default is `Color32::TRANSPARENT` which means a color will be
+    /// auto-assigned.
     #[inline]
     pub fn color(mut self, color: impl Into<Color32>) -> Self {
         let plot_color = color.into();
@@ -209,8 +238,8 @@ impl PlotItem for BarChart {
     }
 }
 
-/// One bar in a [`BarChart`]. Potentially floating, allowing stacked bar charts.
-/// Width can be changed to allow variable-width histograms.
+/// One bar in a [`BarChart`]. Potentially floating, allowing stacked bar
+/// charts. Width can be changed to allow variable-width histograms.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Bar {
     /// Name of plot element in the diagram (annotated by default formatter)
@@ -241,7 +270,8 @@ pub struct Bar {
 impl Bar {
     /// Create a bar. Its `orientation` is set by its [`BarChart`] parent.
     ///
-    /// - `argument`: Position on the argument axis (X if vertical, Y if horizontal).
+    /// - `argument`: Position on the argument axis (X if vertical, Y if
+    ///   horizontal).
     /// - `value`: Height of the bar (if vertical).
     ///
     /// By default the bar is vertical and its base is at zero.
@@ -326,12 +356,7 @@ impl Bar {
         }
     }
 
-    pub(in crate::items) fn add_shapes(
-        &self,
-        transform: &PlotTransform,
-        highlighted: bool,
-        shapes: &mut Vec<Shape>,
-    ) {
+    pub(in crate::items) fn add_shapes(&self, transform: &PlotTransform, highlighted: bool, shapes: &mut Vec<Shape>) {
         let (stroke, fill) = if highlighted {
             highlighted_color(self.stroke, self.fill)
         } else {
@@ -357,10 +382,7 @@ impl Bar {
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
     ) {
-        let text: Option<String> = parent
-            .element_formatter
-            .as_ref()
-            .map(|fmt| fmt(self, parent));
+        let text: Option<String> = parent.element_formatter.as_ref().map(|fmt| fmt(self, parent));
 
         add_rulers_and_text(self, plot, text, shapes, cursors);
     }

@@ -1,15 +1,26 @@
+use std::ops::RangeInclusive;
 use crate::{Id, PlotItemBase, PlotPoints};
 use crate::{PlotBounds, PlotGeometry, PlotItem, PlotTransform};
 use egui::{Color32, Shape, Stroke, Ui};
 use emath::Rot2;
-use std::ops::RangeInclusive;
+
+use egui::Color32;
+use egui::Shape;
+use egui::Stroke;
+use egui::Ui;
+use emath::Rot2;
+
+use crate::Id;
+use crate::PlotBounds;
+use crate::PlotGeometry;
+use crate::PlotItem;
+use crate::PlotItemBase;
+use crate::PlotPoints;
+use crate::PlotTransform;
+use crate::builder_methods_for_base;
 
 impl<'a> Arrows<'a> {
-    pub fn new(
-        name: impl Into<String>,
-        origins: impl Into<PlotPoints<'a>>,
-        tips: impl Into<PlotPoints<'a>>,
-    ) -> Self {
+    pub fn new(name: impl Into<String>, origins: impl Into<PlotPoints<'a>>, tips: impl Into<PlotPoints<'a>>) -> Self {
         Self {
             base: PlotItemBase::new(name.into()),
             origins: origins.into(),
@@ -128,8 +139,7 @@ impl PlotItem for Arrows<'_> {
     }
 
     fn initialize(&mut self, _x_range: RangeInclusive<f64>) {
-        self.origins
-            .generate_points(f64::NEG_INFINITY..=f64::INFINITY);
+        self.origins.generate_points(f64::NEG_INFINITY..=f64::INFINITY);
         self.tips.generate_points(f64::NEG_INFINITY..=f64::INFINITY);
     }
 
