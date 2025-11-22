@@ -1,5 +1,5 @@
+use super::DEFAULT_FILL_ALPHA;
 use crate::builder_methods_for_base;
-use crate::items::DEFAULT_FILL_ALPHA;
 use crate::{
     LineStyle, PlotBounds, PlotGeometry, PlotItem, PlotItemBase, PlotPoints, PlotTransform,
 };

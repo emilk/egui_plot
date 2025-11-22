@@ -1,8 +1,9 @@
-use crate::items::add_rulers_and_text;
-use crate::items::rect_elem::{RectElement, highlighted_color};
+ use super::add_rulers_and_text;
+use super::find_closest_rect;
+use super::rect_elem::{RectElement, highlighted_color};
 use crate::{
     ClosestElem, Cursor, Id, LabelFormatter, Orientation, PlotBounds, PlotConfig, PlotGeometry,
-    PlotItem, PlotItemBase, PlotTransform, items,
+    PlotItem, PlotItemBase, PlotTransform,
 };
 use crate::{PlotPoint, builder_methods_for_base};
 use egui::epaint::RectShape;
@@ -142,7 +143,7 @@ impl PlotItem for BarChart {
     }
 
     fn find_closest(&self, point: Pos2, transform: &PlotTransform) -> Option<ClosestElem> {
-        items::find_closest_rect(&self.bars, point, transform)
+        find_closest_rect(&self.bars, point, transform)
     }
 
     fn on_hover(
