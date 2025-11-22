@@ -1,3 +1,4 @@
+use eframe::emath::Align2;
 use std::ops::RangeInclusive;
 use std::{f64::consts::TAU, sync::Arc};
 
@@ -853,6 +854,13 @@ impl ItemsDemo {
             plot_ui.points(points.name("Points with stems").id("points_with_stems"));
             plot_ui.text(Text::new("Text", PlotPoint::new(-3.0, -3.0), "wow").id("text0"));
             plot_ui.text(Text::new("Text", PlotPoint::new(-2.0, 2.5), "so graph").id("text1"));
+            plot_ui.text(
+                Text::new("Text", PlotPoint::new(-1.5, 2.0), "Very angle")
+                    .angle(-std::f32::consts::FRAC_PI_4)
+                    .anchor(Align2::LEFT_TOP)
+                    .name("Angled text")
+                    .id("text_angled"),
+            );
             plot_ui.text(Text::new("Text", PlotPoint::new(3.0, 3.0), "much color").id("text2"));
             plot_ui.text(Text::new("Text", PlotPoint::new(2.5, -2.0), "such plot").id("text3"));
             plot_ui.image(image.name("Image"));
