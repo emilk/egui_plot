@@ -1,0 +1,7 @@
+max_width = 120
+format_code_in_doc_comments = true
+wrap_comments = true
+reorder_imports = true
+group_imports = "StdExternalCrate"
+blank_lines_upper_bound = 1
+imports_granularity = "Item"
