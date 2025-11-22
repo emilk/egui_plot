@@ -93,9 +93,7 @@ test_docs:
 	# Nextest does not support doc tests, so we fall back to cargo test.
 	cargo test --doc --target $(TARGET_LINUX) -j $(THREADS) $(BUILD_PROFILE)
 
-# ------------------------------- run ---------------------0--------------------
-
-# Launch both backend and frontend in tmux split windows
+# ------------------------------- run ------------------------------------------
 
 demo:
 	cargo run -p demo
@@ -123,7 +121,7 @@ check_cargo_linux:
 	cargo check --workspace --all-features --tests --target $(TARGET_LINUX) -j $(THREADS) $(BUILD_PROFILE)
 check_cargo_wasm:
 	cargo check -p egui_plot -p demo --tests --target $(TARGET_WASM) -j $(THREADS) $(BUILD_PROFILE)
-check_fmt:  #  Only checks.
+check_fmt:
 	cargo fmt --all -- --check
 # Checks that all files have a newline at the end.
 check_newlines:
@@ -143,7 +141,6 @@ check_clippy_docs_wasm:
 
 # Checks if the dependencies have approved licenses.
 check_license:
-	# cargo deny check
 	echo "skipped for now due to https://github.com/EmbarkStudios/cargo-deny/issues/804"
 
 # Checks for dependency cycles between modules.
