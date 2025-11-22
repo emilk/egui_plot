@@ -35,4 +35,7 @@ wasm-bindgen-futures.workspace = true
 web-sys.workspace = true # to access the DOM (to hide the loading text)
 
 [dev-dependencies]
-egui_kittest = { workspace = true, features = ["snapshot", "wgpu", "eframe"] }
+egui_kittest = { workspace = true, features = ["snapshot", "eframe"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+egui_kittest = { workspace = true, features = ["wgpu"] }
