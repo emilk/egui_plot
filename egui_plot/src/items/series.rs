@@ -6,7 +6,7 @@ use crate::{
 };
 use egui::epaint::PathStroke;
 use egui::{Color32, Mesh, Rgba, Shape, Stroke, Ui};
-use emath::{NumExt, Pos2, Rect, pos2};
+use emath::{NumExt as _, Pos2, Rect, pos2};
 use std::ops::RangeInclusive;
 use std::sync::Arc;
 

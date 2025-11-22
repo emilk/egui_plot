@@ -1,8 +1,7 @@
 use crate::builder_methods_for_base;
 use crate::items::DEFAULT_FILL_ALPHA;
 use crate::{
-    LineStyle, PlotBounds, PlotGeometry, PlotItem,
-    PlotItemBase, PlotPoints, PlotTransform,
+    LineStyle, PlotBounds, PlotGeometry, PlotItem, PlotItemBase, PlotPoints, PlotTransform,
 };
 use egui::epaint::PathStroke;
 use egui::{Color32, Id, Shape, Stroke, Ui};

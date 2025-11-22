@@ -7,7 +7,7 @@ use crate::{
 use crate::{PlotPoint, builder_methods_for_base};
 use egui::epaint::RectShape;
 use egui::{Color32, CornerRadius, Shape, Stroke, Ui};
-use emath::{Float, NumExt, Pos2};
+use emath::{Float as _, NumExt as _, Pos2};
 use std::ops::RangeInclusive;
 
 /// A bar chart.

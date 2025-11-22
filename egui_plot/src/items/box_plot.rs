@@ -8,7 +8,7 @@ use crate::{
 use crate::{Id, PlotPoint};
 use egui::epaint::RectShape;
 use egui::{Color32, CornerRadius, Shape, Stroke, Ui};
-use emath::{NumExt, Pos2};
+use emath::{NumExt as _, Pos2};
 use std::ops::RangeInclusive;
 
 /// A diagram containing a series of [`BoxElem`] elements.
