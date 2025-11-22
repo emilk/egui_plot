@@ -7,9 +7,6 @@ use egui::{
     Vec2b, WidgetInfo, WidgetType, remap, vec2,
 };
 
-use std::f64::consts::TAU;
-use std::ops::RangeInclusive;
-
 use egui_plot::{
     Arrows, AxisHints, Bar, BarChart, BoxElem, BoxPlot, BoxSpread, CoordinatesFormatter, Corner,
     GridInput, GridMark, HLine, Legend, Line, LineStyle, MarkerShape, Plot, PlotImage, PlotPoint,
