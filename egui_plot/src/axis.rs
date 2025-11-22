@@ -153,6 +153,7 @@ impl<'a> AxisHints<'a> {
     /// The first parameter of `formatter` is the raw tick value as `f64`.
     /// The second parameter of `formatter` is the currently shown range on this
     /// axis.
+    #[inline]
     pub fn formatter(mut self, fmt: impl Fn(GridMark, &RangeInclusive<f64>) -> String + 'a) -> Self {
         self.formatter = Arc::new(fmt);
         self
