@@ -1,9 +1,142 @@
-use egui::emath::NumExt as _;
-use egui::epaint::{Color32, CornerRadius, RectShape, Shape, Stroke};
+use crate::builder_methods_for_base;
+use crate::items::add_rulers_and_text;
+use crate::items::rect_elem::{RectElement, highlighted_color};
+use crate::{
+    ClosestElem, Cursor, LabelFormatter, Orientation, PlotBounds, PlotConfig, PlotGeometry,
+    PlotItem, PlotItemBase, PlotTransform, items,
+};
+use crate::{Id, PlotPoint};
+use egui::epaint::RectShape;
+use egui::{Color32, CornerRadius, Shape, Stroke, Ui};
+use emath::{NumExt as _, Pos2};
+use std::ops::RangeInclusive;
 
-use crate::{BoxPlot, Cursor, PlotPoint, PlotTransform};
+/// A diagram containing a series of [`BoxElem`] elements.
+pub struct BoxPlot {
+    base: PlotItemBase,
 
-use super::{Orientation, PlotConfig, RectElement, add_rulers_and_text, highlighted_color};
+    pub(crate) boxes: Vec<BoxElem>,
+    default_color: Color32,
+
+    /// A custom element formatter
+    pub(crate) element_formatter: Option<Box<dyn Fn(&BoxElem, &BoxPlot) -> String>>,
+}
+
+impl BoxPlot {
+    /// Create a plot containing multiple `boxes`. It defaults to vertically oriented elements.
+    pub fn new(name: impl Into<String>, boxes: Vec<BoxElem>) -> Self {
+        Self {
+            base: PlotItemBase::new(name.into()),
+            boxes,
+            default_color: Color32::TRANSPARENT,
+            element_formatter: None,
+        }
+    }
+
+    /// Set the default color. It is set on all elements that do not already have a specific color.
+    /// This is the color that shows up in the legend.
+    /// It can be overridden at the element level (see [`BoxElem`]).
+    /// Default is `Color32::TRANSPARENT` which means a color will be auto-assigned.
+    #[inline]
+    pub fn color(mut self, color: impl Into<Color32>) -> Self {
+        let plot_color = color.into();
+        self.default_color = plot_color;
+        for box_elem in &mut self.boxes {
+            if box_elem.fill == Color32::TRANSPARENT
+                && box_elem.stroke.color == Color32::TRANSPARENT
+            {
+                box_elem.fill = plot_color.linear_multiply(0.2);
+                box_elem.stroke.color = plot_color;
+            }
+        }
+        self
+    }
+
+    /// Set all elements to be in a vertical orientation.
+    /// Argument axis will be X and values will be on the Y axis.
+    #[inline]
+    pub fn vertical(mut self) -> Self {
+        for box_elem in &mut self.boxes {
+            box_elem.orientation = Orientation::Vertical;
+        }
+        self
+    }
+
+    /// Set all elements to be in a horizontal orientation.
+    /// Argument axis will be Y and values will be on the X axis.
+    #[inline]
+    pub fn horizontal(mut self) -> Self {
+        for box_elem in &mut self.boxes {
+            box_elem.orientation = Orientation::Horizontal;
+        }
+        self
+    }
+
+    /// Add a custom way to format an element.
+    /// Can be used to display a set number of decimals or custom labels.
+    #[inline]
+    pub fn element_formatter(mut self, formatter: Box<dyn Fn(&BoxElem, &Self) -> String>) -> Self {
+        self.element_formatter = Some(formatter);
+        self
+    }
+
+    builder_methods_for_base!();
+}
+
+impl PlotItem for BoxPlot {
+    fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
+        for b in &self.boxes {
+            b.add_shapes(transform, self.base.highlight, shapes);
+        }
+    }
+
+    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {
+        // nothing to do
+    }
+
+    fn color(&self) -> Color32 {
+        self.default_color
+    }
+
+    fn geometry(&self) -> PlotGeometry<'_> {
+        PlotGeometry::Rects
+    }
+
+    fn bounds(&self) -> PlotBounds {
+        let mut bounds = PlotBounds::NOTHING;
+        for b in &self.boxes {
+            bounds.merge(&b.bounds());
+        }
+        bounds
+    }
+
+    fn find_closest(&self, point: Pos2, transform: &PlotTransform) -> Option<ClosestElem> {
+        items::find_closest_rect(&self.boxes, point, transform)
+    }
+
+    fn on_hover(
+        &self,
+        _plot_area_response: &egui::Response,
+        elem: ClosestElem,
+        shapes: &mut Vec<Shape>,
+        cursors: &mut Vec<Cursor>,
+        plot: &PlotConfig<'_>,
+        _: &LabelFormatter<'_>,
+    ) {
+        let box_plot = &self.boxes[elem.index];
+
+        box_plot.add_shapes(plot.transform, true, shapes);
+        box_plot.add_rulers_and_text(self, plot, shapes, cursors);
+    }
+
+    fn base(&self) -> &PlotItemBase {
+        &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut PlotItemBase {
+        &mut self.base
+    }
+}
 
 /// Contains the values of a single box in a box plot.
 #[derive(Clone, Debug, PartialEq)]
@@ -144,7 +277,7 @@ impl BoxElem {
         self
     }
 
-    pub(super) fn add_shapes(
+    pub(in crate::items) fn add_shapes(
         &self,
         transform: &PlotTransform,
         highlighted: bool,
@@ -227,7 +360,7 @@ impl BoxElem {
         }
     }
 
-    pub(super) fn add_rulers_and_text(
+    pub(in crate::items) fn add_rulers_and_text(
         &self,
         parent: &BoxPlot,
         plot: &PlotConfig<'_>,

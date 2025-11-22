@@ -1,0 +1,163 @@
+use crate::Id;
+use crate::builder_methods_for_base;
+use crate::{PlotBounds, PlotGeometry, PlotItem, PlotItemBase, PlotPoint, PlotTransform};
+use egui::{Color32, CornerRadius, ImageOptions, Shape, Stroke, TextureId, Ui};
+use emath::{Rect, Rot2, Vec2, pos2};
+use std::ops::RangeInclusive;
+
+/// An image in the plot.
+#[derive(Clone)]
+pub struct PlotImage {
+    base: PlotItemBase,
+    pub(crate) position: PlotPoint,
+    pub(crate) texture_id: TextureId,
+    pub(crate) uv: Rect,
+    pub(crate) size: Vec2,
+    pub(crate) rotation: f64,
+    pub(crate) bg_fill: Color32,
+    pub(crate) tint: Color32,
+}
+
+impl PlotImage {
+    /// Create a new image with position and size in plot coordinates.
+    pub fn new(
+        name: impl Into<String>,
+        texture_id: impl Into<TextureId>,
+        center_position: PlotPoint,
+        size: impl Into<Vec2>,
+    ) -> Self {
+        Self {
+            base: PlotItemBase::new(name.into()),
+            position: center_position,
+            texture_id: texture_id.into(),
+            uv: Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
+            size: size.into(),
+            rotation: 0.0,
+            bg_fill: Default::default(),
+            tint: Color32::WHITE,
+        }
+    }
+
+    /// Select UV range. Default is (0,0) in top-left, (1,1) bottom right.
+    #[inline]
+    pub fn uv(mut self, uv: impl Into<Rect>) -> Self {
+        self.uv = uv.into();
+        self
+    }
+
+    /// A solid color to put behind the image. Useful for transparent images.
+    #[inline]
+    pub fn bg_fill(mut self, bg_fill: impl Into<Color32>) -> Self {
+        self.bg_fill = bg_fill.into();
+        self
+    }
+
+    /// Multiply image color with this. Default is WHITE (no tint).
+    #[inline]
+    pub fn tint(mut self, tint: impl Into<Color32>) -> Self {
+        self.tint = tint.into();
+        self
+    }
+
+    /// Rotate the image counter-clockwise around its center by an angle in radians.
+    #[inline]
+    pub fn rotate(mut self, angle: f64) -> Self {
+        self.rotation = angle;
+        self
+    }
+
+    builder_methods_for_base!();
+}
+
+impl PlotItem for PlotImage {
+    fn shapes(&self, ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
+        let Self {
+            position,
+            rotation,
+            texture_id,
+            uv,
+            size,
+            bg_fill,
+            tint,
+            base,
+            ..
+        } = self;
+        let image_screen_rect = {
+            let left_top = PlotPoint::new(
+                position.x - 0.5 * size.x as f64,
+                position.y - 0.5 * size.y as f64,
+            );
+            let right_bottom = PlotPoint::new(
+                position.x + 0.5 * size.x as f64,
+                position.y + 0.5 * size.y as f64,
+            );
+            let left_top_screen = transform.position_from_point(&left_top);
+            let right_bottom_screen = transform.position_from_point(&right_bottom);
+            Rect::from_two_pos(left_top_screen, right_bottom_screen)
+        };
+        let screen_rotation = -*rotation as f32;
+
+        egui::paint_texture_at(
+            ui.painter(),
+            image_screen_rect,
+            &ImageOptions {
+                uv: *uv,
+                bg_fill: *bg_fill,
+                tint: *tint,
+                rotation: Some((Rot2::from_angle(screen_rotation), Vec2::splat(0.5))),
+                corner_radius: CornerRadius::ZERO,
+            },
+            &(*texture_id, image_screen_rect.size()).into(),
+        );
+        if base.highlight {
+            let center = image_screen_rect.center();
+            let rotation = Rot2::from_angle(screen_rotation);
+            let outline = [
+                image_screen_rect.right_bottom(),
+                image_screen_rect.right_top(),
+                image_screen_rect.left_top(),
+                image_screen_rect.left_bottom(),
+            ]
+            .iter()
+            .map(|point| center + rotation * (*point - center))
+            .collect();
+            shapes.push(Shape::closed_line(
+                outline,
+                Stroke::new(1.0, ui.visuals().strong_text_color()),
+            ));
+        }
+    }
+
+    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {}
+
+    fn color(&self) -> Color32 {
+        Color32::TRANSPARENT
+    }
+
+    fn geometry(&self) -> PlotGeometry<'_> {
+        PlotGeometry::None
+    }
+
+    fn bounds(&self) -> PlotBounds {
+        let mut bounds = PlotBounds::NOTHING;
+        let left_top = PlotPoint::new(
+            self.position.x as f32 - self.size.x / 2.0,
+            self.position.y as f32 - self.size.y / 2.0,
+        );
+        let right_bottom = PlotPoint::new(
+            self.position.x as f32 + self.size.x / 2.0,
+            self.position.y as f32 + self.size.y / 2.0,
+        );
+        bounds.extend_with(&left_top);
+        bounds.extend_with(&right_bottom);
+        bounds
+    }
+
+    fn base(&self) -> &PlotItemBase {
+        &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut PlotItemBase {
+        &mut self.base
+    }
+}
