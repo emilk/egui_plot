@@ -47,7 +47,7 @@ impl std::error::Error for HeatmapErr {}
 pub struct Heatmap<const RESOLUTION: usize> {
     base: PlotItemBase,
 
-    /// occupied space in absolute plot coordinates
+    /// Occupied space in absolute plot coordinates.
     pos: PlotPoint,
 
     /// values to plot
@@ -390,7 +390,7 @@ impl<const RESOLUTION: usize> PlotItem for Heatmap<RESOLUTION> {
 
     // FIXME: heatmap has multiple colors
     fn color(&self) -> Color32 {
-        self.palette[0]
+        Color32::TRANSPARENT
     }
 
     fn highlight(&mut self) {
@@ -416,13 +416,11 @@ impl<const RESOLUTION: usize> PlotItem for Heatmap<RESOLUTION> {
     }
 
     fn find_closest(&self, point: Pos2, transform: &PlotTransform) -> Option<ClosestElem> {
-        self.values
-            .clone() // FIXME: is there a better solution that cloning?
-            .into_iter()
-            .enumerate()
-            .map(|(index, _)| {
+        (0..self.values.len())
+            .map(|index| {
                 let x = index % self.cols;
                 let y = index / self.cols;
+
                 let tile_rect = transform.rect_from_values(
                     &PlotPoint {
                         x: self.pos.x + self.tile_size.x as f64 * x as f64,
@@ -433,6 +431,7 @@ impl<const RESOLUTION: usize> PlotItem for Heatmap<RESOLUTION> {
                         y: self.pos.y + self.tile_size.y as f64 * (y + 1) as f64,
                     },
                 );
+
                 let dist_sq = tile_rect.distance_sq_to_pos(point);
 
                 ClosestElem { index, dist_sq }
@@ -456,7 +455,6 @@ impl<const RESOLUTION: usize> PlotItem for Heatmap<RESOLUTION> {
         if self.show_labels {
             shapes.push(text);
         }
-        // v.add_rulers_and_text(self, plot, shapes, cursors); TODO(?)
     }
 
     fn base(&self) -> &super::PlotItemBase {
