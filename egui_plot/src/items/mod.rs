@@ -40,6 +40,7 @@ mod values;
 
 const DEFAULT_FILL_ALPHA: f32 = 0.05;
 
+/// Base data shared by all plot items.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PlotItemBase {
     name: String,
@@ -49,6 +50,7 @@ pub struct PlotItemBase {
 }
 
 impl PlotItemBase {
+    /// Create a new plot item base with the given name.
     pub fn new(name: String) -> Self {
         let id = Id::new(&name);
         Self {
@@ -62,29 +64,38 @@ impl PlotItemBase {
 
 /// Container to pass-through several parameters related to plot visualization
 pub struct PlotConfig<'a> {
+    /// Reference to the UI.
     pub ui: &'a Ui,
+    /// Reference to the plot transform.
     pub transform: &'a PlotTransform,
+    /// Whether to show the x-axis value.
     pub show_x: bool,
+    /// Whether to show the y-axis value.
     pub show_y: bool,
 }
 
 /// Trait shared by things that can be drawn in the plot.
 pub trait PlotItem {
+    /// Generate shapes to be drawn in the plot.
     fn shapes(&self, ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>);
 
     /// For plot-items which are generated based on x values (plotting functions).
     fn initialize(&mut self, x_range: RangeInclusive<f64>);
 
+    /// Returns the name of the plot item.
     fn name(&self) -> &str {
         &self.base().name
     }
 
+    /// Returns the color of the plot item.
     fn color(&self) -> Color32;
 
+    /// Highlight the plot item.
     fn highlight(&mut self) {
         self.base_mut().highlight = true;
     }
 
+    /// Returns whether the plot item is highlighted.
     fn highlighted(&self) -> bool {
         self.base().highlight
     }
@@ -94,18 +105,24 @@ pub trait PlotItem {
         self.base().allow_hover
     }
 
+    /// Returns the geometry of the plot item.
     fn geometry(&self) -> PlotGeometry<'_>;
 
+    /// Returns the bounds of the plot item.
     fn bounds(&self) -> PlotBounds;
 
+    /// Returns a reference to the base data of the plot item.
     fn base(&self) -> &PlotItemBase;
 
+    /// Returns a mutable reference to the base data of the plot item.
     fn base_mut(&mut self) -> &mut PlotItemBase;
 
+    /// Returns the ID of the plot item.
     fn id(&self) -> Id {
         self.base().id
     }
 
+    /// Find the closest element in the plot item to the given point.
     fn find_closest(&self, point: Pos2, transform: &PlotTransform) -> Option<ClosestElem> {
         match self.geometry() {
             PlotGeometry::None => None,
@@ -126,6 +143,7 @@ pub trait PlotItem {
         }
     }
 
+    /// Handle hover events for the plot item.
     fn on_hover(
         &self,
         plot_area_response: &egui::Response,

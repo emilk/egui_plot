@@ -42,6 +42,7 @@ use items::{horizontal_line, rulers_color, vertical_line};
 use legend::LegendWidget;
 
 type LabelFormatterFn<'a> = dyn Fn(&str, &PlotPoint) -> String + 'a;
+/// Optional label formatter function for customizing hover labels.
 pub type LabelFormatter<'a> = Option<Box<LabelFormatterFn<'a>>>;
 
 type GridSpacerFn<'a> = dyn Fn(GridInput) -> Vec<GridMark> + 'a;
@@ -87,8 +88,16 @@ impl Default for CoordinatesFormatter<'_> {
 /// Indicates a vertical or horizontal cursor line in plot coordinates.
 #[derive(Copy, Clone, PartialEq)]
 pub enum Cursor {
-    Horizontal { y: f64 },
-    Vertical { x: f64 },
+    /// Horizontal cursor line at the given y-coordinate.
+    Horizontal {
+        /// Y-coordinate of the horizontal cursor line.
+        y: f64
+    },
+    /// Vertical cursor line at the given x-coordinate.
+    Vertical {
+        /// X-coordinate of the vertical cursor line.
+        x: f64
+    },
 }
 
 /// Contains the cursors drawn for a plot widget in a single frame.
