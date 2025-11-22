@@ -1,9 +1,26 @@
-use std::{collections::BTreeMap, string::String};
+use std::collections::BTreeMap;
+use std::string::String;
 
-use egui::{
-    Align, Color32, Direction, Frame, Id, Layout, PointerButton, Rect, Response, Sense, Shadow,
-    Shape, TextStyle, Ui, Widget, WidgetInfo, WidgetType, epaint::CircleShape, pos2, vec2,
-};
+use egui::Align;
+use egui::Color32;
+use egui::Direction;
+use egui::Frame;
+use egui::Id;
+use egui::Layout;
+use egui::PointerButton;
+use egui::Rect;
+use egui::Response;
+use egui::Sense;
+use egui::Shadow;
+use egui::Shape;
+use egui::TextStyle;
+use egui::Ui;
+use egui::Widget;
+use egui::WidgetInfo;
+use egui::WidgetType;
+use egui::epaint::CircleShape;
+use egui::pos2;
+use egui::vec2;
 
 use super::items::PlotItem;
 
@@ -19,14 +36,9 @@ pub enum Corner {
 
 impl Corner {
     pub fn all() -> impl Iterator<Item = Self> {
-        [
-            Self::LeftTop,
-            Self::RightTop,
-            Self::LeftBottom,
-            Self::RightBottom,
-        ]
-        .iter()
-        .copied()
+        [Self::LeftTop, Self::RightTop, Self::LeftBottom, Self::RightBottom]
+            .iter()
+            .copied()
     }
 }
 
@@ -98,8 +110,9 @@ impl Legend {
         self
     }
 
-    /// Specifies hidden items in the legend configuration to override the existing ones. This
-    /// allows the legend traces' visibility to be controlled from the application code.
+    /// Specifies hidden items in the legend configuration to override the
+    /// existing ones. This allows the legend traces' visibility to be
+    /// controlled from the application code.
     #[inline]
     pub fn hidden_items<I>(mut self, hidden_items: I) -> Self
     where
@@ -111,8 +124,8 @@ impl Legend {
 
     /// Specifies if the legend item order should be the inserted order.
     /// Default: `false`.
-    /// If `true`, the order of the legend items will be the same as the order as they were added.
-    /// By default it will be sorted alphabetically.
+    /// If `true`, the order of the legend items will be the same as the order
+    /// as they were added. By default it will be sorted alphabetically.
     #[inline]
     pub fn follow_insertion_order(mut self, follow: bool) -> Self {
         self.follow_insertion_order = follow;
@@ -121,10 +134,7 @@ impl Legend {
 
     /// Specifies how to handle conflicting colors for an item.
     #[inline]
-    pub fn color_conflict_handling(
-        mut self,
-        color_conflict_handling: ColorConflictHandling,
-    ) -> Self {
+    pub fn color_conflict_handling(mut self, color_conflict_handling: ColorConflictHandling) -> Self {
         self.color_conflict_handling = color_conflict_handling;
         self
     }
@@ -170,14 +180,7 @@ impl LegendEntry {
         let desired_size = total_extra + galley.size();
         let (rect, response) = ui.allocate_exact_size(desired_size, Sense::click());
 
-        response.widget_info(|| {
-            WidgetInfo::selected(
-                WidgetType::Checkbox,
-                ui.is_enabled(),
-                *checked,
-                galley.text(),
-            )
-        });
+        response.widget_info(|| WidgetInfo::selected(WidgetType::Checkbox, ui.is_enabled(), *checked, galley.text()));
 
         let visuals = ui.style().interact(&response);
         let label_on_the_left = ui.layout().horizontal_placement() == Align::RIGHT;
@@ -192,7 +195,8 @@ impl LegendEntry {
 
         let painter = ui.painter();
 
-        // Gray background, for interaction effects, and to sow something if we're disabled:
+        // Gray background, for interaction effects, and to sow something if we're
+        // disabled:
         painter.add(CircleShape {
             center: icon_rect.center(),
             radius: icon_size * 0.35,
@@ -206,11 +210,7 @@ impl LegendEntry {
             } else {
                 *color
             };
-            painter.add(Shape::circle_filled(
-                icon_rect.center(),
-                icon_size * 0.25,
-                fill,
-            ));
+            painter.add(Shape::circle_filled(icon_rect.center(), icon_size * 0.25, fill));
         }
 
         let text_position_x = if label_on_the_left {
@@ -234,8 +234,8 @@ pub(super) struct LegendWidget {
 }
 
 impl LegendWidget {
-    /// Create a new legend from items, the names of items that are hidden and the style of the
-    /// text. Returns `None` if the legend has no entries.
+    /// Create a new legend from items, the names of items that are hidden and
+    /// the style of the text. Returns `None` if the legend has no entries.
     pub(super) fn try_new<'a>(
         rect: Rect,
         config: Legend,
@@ -245,42 +245,40 @@ impl LegendWidget {
         // If `config.hidden_items` is not `None`, it is used.
         let hidden_items = config.hidden_items.as_ref().unwrap_or(hidden_items);
 
-        // Collect the legend entries. If multiple items have the same name, they share a
-        // checkbox. If their colors don't match, we pick a neutral color for the checkbox.
+        // Collect the legend entries. If multiple items have the same name, they share
+        // a checkbox. If their colors don't match, we pick a neutral color for
+        // the checkbox.
         let mut keys: BTreeMap<String, usize> = BTreeMap::new();
         let mut entries: BTreeMap<(usize, &str), LegendEntry> = BTreeMap::new();
-        items
-            .iter()
-            .filter(|item| !item.name().is_empty())
-            .for_each(|item| {
-                let next_entry = entries.len();
-                let key = if config.follow_insertion_order {
-                    *keys.entry(item.name().to_owned()).or_insert(next_entry)
-                } else {
-                    // Use the same key if we don't want insertion order
-                    0
-                };
+        items.iter().filter(|item| !item.name().is_empty()).for_each(|item| {
+            let next_entry = entries.len();
+            let key = if config.follow_insertion_order {
+                *keys.entry(item.name().to_owned()).or_insert(next_entry)
+            } else {
+                // Use the same key if we don't want insertion order
+                0
+            };
 
-                entries
-                    .entry((key, item.name()))
-                    .and_modify(|entry| {
-                        if entry.color != item.color() {
-                            match config.color_conflict_handling {
-                                ColorConflictHandling::PickFirst => (),
-                                ColorConflictHandling::PickLast => entry.color = item.color(),
-                                ColorConflictHandling::RemoveColor => {
-                                    // Multiple items with different colors
-                                    entry.color = Color32::TRANSPARENT;
-                                }
+            entries
+                .entry((key, item.name()))
+                .and_modify(|entry| {
+                    if entry.color != item.color() {
+                        match config.color_conflict_handling {
+                            ColorConflictHandling::PickFirst => (),
+                            ColorConflictHandling::PickLast => entry.color = item.color(),
+                            ColorConflictHandling::RemoveColor => {
+                                // Multiple items with different colors
+                                entry.color = Color32::TRANSPARENT;
                             }
                         }
-                    })
-                    .or_insert_with(|| {
-                        let color = item.color();
-                        let checked = !hidden_items.contains(&item.id());
-                        LegendEntry::new(item.id(), item.name().to_owned(), color, checked)
-                    });
-            });
+                    }
+                })
+                .or_insert_with(|| {
+                    let color = item.color();
+                    let checked = !hidden_items.contains(&item.id());
+                    LegendEntry::new(item.id(), item.name().to_owned(), color, checked)
+                });
+        });
         (!entries.is_empty()).then_some(Self {
             rect,
             entries: entries.into_values().collect(),
@@ -298,19 +296,13 @@ impl LegendWidget {
 
     // Get the name of the hovered items.
     pub fn hovered_item(&self) -> Option<Id> {
-        self.entries
-            .iter()
-            .find_map(|entry| entry.hovered.then_some(entry.id))
+        self.entries.iter().find_map(|entry| entry.hovered.then_some(entry.id))
     }
 }
 
 impl Widget for &mut LegendWidget {
     fn ui(self, ui: &mut Ui) -> Response {
-        let LegendWidget {
-            rect,
-            entries,
-            config,
-        } = self;
+        let LegendWidget { rect, entries, config } = self;
 
         let main_dir = match config.position {
             Corner::LeftTop | Corner::RightTop => Direction::TopDown,
@@ -323,8 +315,7 @@ impl Widget for &mut LegendWidget {
         let layout = Layout::from_main_dir_and_cross_align(main_dir, cross_align);
         let legend_pad = 4.0;
         let legend_rect = rect.shrink(legend_pad);
-        let mut legend_ui =
-            ui.new_child(egui::UiBuilder::new().max_rect(legend_rect).layout(layout));
+        let mut legend_ui = ui.new_child(egui::UiBuilder::new().max_rect(legend_rect).layout(layout));
         legend_ui
             .scope(|ui| {
                 let background_frame = Frame {

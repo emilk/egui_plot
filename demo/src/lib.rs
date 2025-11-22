@@ -9,7 +9,8 @@ mod plot_demo;
 
 pub use app::TemplateApp;
 
-/// Create a [`Hyperlink`](egui::Hyperlink) to this egui source code file on github.
+/// Create a [`Hyperlink`](egui::Hyperlink) to this egui source code file on
+/// github.
 #[macro_export]
 macro_rules! egui_github_link_file {
     () => {
@@ -23,7 +24,8 @@ macro_rules! egui_github_link_file {
     };
 }
 
-/// Create a [`Hyperlink`](egui::Hyperlink) to this egui source code file and line on github.
+/// Create a [`Hyperlink`](egui::Hyperlink) to this egui source code file and
+/// line on github.
 #[macro_export]
 macro_rules! egui_github_link_file_line {
     () => {

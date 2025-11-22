@@ -3,7 +3,10 @@
 #![expect(clippy::print_stderr)]
 
 use eframe::egui;
-use egui_plot::{Legend, Line, Plot, PlotPoints};
+use egui_plot::Legend;
+use egui_plot::Line;
+use egui_plot::Plot;
+use egui_plot::PlotPoints;
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).

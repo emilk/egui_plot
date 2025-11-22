@@ -1,10 +1,16 @@
-use std::ops::{Bound, RangeBounds, RangeInclusive};
+use std::ops::Bound;
+use std::ops::RangeBounds;
+use std::ops::RangeInclusive;
 
-use egui::{
-    Pos2, Rect, Shape, Stroke, Vec2,
-    epaint::{ColorMode, PathStroke},
-    lerp, pos2,
-};
+use egui::Pos2;
+use egui::Rect;
+use egui::Shape;
+use egui::Stroke;
+use egui::Vec2;
+use egui::epaint::ColorMode;
+use egui::epaint::PathStroke;
+use egui::lerp;
+use egui::pos2;
 
 use crate::transform::PlotBounds;
 
@@ -14,8 +20,8 @@ use crate::transform::PlotBounds;
 /// large values (e.g. unix time on x axis).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PlotPoint {
-    /// This is often something monotonically increasing, such as time, but doesn't have to be.
-    /// Goes from left to right.
+    /// This is often something monotonically increasing, such as time, but
+    /// doesn't have to be. Goes from left to right.
     pub x: f64,
 
     /// Goes from bottom to top (inverse of everything else in egui!).
@@ -77,18 +83,10 @@ impl LineStyle {
         Self::Dotted { spacing: 5.0 }
     }
 
-    pub(super) fn style_line(
-        &self,
-        line: Vec<Pos2>,
-        mut stroke: PathStroke,
-        highlight: bool,
-        shapes: &mut Vec<Shape>,
-    ) {
+    pub(super) fn style_line(&self, line: Vec<Pos2>, mut stroke: PathStroke, highlight: bool, shapes: &mut Vec<Shape>) {
         let path_stroke_color = match &stroke.color {
             ColorMode::Solid(c) => *c,
-            ColorMode::UV(callback) => {
-                callback(Rect::from_min_max(pos2(0., 0.), pos2(0., 0.)), pos2(0., 0.))
-            }
+            ColorMode::UV(callback) => callback(Rect::from_min_max(pos2(0., 0.), pos2(0., 0.)), pos2(0., 0.)),
         };
         match line.len() {
             0 => {}
@@ -108,18 +106,13 @@ impl LineStyle {
                         shapes.push(Shape::line(line, stroke));
                     }
                     Self::Dotted { spacing } => {
-                        // Take the stroke width for the radius even though it's not "correct", otherwise
-                        // the dots would become too small.
+                        // Take the stroke width for the radius even though it's not "correct",
+                        // otherwise the dots would become too small.
                         let mut radius = stroke.width;
                         if highlight {
                             radius *= 2f32.sqrt();
                         }
-                        shapes.extend(Shape::dotted_line(
-                            &line,
-                            path_stroke_color,
-                            *spacing,
-                            radius,
-                        ));
+                        shapes.extend(Shape::dotted_line(&line, path_stroke_color, *spacing, radius));
                     }
                     Self::Dashed { length } => {
                         if highlight {
@@ -222,7 +215,8 @@ impl<'a> PlotPoints<'a> {
         }
     }
 
-    /// Draw a line based on a function `y=f(x)`, a range (which can be infinite) for x and the number of points.
+    /// Draw a line based on a function `y=f(x)`, a range (which can be
+    /// infinite) for x and the number of points.
     pub fn from_explicit_callback(
         function: impl Fn(f64) -> f64 + 'a,
         x_range: impl RangeBounds<f64>,
@@ -247,8 +241,9 @@ impl<'a> PlotPoints<'a> {
         Self::Generator(generator)
     }
 
-    /// Draw a line based on a function `(x,y)=f(t)`, a range for t and the number of points.
-    /// The range may be specified as start..end or as start..=end.
+    /// Draw a line based on a function `(x,y)=f(t)`, a range for t and the
+    /// number of points. The range may be specified as start..end or as
+    /// start..=end.
     pub fn from_parametric_callback(
         function: impl Fn(f64) -> (f64, f64),
         t_range: impl RangeBounds<f64>,
@@ -280,10 +275,7 @@ impl<'a> PlotPoints<'a> {
     /// From a series of y-values.
     /// The x-values will be the indices of these values
     pub fn from_ys_f32(ys: &[f32]) -> Self {
-        ys.iter()
-            .enumerate()
-            .map(|(i, &y)| [i as f64, y as f64])
-            .collect()
+        ys.iter().enumerate().map(|(i, &y)| [i as f64, y as f64]).collect()
     }
 
     /// From a series of y-values.
@@ -292,7 +284,8 @@ impl<'a> PlotPoints<'a> {
         ys.iter().enumerate().map(|(i, &y)| [i as f64, y]).collect()
     }
 
-    /// Returns true if there are no data points available and there is no function to generate any.
+    /// Returns true if there are no data points available and there is no
+    /// function to generate any.
     pub(crate) fn is_empty(&self) -> bool {
         match self {
             Self::Owned(points) => points.is_empty(),
@@ -301,14 +294,13 @@ impl<'a> PlotPoints<'a> {
         }
     }
 
-    /// If initialized with a generator function, this will generate `n` evenly spaced points in the
-    /// given range.
+    /// If initialized with a generator function, this will generate `n` evenly
+    /// spaced points in the given range.
     pub(super) fn generate_points(&mut self, x_range: RangeInclusive<f64>) {
         if let Self::Generator(generator) = self {
             *self = Self::range_intersection(&x_range, &generator.x_range)
                 .map(|intersection| {
-                    let increment =
-                        (intersection.end() - intersection.start()) / (generator.points - 1) as f64;
+                    let increment = (intersection.end() - intersection.start()) / (generator.points - 1) as f64;
                     (0..generator.points)
                         .map(|i| {
                             let x = intersection.start() + i as f64 * increment;
@@ -322,10 +314,7 @@ impl<'a> PlotPoints<'a> {
     }
 
     /// Returns the intersection of two ranges if they intersect.
-    fn range_intersection(
-        range1: &RangeInclusive<f64>,
-        range2: &RangeInclusive<f64>,
-    ) -> Option<RangeInclusive<f64>> {
+    fn range_intersection(range1: &RangeInclusive<f64>, range2: &RangeInclusive<f64>) -> Option<RangeInclusive<f64>> {
         let start = range1.start().max(*range2.start());
         let end = range1.end().min(*range2.end());
         (start < end).then_some(start..=end)
@@ -393,7 +382,8 @@ impl MarkerShape {
 
 /// Query the points of the plot, for geometric relations like closest checks
 pub enum PlotGeometry<'a> {
-    /// No geometry based on single elements (examples: text, image, horizontal/vertical line)
+    /// No geometry based on single elements (examples: text, image,
+    /// horizontal/vertical line)
     None,
 
     /// Point values (X-Y graphs)
@@ -407,7 +397,8 @@ pub enum PlotGeometry<'a> {
 
 // ----------------------------------------------------------------------------
 
-/// Describes a function y = f(x) with an optional range for x and a number of points.
+/// Describes a function y = f(x) with an optional range for x and a number of
+/// points.
 pub struct ExplicitGenerator<'a> {
     function: Box<dyn Fn(f64) -> f64 + 'a>,
     x_range: RangeInclusive<f64>,
@@ -459,11 +450,13 @@ impl ExplicitGenerator<'_> {
 
 // ----------------------------------------------------------------------------
 
-/// Result of [`super::PlotItem::find_closest()`] search, identifies an element inside the item for immediate use
+/// Result of [`super::PlotItem::find_closest()`] search, identifies an element
+/// inside the item for immediate use
 pub struct ClosestElem {
     /// Position of hovered-over value (or bar/box-plot/…) in `PlotItem`
     pub index: usize,
 
-    /// Squared distance from the mouse cursor (needed to compare against other `PlotItems`, which might be nearer)
+    /// Squared distance from the mouse cursor (needed to compare against other
+    /// `PlotItems`, which might be nearer)
     pub dist_sq: f32,
 }

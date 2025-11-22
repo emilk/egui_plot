@@ -1,15 +1,31 @@
-use crate::builder_methods_for_base;
-use crate::items::add_rulers_and_text;
-use crate::items::rect_elem::{RectElement, highlighted_color};
-use crate::{
-    ClosestElem, Cursor, LabelFormatter, Orientation, PlotBounds, PlotConfig, PlotGeometry,
-    PlotItem, PlotItemBase, PlotTransform, items,
-};
-use crate::{Id, PlotPoint};
-use egui::epaint::RectShape;
-use egui::{Color32, CornerRadius, Shape, Stroke, Ui};
-use emath::{NumExt as _, Pos2};
 use std::ops::RangeInclusive;
+
+use egui::Color32;
+use egui::CornerRadius;
+use egui::Shape;
+use egui::Stroke;
+use egui::Ui;
+use egui::epaint::RectShape;
+use emath::NumExt as _;
+use emath::Pos2;
+
+use super::add_rulers_and_text;
+use super::find_closest_rect;
+use super::rect_elem::RectElement;
+use super::rect_elem::highlighted_color;
+use crate::ClosestElem;
+use crate::Cursor;
+use crate::Id;
+use crate::LabelFormatter;
+use crate::Orientation;
+use crate::PlotBounds;
+use crate::PlotConfig;
+use crate::PlotGeometry;
+use crate::PlotItem;
+use crate::PlotItemBase;
+use crate::PlotPoint;
+use crate::PlotTransform;
+use crate::builder_methods_for_base;
 
 /// A diagram containing a series of [`BoxElem`] elements.
 pub struct BoxPlot {
@@ -23,7 +39,8 @@ pub struct BoxPlot {
 }
 
 impl BoxPlot {
-    /// Create a plot containing multiple `boxes`. It defaults to vertically oriented elements.
+    /// Create a plot containing multiple `boxes`. It defaults to vertically
+    /// oriented elements.
     pub fn new(name: impl Into<String>, boxes: Vec<BoxElem>) -> Self {
         Self {
             base: PlotItemBase::new(name.into()),
@@ -33,18 +50,17 @@ impl BoxPlot {
         }
     }
 
-    /// Set the default color. It is set on all elements that do not already have a specific color.
-    /// This is the color that shows up in the legend.
-    /// It can be overridden at the element level (see [`BoxElem`]).
-    /// Default is `Color32::TRANSPARENT` which means a color will be auto-assigned.
+    /// Set the default color. It is set on all elements that do not already
+    /// have a specific color. This is the color that shows up in the
+    /// legend. It can be overridden at the element level (see [`BoxElem`]).
+    /// Default is `Color32::TRANSPARENT` which means a color will be
+    /// auto-assigned.
     #[inline]
     pub fn color(mut self, color: impl Into<Color32>) -> Self {
         let plot_color = color.into();
         self.default_color = plot_color;
         for box_elem in &mut self.boxes {
-            if box_elem.fill == Color32::TRANSPARENT
-                && box_elem.stroke.color == Color32::TRANSPARENT
-            {
+            if box_elem.fill == Color32::TRANSPARENT && box_elem.stroke.color == Color32::TRANSPARENT {
                 box_elem.fill = plot_color.linear_multiply(0.2);
                 box_elem.stroke.color = plot_color;
             }
@@ -111,7 +127,7 @@ impl PlotItem for BoxPlot {
     }
 
     fn find_closest(&self, point: Pos2, transform: &PlotTransform) -> Option<ClosestElem> {
-        items::find_closest_rect(&self.boxes, point, transform)
+        find_closest_rect(&self.boxes, point, transform)
     }
 
     fn on_hover(
@@ -162,13 +178,7 @@ pub struct BoxSpread {
 }
 
 impl BoxSpread {
-    pub fn new(
-        lower_whisker: f64,
-        quartile1: f64,
-        median: f64,
-        quartile3: f64,
-        upper_whisker: f64,
-    ) -> Self {
+    pub fn new(lower_whisker: f64, quartile1: f64, median: f64, quartile3: f64, upper_whisker: f64) -> Self {
         Self {
             lower_whisker,
             quartile1,
@@ -181,8 +191,9 @@ impl BoxSpread {
 
 /// A box in a [`BoxPlot`] diagram.
 ///
-/// This is a low-level graphical element; it will not compute quartiles and whiskers, letting one
-/// use their preferred formula. Use [`Points`][`super::Points`] to draw the outliers.
+/// This is a low-level graphical element; it will not compute quartiles and
+/// whiskers, letting one use their preferred formula. Use
+/// [`Points`][`super::Points`] to draw the outliers.
 #[derive(Clone, Debug, PartialEq)]
 pub struct BoxElem {
     /// Name of plot element in the diagram (annotated by default formatter).
@@ -211,7 +222,8 @@ pub struct BoxElem {
 }
 
 impl BoxElem {
-    /// Create a box element. Its `orientation` is set by its [`BoxPlot`] parent.
+    /// Create a box element. Its `orientation` is set by its [`BoxPlot`]
+    /// parent.
     ///
     /// Check [`BoxElem`] fields for detailed description.
     pub fn new(argument: f64, spread: BoxSpread) -> Self {
@@ -277,12 +289,7 @@ impl BoxElem {
         self
     }
 
-    pub(in crate::items) fn add_shapes(
-        &self,
-        transform: &PlotTransform,
-        highlighted: bool,
-        shapes: &mut Vec<Shape>,
-    ) {
+    pub(in crate::items) fn add_shapes(&self, transform: &PlotTransform, highlighted: bool, shapes: &mut Vec<Shape>) {
         let (stroke, fill) = if highlighted {
             highlighted_color(self.stroke, self.fill)
         } else {
@@ -304,10 +311,7 @@ impl BoxElem {
 
         let line_between = |v1, v2| {
             Shape::line_segment(
-                [
-                    transform.position_from_point(&v1),
-                    transform.position_from_point(&v2),
-                ],
+                [transform.position_from_point(&v1), transform.position_from_point(&v2)],
                 stroke,
             )
         };
@@ -325,14 +329,8 @@ impl BoxElem {
             shapes.push(high_whisker);
             if self.box_width > 0.0 {
                 let high_whisker_end = line_between(
-                    self.point_at(
-                        self.argument - self.whisker_width / 2.0,
-                        self.spread.upper_whisker,
-                    ),
-                    self.point_at(
-                        self.argument + self.whisker_width / 2.0,
-                        self.spread.upper_whisker,
-                    ),
+                    self.point_at(self.argument - self.whisker_width / 2.0, self.spread.upper_whisker),
+                    self.point_at(self.argument + self.whisker_width / 2.0, self.spread.upper_whisker),
                 );
                 shapes.push(high_whisker_end);
             }
@@ -346,14 +344,8 @@ impl BoxElem {
             shapes.push(low_whisker);
             if self.box_width > 0.0 {
                 let low_whisker_end = line_between(
-                    self.point_at(
-                        self.argument - self.whisker_width / 2.0,
-                        self.spread.lower_whisker,
-                    ),
-                    self.point_at(
-                        self.argument + self.whisker_width / 2.0,
-                        self.spread.lower_whisker,
-                    ),
+                    self.point_at(self.argument - self.whisker_width / 2.0, self.spread.lower_whisker),
+                    self.point_at(self.argument + self.whisker_width / 2.0, self.spread.lower_whisker),
                 );
                 shapes.push(low_whisker_end);
             }
@@ -367,10 +359,7 @@ impl BoxElem {
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
     ) {
-        let text: Option<String> = parent
-            .element_formatter
-            .as_ref()
-            .map(|fmt| fmt(self, parent));
+        let text: Option<String> = parent.element_formatter.as_ref().map(|fmt| fmt(self, parent));
 
         add_rulers_and_text(self, plot, text, shapes, cursors);
     }

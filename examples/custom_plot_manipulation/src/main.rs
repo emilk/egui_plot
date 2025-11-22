@@ -1,17 +1,19 @@
-//! This example shows how to implement custom gestures to pan and zoom in the plot
+//! This example shows how to implement custom gestures to pan and zoom in the
+//! plot
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-use eframe::egui::{self, DragValue, Event, Vec2};
-use egui_plot::{Legend, Line, PlotPoints};
+use eframe::egui;
+use eframe::egui::DragValue;
+use eframe::egui::Event;
+use eframe::egui::Vec2;
+use egui_plot::Legend;
+use egui_plot::Line;
+use egui_plot::PlotPoints;
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
     let options = eframe::NativeOptions::default();
-    eframe::run_native(
-        "Plot",
-        options,
-        Box::new(|_cc| Ok(Box::<PlotExample>::default())),
-    )
+    eframe::run_native("Plot", options, Box::new(|_cc| Ok(Box::<PlotExample>::default())))
 }
 
 struct PlotExample {

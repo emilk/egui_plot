@@ -2,7 +2,11 @@
 #![expect(rustdoc::missing_crate_level_docs)] // it's an example
 
 use eframe::egui;
-use egui_plot::{Legend, Line, Plot, PlotPoint, PlotPoints};
+use egui_plot::Legend;
+use egui_plot::Line;
+use egui_plot::Plot;
+use egui_plot::PlotPoint;
+use egui_plot::PlotPoints;
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
@@ -30,12 +34,9 @@ struct MyApp {
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            Plot::new("My Plot")
-                .legend(Legend::default())
-                .show(ui, |plot_ui| {
-                    plot_ui
-                        .line(Line::new("curve", PlotPoints::Borrowed(&self.points)).name("curve"));
-                });
+            Plot::new("My Plot").legend(Legend::default()).show(ui, |plot_ui| {
+                plot_ui.line(Line::new("curve", PlotPoints::Borrowed(&self.points)).name("curve"));
+            });
         });
     }
 }
