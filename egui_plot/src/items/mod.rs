@@ -24,6 +24,7 @@ pub use values::{
 
 mod bar;
 mod box_elem;
+pub mod heatmap;
 mod rect_elem;
 mod values;
 
