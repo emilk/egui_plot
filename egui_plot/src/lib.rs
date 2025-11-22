@@ -85,6 +85,7 @@ pub use crate::transform::PlotBounds;
 pub use crate::transform::PlotTransform;
 
 type LabelFormatterFn<'a> = dyn Fn(&str, &PlotPoint) -> String + 'a;
+
 /// Optional label formatter function for customizing hover labels.
 pub type LabelFormatter<'a> = Option<Box<LabelFormatterFn<'a>>>;
 
@@ -136,6 +137,7 @@ pub enum Cursor {
         /// Y-coordinate of the horizontal cursor line.
         y: f64,
     },
+
     /// Vertical cursor line at the given x-coordinate.
     Vertical {
         /// X-coordinate of the vertical cursor line.
@@ -528,12 +530,14 @@ impl<'a> Plot<'a> {
     ///     .show(ui, |plot_ui| plot_ui.line(line));
     /// # });
     /// ```
+    #[inline]
     pub fn label_formatter(mut self, label_formatter: impl Fn(&str, &PlotPoint) -> String + 'a) -> Self {
         self.label_formatter = Some(Box::new(label_formatter));
         self
     }
 
     /// Show the pointer coordinates in the plot.
+    #[inline]
     pub fn coordinates_formatter(mut self, position: Corner, formatter: CoordinatesFormatter<'a>) -> Self {
         self.coordinates_formatter = Some((position, formatter));
         self
@@ -819,6 +823,7 @@ impl<'a> Plot<'a> {
     /// Arguments of `fmt`:
     /// * the grid mark to format
     /// * currently shown range on this axis.
+    #[inline]
     pub fn x_axis_formatter(mut self, fmt: impl Fn(GridMark, &RangeInclusive<f64>) -> String + 'a) -> Self {
         if let Some(main) = self.x_axes.first_mut() {
             main.formatter = Arc::new(fmt);
@@ -831,6 +836,7 @@ impl<'a> Plot<'a> {
     /// Arguments of `fmt`:
     /// * the grid mark to format
     /// * currently shown range on this axis.
+    #[inline]
     pub fn y_axis_formatter(mut self, fmt: impl Fn(GridMark, &RangeInclusive<f64>) -> String + 'a) -> Self {
         if let Some(main) = self.y_axes.first_mut() {
             main.formatter = Arc::new(fmt);

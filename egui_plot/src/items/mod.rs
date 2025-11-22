@@ -82,10 +82,13 @@ impl PlotItemBase {
 pub struct PlotConfig<'a> {
     /// Reference to the UI.
     pub ui: &'a Ui,
+
     /// Reference to the plot transform.
     pub transform: &'a PlotTransform,
+
     /// Whether to show the x-axis value.
     pub show_x: bool,
+
     /// Whether to show the y-axis value.
     pub show_y: bool,
 }
