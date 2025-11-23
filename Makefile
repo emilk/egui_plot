@@ -74,10 +74,10 @@ push: dry_push
 build: build_linux build_wasm
 
 build_linux:
-	cargo build --workspace --all-features --lib --tests --bins --target $(TARGET_LINUX) $(CARGO_OPTS) $(BUILD_PROFILE)
+	cargo build --workspace --all-features --lib --tests --bins --examples --target $(TARGET_LINUX) $(CARGO_OPTS) $(BUILD_PROFILE)
 
 build_wasm:
-	cargo build -p egui_plot -p demo --all-features --lib --tests --bins --target $(TARGET_WASM) $(CARGO_OPTS) $(BUILD_PROFILE)
+	cargo build -p egui_plot -p demo --all-features --lib --tests --bins --examples --target $(TARGET_WASM) $(CARGO_OPTS) $(BUILD_PROFILE)
 
 # Builds the frontend using trunk.
 trunk:
@@ -121,9 +121,9 @@ run_checks: check_no_commented_out_code \
 # Performs a compilation check of all crates in the workspace, without building.
 check_cargo: check_cargo_linux check_cargo_wasm
 check_cargo_linux:
-	cargo check --workspace --all-features --tests --target $(TARGET_LINUX) -j $(THREADS) $(BUILD_PROFILE)
+	cargo check --workspace --all-features --tests --examples --target $(TARGET_LINUX) -j $(THREADS) $(BUILD_PROFILE)
 check_cargo_wasm:
-	cargo check -p egui_plot -p demo --tests --target $(TARGET_WASM) -j $(THREADS) $(BUILD_PROFILE)
+	cargo check -p egui_plot -p demo --tests --examples --target $(TARGET_WASM) -j $(THREADS) $(BUILD_PROFILE)
 check_fmt:
 	cargo fmt --all -- --check
 # Checks that all files have a newline at the end.
@@ -133,9 +133,9 @@ check_newlines:
 # Runs clippy on all crates in the workspace.
 check_clippy: check_clippy_linux check_clippy_wasm
 check_clippy_linux:
-	cargo clippy --workspace --no-deps --target $(TARGET_LINUX) -j $(THREADS) $(BUILD_PROFILE) -- -D warnings
+	cargo clippy --workspace --no-deps --examples --target $(TARGET_LINUX) -j $(THREADS) $(BUILD_PROFILE) -- -D warnings
 check_clippy_wasm:
-	cargo clippy -p demo -p egui_plot --no-deps --target $(TARGET_WASM) -j $(THREADS) $(BUILD_PROFILE) -- -D warnings
+	cargo clippy -p demo -p egui_plot --no-deps --examples --target $(TARGET_WASM) -j $(THREADS) $(BUILD_PROFILE) -- -D warnings
 check_clippy_docs: check_clippy_docs_linux check_clippy_docs_wasm
 check_clippy_docs_linux:
 	cargo clippy --workspace --no-deps --message-format=short --target $(TARGET_LINUX) -j $(THREADS) $(BUILD_PROFILE) -- -D missing-docs 2>&1 | grep -P 'mod.rs|lib.rs' | grep -vP 'crate|module' && exit 1 || exit 0
