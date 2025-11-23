@@ -897,7 +897,7 @@ impl<'a> Plot<'a> {
         self.show_dyn(ui, Box::new(build_fn))
     }
 
-    #[expect(clippy::too_many_lines)] // TODO(emilk): shorten this function
+    #[expect(clippy::too_many_lines)] // TODO #166: shorten this function
     fn show_dyn<'b, R>(self, ui: &mut Ui, build_fn: Box<dyn FnOnce(&mut PlotUi<'b>) -> R + 'a>) -> PlotResponse<R> {
         let Self {
             id_source,
@@ -986,7 +986,7 @@ impl<'a> Plot<'a> {
         let plot_id = id.unwrap_or_else(|| ui.make_persistent_id(id_source));
 
         let ([x_axis_widgets, y_axis_widgets], plot_rect) = axis_widgets(
-            PlotMemory::load(ui.ctx(), plot_id).as_ref(), // TODO(emilk): avoid loading plot memory twice
+            PlotMemory::load(ui.ctx(), plot_id).as_ref(), // TODO #164: avoid loading plot memory twice
             show_axes,
             complete_rect,
             [&x_axes, &y_axes],
