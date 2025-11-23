@@ -362,7 +362,7 @@ impl<'a> AxisWidget<'a> {
 
                         match HPlacement::from(self.hints.placement) {
                             HPlacement::Left => {
-                                let angle = 0.0; // TODO(emilk): allow users to rotate text
+                                let angle = 0.0; // TODO #162: allow users to rotate text
 
                                 if angle == 0.0 {
                                     let x = self.rect.max.x - galley_size.x + SIDE_MARGIN;

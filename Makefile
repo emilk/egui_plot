@@ -59,8 +59,8 @@ dry_push: check_branch_name \
 		check_clippy_docs \
 		check_cargo \
 		build \
-		test \
 		run_checks \
+		test \
 		check_git_clean_status
 	echo "All checks passed, ready to push."
 
