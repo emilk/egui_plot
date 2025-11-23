@@ -1,7 +1,7 @@
 # Configuration variables
 THREADS ?= $(shell nproc)
 BROWSER ?= firefox
-TRUNK_OPTS ?= 
+TRUNK_OPTS ?=
 CARGO_OPTS ?= --verbose -j $(THREADS)
 
 export RUST_LOG ?= debug
@@ -15,7 +15,7 @@ TARGET_LINUX ?= x86_64-unknown-linux-gnu
 TARGET_WASM ?= wasm32-unknown-unknown
 
 # By default, build in debug mode. Use BUILD_PROFILE=--release to build in release mode.
-BUILD_PROFILE ?= 
+BUILD_PROFILE ?=
 
 # Versions of tools / languages / frameworks.
 RUST_NIGHTLY_VERSION ?= +nightly-2025-07-04
@@ -24,6 +24,7 @@ CARGO_TOOLS = \
 	cargo-nextest@0.9.99 \
 	cargo-cycles@0.1.0 \
 	cargo-chef@0.1.72 \
+	cargo-public-api@0.50.1 \
 	trunk@0.21.14 \
 	wasm-pack@0.13.1
 
@@ -50,16 +51,16 @@ help:
 	@echo "  CARGO_OPTS      Extra options to pass to cargo (default: $(CARGO_OPTS))."
 
 
-# Run all pre-push checks. 
+# Run all pre-push checks.
 dry_push: check_branch_name \
         fmt \
-		run_checks \
 		docs \
 		check_clippy \
 		check_clippy_docs \
 		check_cargo \
 		build \
 		test \
+		run_checks \
 		check_git_clean_status
 	echo "All checks passed, ready to push."
 
@@ -103,7 +104,7 @@ fmt:
 	cargo $(RUST_NIGHTLY_VERSION) fmt --all
 
 # Builds the documentation for all crates in the workspace.
-docs: 
+docs:
 	cargo doc --workspace --no-deps $(CARGO_OPTS)
 
 # ------------------------------- checks ---------------------------------------
@@ -113,7 +114,9 @@ run_checks: check_no_commented_out_code \
 			check_newlines \
 			check_fmt \
 			check_license \
-			check_cycles
+			check_cycles \
+			checks_no_unfinished \
+			check_pub_change_intentional
 
 # Performs a compilation check of all crates in the workspace, without building.
 check_cargo: check_cargo_linux check_cargo_wasm
@@ -147,6 +150,18 @@ check_license:
 check_cycles:
 	cargo-cycles --verbose
 
+check_pub_change_intentional:
+	if [ "$$(cargo public-api diff latest -p egui_plot -sss --deny all)" != "" ]; then \
+		echo "--------------------------------"; \
+		echo "Public API changes detected, please confirm this is intentional by typing 'y'"; \
+		echo "--------------------------------"; \
+		cargo public-api diff latest -p egui_plot -sss; \
+		read -p "Continue? (y/n): " confirm; \
+		if [ "$$confirm" != "y" ]; then \
+			echo "Aborting..."; \
+			exit 1; \
+		fi; \
+	fi
 
 # Checks for unfinished work.
 checks_no_unfinished: check_todos_have_issues check_no_fixme check_no_unimplemented
