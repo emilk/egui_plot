@@ -37,8 +37,8 @@ impl Text {
     /// change the name dynamically between frames without losing the item's state. You should
     /// make sure the name passed to [`Self::new`] is unique and stable for each item, or
     /// set unique and stable ids explicitly via [`Self::id`].
-    #[inline]
     #[expect(clippy::needless_pass_by_value)]
+    #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
         self.base_mut().name = name.to_string();
         self
