@@ -1,7 +1,8 @@
 use demo::TemplateApp;
 use egui::ThemePreference;
 use egui::accesskit::Role;
-use egui_kittest::kittest::{NodeT as _, Queryable as _};
+use egui_kittest::kittest::NodeT as _;
+use egui_kittest::kittest::Queryable as _;
 
 #[test]
 fn test_demos() {

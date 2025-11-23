@@ -1,8 +1,12 @@
 use std::collections::BTreeMap;
 
-use egui::{Context, Id, Pos2, Vec2b};
+use egui::Context;
+use egui::Id;
+use egui::Pos2;
+use egui::Vec2b;
 
-use crate::{PlotBounds, PlotTransform};
+use crate::PlotBounds;
+use crate::PlotTransform;
 
 /// Information about the plot that has to persist between frames.
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]

@@ -1,8 +1,21 @@
-use crate::{Id, PlotBounds, PlotGeometry, PlotItem, PlotItemBase, PlotPoint, PlotTransform};
-use egui::epaint::TextShape;
-use egui::{Color32, Shape, Stroke, TextStyle, Ui, WidgetText};
-use emath::Align2;
 use std::ops::RangeInclusive;
+
+use egui::Color32;
+use egui::Shape;
+use egui::Stroke;
+use egui::TextStyle;
+use egui::Ui;
+use egui::WidgetText;
+use egui::epaint::TextShape;
+use emath::Align2;
+
+use crate::Id;
+use crate::PlotBounds;
+use crate::PlotGeometry;
+use crate::PlotItem;
+use crate::PlotItemBase;
+use crate::PlotPoint;
+use crate::PlotTransform;
 
 impl Text {
     pub fn new(name: impl Into<String>, position: PlotPoint, text: impl Into<WidgetText>) -> Self {
@@ -33,10 +46,11 @@ impl Text {
     ///
     /// This name will show up in the plot legend, if legends are turned on.
     ///
-    /// Setting the name via this method does not change the item's id, so you can use it to
-    /// change the name dynamically between frames without losing the item's state. You should
-    /// make sure the name passed to [`Self::new`] is unique and stable for each item, or
-    /// set unique and stable ids explicitly via [`Self::id`].
+    /// Setting the name via this method does not change the item's id, so you
+    /// can use it to change the name dynamically between frames without
+    /// losing the item's state. You should make sure the name passed to
+    /// [`Self::new`] is unique and stable for each item, or set unique and
+    /// stable ids explicitly via [`Self::id`].
     #[expect(clippy::needless_pass_by_value)]
     #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
@@ -62,8 +76,8 @@ impl Text {
 
     /// Sets the id of this plot item.
     ///
-    /// By default the id is determined from the name passed to [`Self::new`], but it can be
-    /// explicitly set to a different value.
+    /// By default the id is determined from the name passed to [`Self::new`],
+    /// but it can be explicitly set to a different value.
     #[inline]
     pub fn id(mut self, id: impl Into<Id>) -> Self {
         self.base_mut().id = id.into();
@@ -79,12 +93,10 @@ impl PlotItem for Text {
             self.color
         };
 
-        let galley = self.text.clone().into_galley(
-            ui,
-            Some(egui::TextWrapMode::Extend),
-            f32::INFINITY,
-            TextStyle::Small,
-        );
+        let galley =
+            self.text
+                .clone()
+                .into_galley(ui, Some(egui::TextWrapMode::Extend), f32::INFINITY, TextStyle::Small);
 
         let pos = transform.position_from_point(&self.position);
         let rect = self.anchor.anchor_size(pos, galley.size());

@@ -1,9 +1,24 @@
-use crate::Id;
-
-use crate::{PlotBounds, PlotGeometry, PlotItem, PlotItemBase, PlotPoint, PlotTransform};
-use egui::{Color32, CornerRadius, ImageOptions, Shape, Stroke, TextureId, Ui};
-use emath::{Rect, Rot2, Vec2, pos2};
 use std::ops::RangeInclusive;
+
+use egui::Color32;
+use egui::CornerRadius;
+use egui::ImageOptions;
+use egui::Shape;
+use egui::Stroke;
+use egui::TextureId;
+use egui::Ui;
+use emath::Rect;
+use emath::Rot2;
+use emath::Vec2;
+use emath::pos2;
+
+use crate::Id;
+use crate::PlotBounds;
+use crate::PlotGeometry;
+use crate::PlotItem;
+use crate::PlotItemBase;
+use crate::PlotPoint;
+use crate::PlotTransform;
 
 /// An image in the plot.
 #[derive(Clone)]
@@ -59,7 +74,8 @@ impl PlotImage {
         self
     }
 
-    /// Rotate the image counter-clockwise around its center by an angle in radians.
+    /// Rotate the image counter-clockwise around its center by an angle in
+    /// radians.
     #[inline]
     pub fn rotate(mut self, angle: f64) -> Self {
         self.rotation = angle;
@@ -70,10 +86,11 @@ impl PlotImage {
     ///
     /// This name will show up in the plot legend, if legends are turned on.
     ///
-    /// Setting the name via this method does not change the item's id, so you can use it to
-    /// change the name dynamically between frames without losing the item's state. You should
-    /// make sure the name passed to [`Self::new`] is unique and stable for each item, or
-    /// set unique and stable ids explicitly via [`Self::id`].
+    /// Setting the name via this method does not change the item's id, so you
+    /// can use it to change the name dynamically between frames without
+    /// losing the item's state. You should make sure the name passed to
+    /// [`Self::new`] is unique and stable for each item, or set unique and
+    /// stable ids explicitly via [`Self::id`].
     #[expect(clippy::needless_pass_by_value)]
     #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
@@ -99,8 +116,8 @@ impl PlotImage {
 
     /// Sets the id of this plot item.
     ///
-    /// By default the id is determined from the name passed to [`Self::new`], but it can be
-    /// explicitly set to a different value.
+    /// By default the id is determined from the name passed to [`Self::new`],
+    /// but it can be explicitly set to a different value.
     #[inline]
     pub fn id(mut self, id: impl Into<Id>) -> Self {
         self.base_mut().id = id.into();
@@ -122,14 +139,8 @@ impl PlotItem for PlotImage {
             ..
         } = self;
         let image_screen_rect = {
-            let left_top = PlotPoint::new(
-                position.x - 0.5 * size.x as f64,
-                position.y - 0.5 * size.y as f64,
-            );
-            let right_bottom = PlotPoint::new(
-                position.x + 0.5 * size.x as f64,
-                position.y + 0.5 * size.y as f64,
-            );
+            let left_top = PlotPoint::new(position.x - 0.5 * size.x as f64, position.y - 0.5 * size.y as f64);
+            let right_bottom = PlotPoint::new(position.x + 0.5 * size.x as f64, position.y + 0.5 * size.y as f64);
             let left_top_screen = transform.position_from_point(&left_top);
             let right_bottom_screen = transform.position_from_point(&right_bottom);
             Rect::from_two_pos(left_top_screen, right_bottom_screen)

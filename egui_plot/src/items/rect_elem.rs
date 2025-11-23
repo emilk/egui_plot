@@ -1,11 +1,15 @@
 use egui::emath::NumExt as _;
-use egui::epaint::{Color32, Rgba, Stroke};
+use egui::epaint::Color32;
+use egui::epaint::Rgba;
+use egui::epaint::Stroke;
 
-use crate::transform::{PlotBounds, PlotTransform};
+use super::Orientation;
+use super::PlotPoint;
+use crate::transform::PlotBounds;
+use crate::transform::PlotTransform;
 
-use super::{Orientation, PlotPoint};
-
-/// Trait that abstracts from rectangular 'Value'-like elements, such as bars or boxes
+/// Trait that abstracts from rectangular 'Value'-like elements, such as bars or
+/// boxes
 pub(super) trait RectElement {
     fn name(&self) -> &str;
 
@@ -32,7 +36,8 @@ pub(super) trait RectElement {
     /// The diagram's orientation (vertical/horizontal)
     fn orientation(&self) -> Orientation;
 
-    /// Get X/Y-value for (argument, value) pair, taking into account orientation
+    /// Get X/Y-value for (argument, value) pair, taking into account
+    /// orientation
     fn point_at(&self, argument: f64, value: f64) -> PlotPoint {
         match self.orientation() {
             Orientation::Horizontal => PlotPoint::new(value, argument),
@@ -42,14 +47,14 @@ pub(super) trait RectElement {
 
     /// Right top of the rectangle (position of text)
     fn corner_value(&self) -> PlotPoint {
-        //self.point_at(self.position + self.width / 2.0, value)
         PlotPoint {
             x: self.bounds_max().x,
             y: self.bounds_max().y,
         }
     }
 
-    /// Debug formatting for hovered-over value, if none is specified by the user
+    /// Debug formatting for hovered-over value, if none is specified by the
+    /// user
     fn default_values_format(&self, transform: &PlotTransform) -> String;
 }
 
