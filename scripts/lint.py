@@ -67,7 +67,7 @@ def lint_lines(filepath, lines_in):
                 lines_out.append("#[inline]")
 
 
-        if re.search(r"TODO[^(]", line):
+        if re.search(r"TODO[^ \#]", line):
             errors.append(
                 f"{filepath}:{line_nr}: write 'TODO(username):' instead"
             )

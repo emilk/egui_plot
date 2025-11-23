@@ -15,33 +15,78 @@ mod memory;
 mod plot_ui;
 mod transform;
 
-use std::{cmp::Ordering, ops::RangeInclusive, sync::Arc};
+use std::cmp::Ordering;
+use std::ops::RangeInclusive;
+use std::sync::Arc;
 
 use ahash::HashMap;
-use egui::{
-    Align2, Color32, CursorIcon, Id, Layout, NumExt as _, PointerButton, Pos2, Rangef, Rect,
-    Response, Sense, Shape, Stroke, TextStyle, Ui, Vec2, Vec2b, WidgetText, epaint, remap_clamp,
-    vec2,
-};
-
-pub use crate::{
-    axis::{Axis, AxisHints, HPlacement, Placement, VPlacement},
-    items::{
-        Arrows, Bar, BarChart, BoxElem, BoxPlot, BoxSpread, ClosestElem, HLine, Line, LineStyle,
-        MarkerShape, Orientation, PlotConfig, PlotGeometry, PlotImage, PlotItem, PlotItemBase,
-        PlotPoint, PlotPoints, Points, Polygon, Text, VLine,
-    },
-    legend::{ColorConflictHandling, Corner, Legend},
-    memory::PlotMemory,
-    plot_ui::PlotUi,
-    transform::{PlotBounds, PlotTransform},
-};
-
 use axis::AxisWidget;
-use items::{horizontal_line, rulers_color, vertical_line};
+use egui::Align2;
+use egui::Color32;
+use egui::CursorIcon;
+use egui::Id;
+use egui::Layout;
+use egui::NumExt as _;
+use egui::PointerButton;
+use egui::Pos2;
+use egui::Rangef;
+use egui::Rect;
+use egui::Response;
+use egui::Sense;
+use egui::Shape;
+use egui::Stroke;
+use egui::TextStyle;
+use egui::Ui;
+use egui::Vec2;
+use egui::Vec2b;
+use egui::WidgetText;
+use egui::epaint;
+use egui::remap_clamp;
+use egui::vec2;
+use items::horizontal_line;
+use items::rulers_color;
+use items::vertical_line;
 use legend::LegendWidget;
 
+pub use crate::axis::Axis;
+pub use crate::axis::AxisHints;
+pub use crate::axis::HPlacement;
+pub use crate::axis::Placement;
+pub use crate::axis::VPlacement;
+pub use crate::items::Arrows;
+pub use crate::items::Bar;
+pub use crate::items::BarChart;
+pub use crate::items::BoxElem;
+pub use crate::items::BoxPlot;
+pub use crate::items::BoxSpread;
+pub use crate::items::ClosestElem;
+pub use crate::items::HLine;
+pub use crate::items::Line;
+pub use crate::items::LineStyle;
+pub use crate::items::MarkerShape;
+pub use crate::items::Orientation;
+pub use crate::items::PlotConfig;
+pub use crate::items::PlotGeometry;
+pub use crate::items::PlotImage;
+pub use crate::items::PlotItem;
+pub use crate::items::PlotItemBase;
+pub use crate::items::PlotPoint;
+pub use crate::items::PlotPoints;
+pub use crate::items::Points;
+pub use crate::items::Polygon;
+pub use crate::items::Text;
+pub use crate::items::VLine;
+pub use crate::legend::ColorConflictHandling;
+pub use crate::legend::Corner;
+pub use crate::legend::Legend;
+pub use crate::memory::PlotMemory;
+pub use crate::plot_ui::PlotUi;
+pub use crate::transform::PlotBounds;
+pub use crate::transform::PlotTransform;
+
 type LabelFormatterFn<'a> = dyn Fn(&str, &PlotPoint) -> String + 'a;
+
+/// Optional label formatter function for customizing hover labels.
 pub type LabelFormatter<'a> = Option<Box<LabelFormatterFn<'a>>>;
 
 type GridSpacerFn<'a> = dyn Fn(GridInput) -> Vec<GridMark> + 'a;
@@ -49,13 +94,15 @@ type GridSpacer<'a> = Box<GridSpacerFn<'a>>;
 
 type CoordinatesFormatterFn<'a> = dyn Fn(&PlotPoint, &PlotBounds) -> String + 'a;
 
-/// Specifies the coordinates formatting when passed to [`Plot::coordinates_formatter`].
+/// Specifies the coordinates formatting when passed to
+/// [`Plot::coordinates_formatter`].
 pub struct CoordinatesFormatter<'a> {
     function: Box<CoordinatesFormatterFn<'a>>,
 }
 
 impl<'a> CoordinatesFormatter<'a> {
-    /// Create a new formatter based on the pointer coordinate and the plot bounds.
+    /// Create a new formatter based on the pointer coordinate and the plot
+    /// bounds.
     pub fn new(function: impl Fn(&PlotPoint, &PlotBounds) -> String + 'a) -> Self {
         Self {
             function: Box::new(function),
@@ -65,9 +112,7 @@ impl<'a> CoordinatesFormatter<'a> {
     /// Show a fixed number of decimal places.
     pub fn with_decimals(num_decimals: usize) -> Self {
         Self {
-            function: Box::new(move |value, _| {
-                format!("x: {:.d$}\ny: {:.d$}", value.x, value.y, d = num_decimals)
-            }),
+            function: Box::new(move |value, _| format!("x: {:.d$}\ny: {:.d$}", value.x, value.y, d = num_decimals)),
         }
     }
 
@@ -87,8 +132,17 @@ impl Default for CoordinatesFormatter<'_> {
 /// Indicates a vertical or horizontal cursor line in plot coordinates.
 #[derive(Copy, Clone, PartialEq)]
 pub enum Cursor {
-    Horizontal { y: f64 },
-    Vertical { x: f64 },
+    /// Horizontal cursor line at the given y-coordinate.
+    Horizontal {
+        /// Y-coordinate of the horizontal cursor line.
+        y: f64,
+    },
+
+    /// Vertical cursor line at the given x-coordinate.
+    Vertical {
+        /// X-coordinate of the vertical cursor line.
+        x: f64,
+    },
 }
 
 /// Contains the cursors drawn for a plot widget in a single frame.
@@ -126,8 +180,8 @@ pub struct PlotResponse<R> {
     /// The id of a currently hovered item if any.
     ///
     /// This is `None` if either no item was hovered.
-    /// A plot item can be hovered either by hovering its representation in the plot (line, marker, etc.)
-    /// or by hovering the item in the legend.
+    /// A plot item can be hovered either by hovering its representation in the
+    /// plot (line, marker, etc.) or by hovering the item in the legend.
     pub hovered_plot_item: Option<Id>,
 }
 
@@ -139,14 +193,20 @@ pub struct PlotResponse<R> {
 ///
 /// ```
 /// # egui::__run_test_ui(|ui| {
-/// use egui_plot::{Line, Plot, PlotPoints};
+/// use egui_plot::Line;
+/// use egui_plot::Plot;
+/// use egui_plot::PlotPoints;
 ///
-/// let sin: PlotPoints = (0..1000).map(|i| {
-///     let x = i as f64 * 0.01;
-///     [x, x.sin()]
-/// }).collect();
+/// let sin: PlotPoints = (0..1000)
+///     .map(|i| {
+///         let x = i as f64 * 0.01;
+///         [x, x.sin()]
+///     })
+///     .collect();
 /// let line = Line::new("sin", sin);
-/// Plot::new("my_plot").view_aspect(2.0).show(ui, |plot_ui| plot_ui.line(line));
+/// Plot::new("my_plot")
+///     .view_aspect(2.0)
+///     .show(ui, |plot_ui| plot_ui.line(line));
 /// # });
 /// ```
 pub struct Plot<'a> {
@@ -261,8 +321,8 @@ impl<'a> Plot<'a> {
     }
 
     /// width / height ratio of the data.
-    /// For instance, it can be useful to set this to `1.0` for when the two axes show the same
-    /// unit.
+    /// For instance, it can be useful to set this to `1.0` for when the two
+    /// axes show the same unit.
     /// By default the plot window's aspect ratio is used.
     #[inline]
     pub fn data_aspect(mut self, data_aspect: f32) -> Self {
@@ -271,7 +331,8 @@ impl<'a> Plot<'a> {
     }
 
     /// width / height ratio of the plot region.
-    /// By default no fixed aspect ratio is set (and width/height will fill the ui it is in).
+    /// By default no fixed aspect ratio is set (and width/height will fill the
+    /// ui it is in).
     #[inline]
     pub fn view_aspect(mut self, view_aspect: f32) -> Self {
         self.view_aspect = Some(view_aspect);
@@ -279,7 +340,8 @@ impl<'a> Plot<'a> {
     }
 
     /// Set whether to invert the x-axis (i.e. positive values go to the left).
-    /// By default the x-axis is not inverted (i.e. positive values go to the right).
+    /// By default the x-axis is not inverted (i.e. positive values go to the
+    /// right).
     #[inline]
     pub fn invert_x(mut self, invert: bool) -> Self {
         self.invert_x = invert;
@@ -295,7 +357,8 @@ impl<'a> Plot<'a> {
     }
 
     /// Width of plot. By default a plot will fill the ui it is in.
-    /// If you set [`Self::view_aspect`], the width can be calculated from the height.
+    /// If you set [`Self::view_aspect`], the width can be calculated from the
+    /// height.
     #[inline]
     pub fn width(mut self, width: f32) -> Self {
         self.min_size.x = width;
@@ -304,7 +367,8 @@ impl<'a> Plot<'a> {
     }
 
     /// Height of plot. By default a plot will fill the ui it is in.
-    /// If you set [`Self::view_aspect`], the height can be calculated from the width.
+    /// If you set [`Self::view_aspect`], the height can be calculated from the
+    /// width.
     #[inline]
     pub fn height(mut self, height: f32) -> Self {
         self.min_size.y = height;
@@ -349,7 +413,8 @@ impl<'a> Plot<'a> {
 
     /// Whether to allow zooming in the plot. Default: `true`.
     ///
-    /// Note: Allowing zoom in one axis but not the other may lead to unexpected results if used in combination with `data_aspect`.
+    /// Note: Allowing zoom in one axis but not the other may lead to unexpected
+    /// results if used in combination with `data_aspect`.
     #[inline]
     pub fn allow_zoom<T>(mut self, on: T) -> Self
     where
@@ -377,7 +442,8 @@ impl<'a> Plot<'a> {
         self
     }
 
-    /// Set the side margin as a fraction of the plot size. Only used for auto bounds.
+    /// Set the side margin as a fraction of the plot size. Only used for auto
+    /// bounds.
     ///
     /// For instance, a value of `0.1` will add 10% space on both sides.
     #[inline]
@@ -386,7 +452,8 @@ impl<'a> Plot<'a> {
         self
     }
 
-    /// Whether to allow zooming in the plot by dragging out a box with the secondary mouse button.
+    /// Whether to allow zooming in the plot by dragging out a box with the
+    /// secondary mouse button.
     ///
     /// Default: `true`.
     ///
@@ -397,21 +464,24 @@ impl<'a> Plot<'a> {
         self
     }
 
-    /// Config the button pointer to use for drag-to-pan. Default: [`Secondary`](PointerButton::Primary)
+    /// Config the button pointer to use for drag-to-pan. Default:
+    /// [`Secondary`](PointerButton::Primary)
     #[inline]
     pub fn pan_pointer_button(mut self, pan_pointer_button: PointerButton) -> Self {
         self.pan_pointer_button = pan_pointer_button;
         self
     }
 
-    /// Config the button pointer to use for boxed zooming. Default: [`Secondary`](PointerButton::Secondary)
+    /// Config the button pointer to use for boxed zooming. Default:
+    /// [`Secondary`](PointerButton::Secondary)
     #[inline]
     pub fn boxed_zoom_pointer_button(mut self, boxed_zoom_pointer_button: PointerButton) -> Self {
         self.boxed_zoom_pointer_button = boxed_zoom_pointer_button;
         self
     }
 
-    /// Whether to allow dragging in the plot to move the bounds. Default: `true`.
+    /// Whether to allow dragging in the plot to move the bounds. Default:
+    /// `true`.
     ///
     /// The button to use is specified by [`Self::pan_pointer_button`].
     #[inline]
@@ -423,7 +493,8 @@ impl<'a> Plot<'a> {
         self
     }
 
-    /// Whether to allow dragging in the axis areas to zoom the plot. Default: `true`.
+    /// Whether to allow dragging in the axis areas to zoom the plot. Default:
+    /// `true`.
     #[inline]
     pub fn allow_axis_zoom_drag<T>(mut self, on: T) -> Self
     where
@@ -437,78 +508,99 @@ impl<'a> Plot<'a> {
     ///
     /// ```
     /// # egui::__run_test_ui(|ui| {
-    /// use egui_plot::{Line, Plot, PlotPoints};
-    /// let sin: PlotPoints = (0..1000).map(|i| {
-    ///     let x = i as f64 * 0.01;
-    ///     [x, x.sin()]
-    /// }).collect();
+    /// use egui_plot::Line;
+    /// use egui_plot::Plot;
+    /// use egui_plot::PlotPoints;
+    /// let sin: PlotPoints = (0..1000)
+    ///     .map(|i| {
+    ///         let x = i as f64 * 0.01;
+    ///         [x, x.sin()]
+    ///     })
+    ///     .collect();
     /// let line = Line::new("sin", sin);
-    /// Plot::new("my_plot").view_aspect(2.0)
-    /// .label_formatter(|name, value| {
-    ///     if !name.is_empty() {
-    ///         format!("{}: {:.*}%", name, 1, value.y)
-    ///     } else {
-    ///         "".to_owned()
-    ///     }
-    /// })
-    /// .show(ui, |plot_ui| plot_ui.line(line));
+    /// Plot::new("my_plot")
+    ///     .view_aspect(2.0)
+    ///     .label_formatter(|name, value| {
+    ///         if !name.is_empty() {
+    ///             format!("{}: {:.*}%", name, 1, value.y)
+    ///         } else {
+    ///             "".to_owned()
+    ///         }
+    ///     })
+    ///     .show(ui, |plot_ui| plot_ui.line(line));
     /// # });
     /// ```
-    pub fn label_formatter(
-        mut self,
-        label_formatter: impl Fn(&str, &PlotPoint) -> String + 'a,
-    ) -> Self {
+    #[inline]
+    pub fn label_formatter(mut self, label_formatter: impl Fn(&str, &PlotPoint) -> String + 'a) -> Self {
         self.label_formatter = Some(Box::new(label_formatter));
         self
     }
 
     /// Show the pointer coordinates in the plot.
-    pub fn coordinates_formatter(
-        mut self,
-        position: Corner,
-        formatter: CoordinatesFormatter<'a>,
-    ) -> Self {
+    #[inline]
+    pub fn coordinates_formatter(mut self, position: Corner, formatter: CoordinatesFormatter<'a>) -> Self {
         self.coordinates_formatter = Some((position, formatter));
         self
     }
 
-    /// Configure how the grid in the background is spaced apart along the X axis.
+    /// Configure how the grid in the background is spaced apart along the X
+    /// axis.
     ///
-    /// Default is a log-10 grid, i.e. every plot unit is divided into 10 other units.
+    /// Default is a log-10 grid, i.e. every plot unit is divided into 10 other
+    /// units.
     ///
     /// The function has this signature:
     /// ```ignore
     /// fn step_sizes(input: GridInput) -> Vec<GridMark>;
     /// ```
     ///
-    /// This function should return all marks along the visible range of the X axis.
-    /// `step_size` also determines how thick/faint each line is drawn.
-    /// For example, if x = 80..=230 is visible and you want big marks at steps of
-    /// 100 and small ones at 25, you can return:
+    /// This function should return all marks along the visible range of the X
+    /// axis. `step_size` also determines how thick/faint each line is
+    /// drawn. For example, if x = 80..=230 is visible and you want big
+    /// marks at steps of 100 and small ones at 25, you can return:
     /// ```no_run
     /// # use egui_plot::GridMark;
     /// vec![
-    ///    // 100s
-    ///    GridMark { value: 100.0, step_size: 100.0 },
-    ///    GridMark { value: 200.0, step_size: 100.0 },
-    ///
-    ///    // 25s
-    ///    GridMark { value: 125.0, step_size: 25.0 },
-    ///    GridMark { value: 150.0, step_size: 25.0 },
-    ///    GridMark { value: 175.0, step_size: 25.0 },
-    ///    GridMark { value: 225.0, step_size: 25.0 },
+    ///     // 100s
+    ///     GridMark {
+    ///         value: 100.0,
+    ///         step_size: 100.0,
+    ///     },
+    ///     GridMark {
+    ///         value: 200.0,
+    ///         step_size: 100.0,
+    ///     },
+    ///     // 25s
+    ///     GridMark {
+    ///         value: 125.0,
+    ///         step_size: 25.0,
+    ///     },
+    ///     GridMark {
+    ///         value: 150.0,
+    ///         step_size: 25.0,
+    ///     },
+    ///     GridMark {
+    ///         value: 175.0,
+    ///         step_size: 25.0,
+    ///     },
+    ///     GridMark {
+    ///         value: 225.0,
+    ///         step_size: 25.0,
+    ///     },
     /// ];
     /// # ()
     /// ```
     ///
-    /// There are helpers for common cases, see [`log_grid_spacer`] and [`uniform_grid_spacer`].
+    /// There are helpers for common cases, see [`log_grid_spacer`] and
+    /// [`uniform_grid_spacer`].
     #[inline]
     pub fn x_grid_spacer(mut self, spacer: impl Fn(GridInput) -> Vec<GridMark> + 'a) -> Self {
         self.grid_spacers[0] = Box::new(spacer);
         self
     }
 
-    /// Default is a log-10 grid, i.e. every plot unit is divided into 10 other units.
+    /// Default is a log-10 grid, i.e. every plot unit is divided into 10 other
+    /// units.
     ///
     /// See [`Self::x_grid_spacer`] for explanation.
     #[inline]
@@ -520,15 +612,16 @@ impl<'a> Plot<'a> {
     /// Set when the grid starts showing.
     ///
     /// When grid lines are closer than the given minimum, they will be hidden.
-    /// When they get further apart they will fade in, until the reaches the given maximum,
-    /// at which point they are fully opaque.
+    /// When they get further apart they will fade in, until the reaches the
+    /// given maximum, at which point they are fully opaque.
     #[inline]
     pub fn grid_spacing(mut self, grid_spacing: impl Into<Rangef>) -> Self {
         self.grid_spacing = grid_spacing.into();
         self
     }
 
-    /// Clamp the grid to only be visible at the range of data where we have values.
+    /// Clamp the grid to only be visible at the range of data where we have
+    /// values.
     ///
     /// Default: `false`.
     #[inline]
@@ -552,10 +645,7 @@ impl<'a> Plot<'a> {
     /// Panics in debug builds if `min >= max`.
     #[inline]
     pub fn default_x_bounds(mut self, min: f64, max: f64) -> Self {
-        debug_assert!(
-            min < max,
-            "`min` must be less than `max` in `default_x_bounds`"
-        );
+        debug_assert!(min < max, "`min` must be less than `max` in `default_x_bounds`");
         self.default_auto_bounds.x = false;
         self.min_auto_bounds.min[0] = min;
         self.min_auto_bounds.max[0] = max;
@@ -568,10 +658,7 @@ impl<'a> Plot<'a> {
     /// Panics in debug builds if `min >= max`.
     #[inline]
     pub fn default_y_bounds(mut self, min: f64, max: f64) -> Self {
-        debug_assert!(
-            min < max,
-            "`min` must be less than `max` in `default_y_bounds`"
-        );
+        debug_assert!(min < max, "`min` must be less than `max` in `default_y_bounds`");
         self.default_auto_bounds.y = false;
         self.min_auto_bounds.min[1] = min;
         self.min_auto_bounds.max[1] = max;
@@ -594,7 +681,8 @@ impl<'a> Plot<'a> {
         self
     }
 
-    /// Set whether the bounds should be automatically set based on data by default.
+    /// Set whether the bounds should be automatically set based on data by
+    /// default.
     ///
     /// This is enabled by default.
     #[inline]
@@ -603,7 +691,8 @@ impl<'a> Plot<'a> {
         self
     }
 
-    /// Expand bounds to fit all items across the x axis, including values given by `include_x`.
+    /// Expand bounds to fit all items across the x axis, including values given
+    /// by `include_x`.
     #[deprecated = "Use `auto_bounds` instead"]
     #[inline]
     pub fn auto_bounds_x(mut self) -> Self {
@@ -611,7 +700,8 @@ impl<'a> Plot<'a> {
         self
     }
 
-    /// Expand bounds to fit all items across the y axis, including values given by `include_y`.
+    /// Expand bounds to fit all items across the y axis, including values given
+    /// by `include_y`.
     #[deprecated = "Use `auto_bounds` instead"]
     #[inline]
     pub fn auto_bounds_y(mut self) -> Self {
@@ -654,24 +744,27 @@ impl<'a> Plot<'a> {
         self
     }
 
-    /// Add this plot to an axis link group so that this plot will share the bounds with other plots in the
-    /// same group. A plot cannot belong to more than one axis group.
+    /// Add this plot to an axis link group so that this plot will share the
+    /// bounds with other plots in the same group. A plot cannot belong to
+    /// more than one axis group.
     #[inline]
     pub fn link_axis(mut self, group_id: impl Into<Id>, link: impl Into<Vec2b>) -> Self {
         self.linked_axes = Some((group_id.into(), link.into()));
         self
     }
 
-    /// Add this plot to a cursor link group so that this plot will share the cursor position with other plots
-    /// in the same group. A plot cannot belong to more than one cursor group.
+    /// Add this plot to a cursor link group so that this plot will share the
+    /// cursor position with other plots in the same group. A plot cannot
+    /// belong to more than one cursor group.
     #[inline]
     pub fn link_cursor(mut self, group_id: impl Into<Id>, link: impl Into<Vec2b>) -> Self {
         self.linked_cursors = Some((group_id.into(), link.into()));
         self
     }
 
-    /// Round grid positions to full pixels to avoid aliasing. Improves plot appearance but might have an
-    /// undesired effect when shifting the plot bounds. Enabled by default.
+    /// Round grid positions to full pixels to avoid aliasing. Improves plot
+    /// appearance but might have an undesired effect when shifting the plot
+    /// bounds. Enabled by default.
     #[inline]
     #[deprecated = "This no longer has any effect and is always enabled."]
     pub fn sharp_grid_lines(self, _enabled: bool) -> Self {
@@ -730,10 +823,8 @@ impl<'a> Plot<'a> {
     /// Arguments of `fmt`:
     /// * the grid mark to format
     /// * currently shown range on this axis.
-    pub fn x_axis_formatter(
-        mut self,
-        fmt: impl Fn(GridMark, &RangeInclusive<f64>) -> String + 'a,
-    ) -> Self {
+    #[inline]
+    pub fn x_axis_formatter(mut self, fmt: impl Fn(GridMark, &RangeInclusive<f64>) -> String + 'a) -> Self {
         if let Some(main) = self.x_axes.first_mut() {
             main.formatter = Arc::new(fmt);
         }
@@ -745,10 +836,8 @@ impl<'a> Plot<'a> {
     /// Arguments of `fmt`:
     /// * the grid mark to format
     /// * currently shown range on this axis.
-    pub fn y_axis_formatter(
-        mut self,
-        fmt: impl Fn(GridMark, &RangeInclusive<f64>) -> String + 'a,
-    ) -> Self {
+    #[inline]
+    pub fn y_axis_formatter(mut self, fmt: impl Fn(GridMark, &RangeInclusive<f64>) -> String + 'a) -> Self {
         if let Some(main) = self.y_axes.first_mut() {
             main.formatter = Arc::new(fmt);
         }
@@ -757,7 +846,8 @@ impl<'a> Plot<'a> {
 
     /// Set the minimum width of the main y-axis, in ui points.
     ///
-    /// The width will automatically expand if any tickmark text is wider than this.
+    /// The width will automatically expand if any tickmark text is wider than
+    /// this.
     #[inline]
     pub fn y_axis_min_width(mut self, min_width: f32) -> Self {
         if let Some(main) = self.y_axes.first_mut() {
@@ -775,7 +865,8 @@ impl<'a> Plot<'a> {
 
     /// Set custom configuration for X-axis
     ///
-    /// More than one axis may be specified. The first specified axis is considered the main axis.
+    /// More than one axis may be specified. The first specified axis is
+    /// considered the main axis.
     #[inline]
     pub fn custom_x_axes(mut self, hints: Vec<AxisHints<'a>>) -> Self {
         self.x_axes = hints;
@@ -784,7 +875,8 @@ impl<'a> Plot<'a> {
 
     /// Set custom configuration for left Y-axis
     ///
-    /// More than one axis may be specified. The first specified axis is considered the main axis.
+    /// More than one axis may be specified. The first specified axis is
+    /// considered the main axis.
     #[inline]
     pub fn custom_y_axes(mut self, hints: Vec<AxisHints<'a>>) -> Self {
         self.y_axes = hints;
@@ -801,20 +893,12 @@ impl<'a> Plot<'a> {
     }
 
     /// Interact with and add items to the plot and finally draw it.
-    pub fn show<'b, R>(
-        self,
-        ui: &mut Ui,
-        build_fn: impl FnOnce(&mut PlotUi<'b>) -> R + 'a,
-    ) -> PlotResponse<R> {
+    pub fn show<'b, R>(self, ui: &mut Ui, build_fn: impl FnOnce(&mut PlotUi<'b>) -> R + 'a) -> PlotResponse<R> {
         self.show_dyn(ui, Box::new(build_fn))
     }
 
-    #[expect(clippy::too_many_lines)] // TODO(emilk): shorten this function
-    fn show_dyn<'b, R>(
-        self,
-        ui: &mut Ui,
-        build_fn: Box<dyn FnOnce(&mut PlotUi<'b>) -> R + 'a>,
-    ) -> PlotResponse<R> {
+    #[expect(clippy::too_many_lines)] // TODO #166: shorten this function
+    fn show_dyn<'b, R>(self, ui: &mut Ui, build_fn: Box<dyn FnOnce(&mut PlotUi<'b>) -> R + 'a>) -> PlotResponse<R> {
         let Self {
             id_source,
             id,
@@ -902,7 +986,7 @@ impl<'a> Plot<'a> {
         let plot_id = id.unwrap_or_else(|| ui.make_persistent_id(id_source));
 
         let ([x_axis_widgets, y_axis_widgets], plot_rect) = axis_widgets(
-            PlotMemory::load(ui.ctx(), plot_id).as_ref(), // TODO(emilk): avoid loading plot memory twice
+            PlotMemory::load(ui.ctx(), plot_id).as_ref(), // TODO #164: avoid loading plot memory twice
             show_axes,
             complete_rect,
             [&x_axes, &y_axes],
@@ -988,20 +1072,18 @@ impl<'a> Plot<'a> {
 
         // Background
         if show_background {
-            ui.painter()
-                .with_clip_rect(plot_rect)
-                .add(epaint::RectShape::new(
-                    plot_rect,
-                    2,
-                    ui.visuals().extreme_bg_color,
-                    ui.visuals().widgets.noninteractive.bg_stroke,
-                    egui::StrokeKind::Inside,
-                ));
+            ui.painter().with_clip_rect(plot_rect).add(epaint::RectShape::new(
+                plot_rect,
+                2,
+                ui.visuals().extreme_bg_color,
+                ui.visuals().widgets.noninteractive.bg_stroke,
+                egui::StrokeKind::Inside,
+            ));
         }
 
         // --- Legend ---
-        let legend = legend_config
-            .and_then(|config| LegendWidget::try_new(plot_rect, config, &items, &mem.hidden_items));
+        let legend =
+            legend_config.and_then(|config| LegendWidget::try_new(plot_rect, config, &items, &mem.hidden_items));
         // Don't show hover cursor when hovering over legend.
         if mem.hovered_legend_item.is_some() {
             show_x = false;
@@ -1035,16 +1117,15 @@ impl<'a> Plot<'a> {
                     .find(|(_, frame)| frame.id == plot_id)
                     .map(|(i, _)| i);
 
-                // Remove our previous frame and all older frames as these are no longer displayed. This avoids
-                // unbounded growth, as we add an entry each time we draw a plot.
+                // Remove our previous frame and all older frames as these are no longer
+                // displayed. This avoids unbounded growth, as we add an entry
+                // each time we draw a plot.
                 index.map(|index| cursors.drain(0..=index));
 
-                // Gather all cursors of the remaining frames. This will be all the cursors of the
-                // other plots in the group. We want to draw these in the current plot too.
-                cursors
-                    .iter()
-                    .flat_map(|frame| frame.cursors.iter().copied())
-                    .collect()
+                // Gather all cursors of the remaining frames. This will be all the cursors of
+                // the other plots in the group. We want to draw these in the
+                // current plot too.
+                cursors.iter().flat_map(|frame| frame.cursors.iter().copied()).collect()
             })
         } else {
             Vec::new()
@@ -1133,26 +1214,19 @@ impl<'a> Plot<'a> {
             }
         }
 
-        mem.transform = PlotTransform::new_with_invert_axis(
-            plot_rect,
-            bounds,
-            center_axis,
-            Vec2b::new(invert_x, invert_y),
-        );
+        mem.transform =
+            PlotTransform::new_with_invert_axis(plot_rect, bounds, center_axis, Vec2b::new(invert_x, invert_y));
 
         // Enforce aspect ratio
         if let Some(data_aspect) = data_aspect {
             if let Some((_, linked_axes)) = &linked_axes {
                 let change_x = linked_axes.y && !linked_axes.x;
-                mem.transform.set_aspect_by_changing_axis(
-                    data_aspect as f64,
-                    if change_x { Axis::X } else { Axis::Y },
-                );
+                mem.transform
+                    .set_aspect_by_changing_axis(data_aspect as f64, if change_x { Axis::X } else { Axis::Y });
             } else if default_auto_bounds.any() {
                 mem.transform.set_aspect_by_expanding(data_aspect as f64);
             } else {
-                mem.transform
-                    .set_aspect_by_changing_axis(data_aspect as f64, Axis::Y);
+                mem.transform.set_aspect_by_changing_axis(data_aspect as f64, Axis::Y);
             }
         }
 
@@ -1166,21 +1240,16 @@ impl<'a> Plot<'a> {
             if !allow_drag.y {
                 delta.y = 0.0;
             }
-            mem.transform
-                .translate_bounds((delta.x as f64, delta.y as f64));
+            mem.transform.translate_bounds((delta.x as f64, delta.y as f64));
             mem.auto_bounds = mem.auto_bounds.and(!allow_drag);
         }
 
         // Drag axes to zoom:
         for d in 0..2 {
             if allow_axis_zoom_drag[d] {
-                if let Some(axis_response) = (if d == 0 {
-                    &x_axis_responses
-                } else {
-                    &y_axis_responses
-                })
-                .iter()
-                .find(|r| r.dragged_by(PointerButton::Primary))
+                if let Some(axis_response) = (if d == 0 { &x_axis_responses } else { &y_axis_responses })
+                    .iter()
+                    .find(|r| r.dragged_by(PointerButton::Primary))
                 {
                     if let Some(drag_start_pos) = ui.input(|i| i.pointer.press_origin()) {
                         let delta = axis_response.drag_delta();
@@ -1212,7 +1281,8 @@ impl<'a> Plot<'a> {
         if allow_boxed_zoom {
             // Save last click to allow boxed zooming
             if response.drag_started() && response.dragged_by(boxed_zoom_pointer_button) {
-                // it would be best for egui that input has a memory of the last click pos because it's a common pattern
+                // it would be best for egui that input has a memory of the last click pos
+                // because it's a common pattern
                 mem.last_click_pos_for_zoom = response.hover_pos();
             }
             let box_start_pos = mem.last_click_pos_for_zoom;
@@ -1242,14 +1312,8 @@ impl<'a> Plot<'a> {
                     let box_start_pos = mem.transform.value_from_position(box_start_pos);
                     let box_end_pos = mem.transform.value_from_position(box_end_pos);
                     let new_bounds = PlotBounds {
-                        min: [
-                            box_start_pos.x.min(box_end_pos.x),
-                            box_start_pos.y.min(box_end_pos.y),
-                        ],
-                        max: [
-                            box_start_pos.x.max(box_end_pos.x),
-                            box_start_pos.y.max(box_end_pos.y),
-                        ],
+                        min: [box_start_pos.x.min(box_end_pos.x), box_start_pos.y.min(box_end_pos.y)],
+                        max: [box_start_pos.x.max(box_end_pos.x), box_start_pos.y.max(box_end_pos.y)],
                     };
                     if new_bounds.is_valid() {
                         mem.transform.set_bounds(new_bounds);
@@ -1261,13 +1325,11 @@ impl<'a> Plot<'a> {
             }
         }
 
-        // Note: we catch zoom/pan if the response contains the pointer, even if it isn't hovered.
-        // For instance: The user is painting another interactive widget on top of the plot
-        // but they still want to be able to pan/zoom the plot.
-        if let (true, Some(hover_pos)) = (
-            response.contains_pointer(),
-            ui.input(|i| i.pointer.hover_pos()),
-        ) {
+        // Note: we catch zoom/pan if the response contains the pointer, even if it
+        // isn't hovered. For instance: The user is painting another interactive
+        // widget on top of the plot but they still want to be able to pan/zoom
+        // the plot.
+        if let (true, Some(hover_pos)) = (response.contains_pointer(), ui.input(|i| i.pointer.hover_pos())) {
             if allow_zoom.any() {
                 let mut zoom_factor = if data_aspect.is_some() {
                     Vec2::splat(ui.input(|i| i.zoom_delta()))
@@ -1362,12 +1424,8 @@ impl<'a> Plot<'a> {
         let (plot_cursors, mut hovered_plot_item) = prepared.ui(ui, &response);
 
         if let Some(boxed_zoom_rect) = boxed_zoom_rect {
-            ui.painter()
-                .with_clip_rect(plot_rect)
-                .add(boxed_zoom_rect.0);
-            ui.painter()
-                .with_clip_rect(plot_rect)
-                .add(boxed_zoom_rect.1);
+            ui.painter().with_clip_rect(plot_rect).add(boxed_zoom_rect.0);
+            ui.painter().with_clip_rect(plot_rect).add(boxed_zoom_rect.1);
         }
 
         if let Some(mut legend) = legend {
@@ -1453,7 +1511,7 @@ fn axis_widgets<'a>(
     //      |      X-axis 0      |   |
     //      +--------------------+   | bottom
     //      |      X-axis 1      |   |
-    //  +   +--------------------+---+
+    //  + +--------------------+---+
     //
     let show_axes = show_axes.into();
 
@@ -1470,7 +1528,8 @@ fn axis_widgets<'a>(
         for (i, cfg) in x_axes.iter().enumerate().rev() {
             let mut height = cfg.min_thickness;
             if let Some(mem) = mem {
-                // If the labels took up too much space the previous frame, give them more space now:
+                // If the labels took up too much space the previous frame, give them more space
+                // now:
                 height = height.max(mem.x_axis_thickness.get(&i).copied().unwrap_or_default());
             }
 
@@ -1498,7 +1557,8 @@ fn axis_widgets<'a>(
         for (i, cfg) in y_axes.iter().enumerate().rev() {
             let mut width = cfg.min_thickness;
             if let Some(mem) = mem {
-                // If the labels took up too much space the previous frame, give them more space now:
+                // If the labels took up too much space the previous frame, give them more space
+                // now:
                 width = width.max(mem.y_axis_thickness.get(&i).copied().unwrap_or_default());
             }
 
@@ -1520,9 +1580,10 @@ fn axis_widgets<'a>(
         }
     }
 
-    // The loops iterated through {x,y}_axes in reverse order, so we have to reverse the
-    // {x,y}_axis_widgets vec as well. Otherwise, the indices are messed up and the plot memory
-    // (mem.{x,y}_axis_thickness) will access the wrong axis given an index.
+    // The loops iterated through {x,y}_axes in reverse order, so we have to reverse
+    // the {x,y}_axis_widgets vec as well. Otherwise, the indices are messed up
+    // and the plot memory (mem.{x,y}_axis_thickness) will access the wrong axis
+    // given an index.
     x_axis_widgets.reverse();
     y_axis_widgets.reverse();
 
@@ -1544,8 +1605,9 @@ fn axis_widgets<'a>(
     ([x_axis_widgets, y_axis_widgets], plot_rect)
 }
 
-/// User-requested modifications to the plot bounds. We collect them in the plot build function to later apply
-/// them at the right time, as other modifications need to happen first.
+/// User-requested modifications to the plot bounds. We collect them in the plot
+/// build function to later apply them at the right time, as other modifications
+/// need to happen first.
 enum BoundsModification {
     SetX(RangeInclusive<f64>),
     SetY(RangeInclusive<f64>),
@@ -1561,14 +1623,16 @@ enum BoundsModification {
 ///
 /// See [`Plot::x_grid_spacer()`] and [`Plot::y_grid_spacer()`].
 pub struct GridInput {
-    /// Min/max of the visible data range (the values at the two edges of the plot,
-    /// for the current axis).
+    /// Min/max of the visible data range (the values at the two edges of the
+    /// plot, for the current axis).
     pub bounds: (f64, f64),
 
-    /// Recommended (but not required) lower-bound on the step size returned by custom grid spacers.
+    /// Recommended (but not required) lower-bound on the step size returned by
+    /// custom grid spacers.
     ///
-    /// Computed as the ratio between the diagram's bounds (in plot coordinates) and the viewport
-    /// (in frame/window coordinates), scaled up to represent the minimal possible step.
+    /// Computed as the ratio between the diagram's bounds (in plot coordinates)
+    /// and the viewport (in frame/window coordinates), scaled up to
+    /// represent the minimal possible step.
     ///
     /// Always positive.
     pub base_step_size: f64,
@@ -1582,17 +1646,18 @@ pub struct GridMark {
 
     /// The (approximate) distance to the next value of same thickness.
     ///
-    /// Determines how thick the grid line is painted. It's not important that `step_size`
-    /// matches the difference between two `value`s precisely, but rather that grid marks of
-    /// same thickness have same `step_size`. For example, months can have a different number
-    /// of days, but consistently using a `step_size` of 30 days is a valid approximation.
+    /// Determines how thick the grid line is painted. It's not important that
+    /// `step_size` matches the difference between two `value`s precisely,
+    /// but rather that grid marks of same thickness have same `step_size`.
+    /// For example, months can have a different number of days, but
+    /// consistently using a `step_size` of 30 days is a valid approximation.
     pub step_size: f64,
 }
 
 /// Recursively splits the grid into `base` subdivisions (e.g. 100, 10, 1).
 ///
-/// The logarithmic base, expressing how many times each grid unit is subdivided.
-/// 10 is a typical value, others are possible though.
+/// The logarithmic base, expressing how many times each grid unit is
+/// subdivided. 10 is a typical value, others are possible though.
 pub fn log_grid_spacer(log_base: i64) -> GridSpacer<'static> {
     let log_base = log_base as f64;
     let step_sizes = move |input: GridInput| -> Vec<GridMark> {
@@ -1619,11 +1684,13 @@ pub fn log_grid_spacer(log_base: i64) -> GridSpacer<'static> {
 
 /// Splits the grid into uniform-sized spacings (e.g. 100, 25, 1).
 ///
-/// This function should return 3 positive step sizes, designating where the lines in the grid are drawn.
-/// Lines are thicker for larger step sizes. Ordering of returned value is irrelevant.
+/// This function should return 3 positive step sizes, designating where the
+/// lines in the grid are drawn. Lines are thicker for larger step sizes.
+/// Ordering of returned value is irrelevant.
 ///
-/// Why only 3 step sizes? Three is the number of different line thicknesses that egui typically uses in the grid.
-/// Ideally, those 3 are not hardcoded values, but depend on the visible range (accessible through `GridInput`).
+/// Why only 3 step sizes? Three is the number of different line thicknesses
+/// that egui typically uses in the grid. Ideally, those 3 are not hardcoded
+/// values, but depend on the visible range (accessible through `GridInput`).
 pub fn uniform_grid_spacer<'a>(spacer: impl Fn(GridInput) -> [f64; 3] + 'a) -> GridSpacer<'a> {
     let get_marks = move |input: GridInput| -> Vec<GridMark> {
         let bounds = input.bounds;
@@ -1668,7 +1735,8 @@ impl PreparedPlot<'_> {
             self.paint_grid(ui, &mut axes_shapes, Axis::Y, self.grid_spacing);
         }
 
-        // Sort the axes by strength so that those with higher strength are drawn in front.
+        // Sort the axes by strength so that those with higher strength are drawn in
+        // front.
         axes_shapes.sort_by(|(_, strength1), (_, strength2)| strength1.total_cmp(strength2));
 
         let mut shapes = axes_shapes.into_iter().map(|(shape, _)| shape).collect();
@@ -1863,15 +1931,12 @@ impl PreparedPlot<'_> {
 
         let interact_radius_sq = ui.style().interaction.interact_radius.powi(2);
 
-        let candidates = items
-            .iter()
-            .filter(|entry| entry.allow_hover())
-            .filter_map(|item| {
-                let item = &**item;
-                let closest = item.find_closest(pointer, transform);
+        let candidates = items.iter().filter(|entry| entry.allow_hover()).filter_map(|item| {
+            let item = &**item;
+            let closest = item.find_closest(pointer, transform);
 
-                Some(item).zip(closest)
-            });
+            Some(item).zip(closest)
+        });
 
         // Since many items can have same distance,
         // and dist_sq can be zero for some items (e.g. rectangle)
@@ -1890,25 +1955,11 @@ impl PreparedPlot<'_> {
         let mut cursors = Vec::new();
 
         let hovered_plot_item_id = if let Some((item, elem)) = topmost {
-            item.on_hover(
-                plot_area_response,
-                elem,
-                shapes,
-                &mut cursors,
-                &plot,
-                label_formatter,
-            );
+            item.on_hover(plot_area_response, elem, shapes, &mut cursors, &plot, label_formatter);
             Some(item.id())
         } else {
             let value = transform.value_from_position(pointer);
-            items::rulers_and_tooltip_at_value(
-                plot_area_response,
-                value,
-                "",
-                &plot,
-                &mut cursors,
-                label_formatter,
-            );
+            items::rulers_and_tooltip_at_value(plot_area_response, value, "", &plot, &mut cursors, label_formatter);
             None
         };
 
@@ -1938,9 +1989,10 @@ fn generate_marks(step_sizes: [f64; 3], bounds: (f64, f64)) -> Vec<GridMark> {
 
     // Remove duplicates:
     // This can happen because we have overlapping steps, e.g.:
-    // step_size[0] =   10  =>  [-10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120]
-    // step_size[1] =  100  =>  [     0,                                     100          ]
-    // step_size[2] = 1000  =>  [     0                                                   ]
+    // step_size[0] =   10  =>  [-10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
+    // 110, 120] step_size[1] =  100  =>  [     0,
+    // 100          ] step_size[2] = 1000  =>  [     0
+    // ]
 
     steps.sort_by(|a, b| cmp_f64(a.value, b.value));
 
@@ -2034,15 +2086,16 @@ fn fill_marks_between(out: &mut Vec<GridMark>, step_size: f64, (min, max): (f64,
     out.extend(marks_iter);
 }
 
-/// Helper for formatting a number so that we always show at least a few decimals,
-/// unless it is an integer, in which case we never show any decimals.
+/// Helper for formatting a number so that we always show at least a few
+/// decimals, unless it is an integer, in which case we never show any decimals.
 pub fn format_number(number: f64, num_decimals: usize) -> String {
     let is_integral = number as i64 as f64 == number;
     if is_integral {
         // perfect integer - show it as such:
         format!("{number:.0}")
     } else {
-        // make sure we tell the user it is not an integer by always showing a decimal or two:
+        // make sure we tell the user it is not an integer by always showing a decimal
+        // or two:
         format!("{:.*}", num_decimals.at_least(1), number)
     }
 }

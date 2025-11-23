@@ -1,14 +1,31 @@
-use crate::PlotPoint;
-use crate::items::add_rulers_and_text;
-use crate::items::rect_elem::{RectElement, highlighted_color};
-use crate::{
-    ClosestElem, Cursor, Id, LabelFormatter, Orientation, PlotBounds, PlotConfig, PlotGeometry,
-    PlotItem, PlotItemBase, PlotTransform, items,
-};
-use egui::epaint::RectShape;
-use egui::{Color32, CornerRadius, Shape, Stroke, Ui};
-use emath::{Float as _, NumExt as _, Pos2};
 use std::ops::RangeInclusive;
+
+use egui::Color32;
+use egui::CornerRadius;
+use egui::Shape;
+use egui::Stroke;
+use egui::Ui;
+use egui::epaint::RectShape;
+use emath::Float as _;
+use emath::NumExt as _;
+use emath::Pos2;
+
+use super::add_rulers_and_text;
+use super::find_closest_rect;
+use super::rect_elem::RectElement;
+use super::rect_elem::highlighted_color;
+use crate::ClosestElem;
+use crate::Cursor;
+use crate::Id;
+use crate::LabelFormatter;
+use crate::Orientation;
+use crate::PlotBounds;
+use crate::PlotConfig;
+use crate::PlotGeometry;
+use crate::PlotItem;
+use crate::PlotItemBase;
+use crate::PlotPoint;
+use crate::PlotTransform;
 
 /// A bar chart.
 pub struct BarChart {
@@ -32,10 +49,11 @@ impl BarChart {
         }
     }
 
-    /// Set the default color. It is set on all elements that do not already have a specific color.
-    /// This is the color that shows up in the legend.
-    /// It can be overridden at the bar level (see [[`Bar`]]).
-    /// Default is `Color32::TRANSPARENT` which means a color will be auto-assigned.
+    /// Set the default color. It is set on all elements that do not already
+    /// have a specific color. This is the color that shows up in the
+    /// legend. It can be overridden at the bar level (see [[`Bar`]]).
+    /// Default is `Color32::TRANSPARENT` which means a color will be
+    /// auto-assigned.
     #[inline]
     pub fn color(mut self, color: impl Into<Color32>) -> Self {
         let plot_color = color.into();
@@ -115,10 +133,11 @@ impl BarChart {
     ///
     /// This name will show up in the plot legend, if legends are turned on.
     ///
-    /// Setting the name via this method does not change the item's id, so you can use it to
-    /// change the name dynamically between frames without losing the item's state. You should
-    /// make sure the name passed to [`Self::new`] is unique and stable for each item, or
-    /// set unique and stable ids explicitly via [`Self::id`].
+    /// Setting the name via this method does not change the item's id, so you
+    /// can use it to change the name dynamically between frames without
+    /// losing the item's state. You should make sure the name passed to
+    /// [`Self::new`] is unique and stable for each item, or set unique and
+    /// stable ids explicitly via [`Self::id`].
     #[expect(clippy::needless_pass_by_value)]
     #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
@@ -144,8 +163,8 @@ impl BarChart {
 
     /// Sets the id of this plot item.
     ///
-    /// By default the id is determined from the name passed to [`Self::new`], but it can be
-    /// explicitly set to a different value.
+    /// By default the id is determined from the name passed to [`Self::new`],
+    /// but it can be explicitly set to a different value.
     #[inline]
     pub fn id(mut self, id: impl Into<Id>) -> Self {
         self.base_mut().id = id.into();
@@ -181,7 +200,7 @@ impl PlotItem for BarChart {
     }
 
     fn find_closest(&self, point: Pos2, transform: &PlotTransform) -> Option<ClosestElem> {
-        items::find_closest_rect(&self.bars, point, transform)
+        find_closest_rect(&self.bars, point, transform)
     }
 
     fn on_hover(
@@ -208,8 +227,8 @@ impl PlotItem for BarChart {
     }
 }
 
-/// One bar in a [`BarChart`]. Potentially floating, allowing stacked bar charts.
-/// Width can be changed to allow variable-width histograms.
+/// One bar in a [`BarChart`]. Potentially floating, allowing stacked bar
+/// charts. Width can be changed to allow variable-width histograms.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Bar {
     /// Name of plot element in the diagram (annotated by default formatter)
@@ -240,7 +259,8 @@ pub struct Bar {
 impl Bar {
     /// Create a bar. Its `orientation` is set by its [`BarChart`] parent.
     ///
-    /// - `argument`: Position on the argument axis (X if vertical, Y if horizontal).
+    /// - `argument`: Position on the argument axis (X if vertical, Y if
+    ///   horizontal).
     /// - `value`: Height of the bar (if vertical).
     ///
     /// By default the bar is vertical and its base is at zero.
@@ -325,12 +345,7 @@ impl Bar {
         }
     }
 
-    pub(in crate::items) fn add_shapes(
-        &self,
-        transform: &PlotTransform,
-        highlighted: bool,
-        shapes: &mut Vec<Shape>,
-    ) {
+    pub(in crate::items) fn add_shapes(&self, transform: &PlotTransform, highlighted: bool, shapes: &mut Vec<Shape>) {
         let (stroke, fill) = if highlighted {
             highlighted_color(self.stroke, self.fill)
         } else {
@@ -356,10 +371,7 @@ impl Bar {
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
     ) {
-        let text: Option<String> = parent
-            .element_formatter
-            .as_ref()
-            .map(|fmt| fmt(self, parent));
+        let text: Option<String> = parent.element_formatter.as_ref().map(|fmt| fmt(self, parent));
 
         add_rulers_and_text(self, plot, text, shapes, cursors);
     }
