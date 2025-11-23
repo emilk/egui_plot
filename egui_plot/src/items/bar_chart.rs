@@ -11,8 +11,6 @@ use emath::NumExt as _;
 use emath::Pos2;
 
 use super::add_rulers_and_text;
- use crate::PlotPoint;
-use super::add_rulers_and_text;
 use super::find_closest_rect;
 use super::rect_elem::RectElement;
 use super::rect_elem::highlighted_color;
@@ -28,16 +26,6 @@ use crate::PlotItem;
 use crate::PlotItemBase;
 use crate::PlotPoint;
 use crate::PlotTransform;
-use crate::builder_methods_for_base;
-use super::rect_elem::{RectElement, highlighted_color};
-use crate::{
-    ClosestElem, Cursor, Id, LabelFormatter, Orientation, PlotBounds, PlotConfig, PlotGeometry,
-    PlotItem, PlotItemBase, PlotTransform,
-};
-use egui::epaint::RectShape;
-use egui::{Color32, CornerRadius, Shape, Stroke, Ui};
-use emath::{Float as _, NumExt as _, Pos2};
-use std::ops::RangeInclusive;
 
 /// A bar chart.
 pub struct BarChart {
@@ -145,10 +133,11 @@ impl BarChart {
     ///
     /// This name will show up in the plot legend, if legends are turned on.
     ///
-    /// Setting the name via this method does not change the item's id, so you can use it to
-    /// change the name dynamically between frames without losing the item's state. You should
-    /// make sure the name passed to [`Self::new`] is unique and stable for each item, or
-    /// set unique and stable ids explicitly via [`Self::id`].
+    /// Setting the name via this method does not change the item's id, so you
+    /// can use it to change the name dynamically between frames without
+    /// losing the item's state. You should make sure the name passed to
+    /// [`Self::new`] is unique and stable for each item, or set unique and
+    /// stable ids explicitly via [`Self::id`].
     #[expect(clippy::needless_pass_by_value)]
     #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
@@ -174,8 +163,8 @@ impl BarChart {
 
     /// Sets the id of this plot item.
     ///
-    /// By default the id is determined from the name passed to [`Self::new`], but it can be
-    /// explicitly set to a different value.
+    /// By default the id is determined from the name passed to [`Self::new`],
+    /// but it can be explicitly set to a different value.
     #[inline]
     pub fn id(mut self, id: impl Into<Id>) -> Self {
         self.base_mut().id = id.into();

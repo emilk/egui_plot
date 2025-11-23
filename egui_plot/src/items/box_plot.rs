@@ -25,7 +25,6 @@ use crate::PlotItem;
 use crate::PlotItemBase;
 use crate::PlotPoint;
 use crate::PlotTransform;
-use crate::builder_methods_for_base;
 
 /// A diagram containing a series of [`BoxElem`] elements.
 pub struct BoxPlot {
@@ -100,10 +99,11 @@ impl BoxPlot {
     ///
     /// This name will show up in the plot legend, if legends are turned on.
     ///
-    /// Setting the name via this method does not change the item's id, so you can use it to
-    /// change the name dynamically between frames without losing the item's state. You should
-    /// make sure the name passed to [`Self::new`] is unique and stable for each item, or
-    /// set unique and stable ids explicitly via [`Self::id`].
+    /// Setting the name via this method does not change the item's id, so you
+    /// can use it to change the name dynamically between frames without
+    /// losing the item's state. You should make sure the name passed to
+    /// [`Self::new`] is unique and stable for each item, or set unique and
+    /// stable ids explicitly via [`Self::id`].
     #[expect(clippy::needless_pass_by_value)]
     #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
@@ -129,8 +129,8 @@ impl BoxPlot {
 
     /// Sets the id of this plot item.
     ///
-    /// By default the id is determined from the name passed to [`Self::new`], but it can be
-    /// explicitly set to a different value.
+    /// By default the id is determined from the name passed to [`Self::new`],
+    /// but it can be explicitly set to a different value.
     #[inline]
     pub fn id(mut self, id: impl Into<Id>) -> Self {
         self.base_mut().id = id.into();
