@@ -20,11 +20,9 @@ use std::cmp::Ordering;
 use std::ops::RangeInclusive;
 
 use ahash::HashMap;
-use axis::AxisWidget;
 use egui::Color32;
 use egui::Id;
 use egui::NumExt as _;
-use egui::Rect;
 use egui::Response;
 use egui::Ui;
 use egui::Vec2;
@@ -169,127 +167,6 @@ pub struct PlotResponse<R> {
 }
 
 // ----------------------------------------------------------------------------
-
-/// Returns the rect left after adding axes.
-fn axis_widgets<'a>(
-    mem: Option<&PlotMemory>,
-    show_axes: impl Into<Vec2b>,
-    complete_rect: Rect,
-    [x_axes, y_axes]: [&'a [AxisHints<'a>]; 2],
-) -> ([Vec<AxisWidget<'a>>; 2], Rect) {
-    // Next we want to create this layout.
-    // Indices are only examples.
-    //
-    //  left                     right
-    //  +---+---------x----------+   +
-    //  |   |      X-axis 3      |
-    //  |   +--------------------+    top
-    //  |   |      X-axis 2      |
-    //  +-+-+--------------------+-+-+
-    //  |y|y|                    |y|y|
-    //  |-|-|                    |-|-|
-    //  |A|A|                    |A|A|
-    // y|x|x|    Plot Window     |x|x|
-    //  |i|i|                    |i|i|
-    //  |s|s|                    |s|s|
-    //  |1|0|                    |2|3|
-    //  +-+-+--------------------+-+-+
-    //      |      X-axis 0      |   |
-    //      +--------------------+   | bottom
-    //      |      X-axis 1      |   |
-    //  + +--------------------+---+
-    //
-    let show_axes = show_axes.into();
-
-    let mut x_axis_widgets = Vec::<AxisWidget<'_>>::new();
-    let mut y_axis_widgets = Vec::<AxisWidget<'_>>::new();
-
-    // Will shrink as we add more axes.
-    let mut rect_left = complete_rect;
-
-    if show_axes.x {
-        // We will fix this later, once we know how much space the y axes take up.
-        let initial_x_range = complete_rect.x_range();
-
-        for (i, cfg) in x_axes.iter().enumerate().rev() {
-            let mut height = cfg.min_thickness;
-            if let Some(mem) = mem {
-                // If the labels took up too much space the previous frame, give them more space
-                // now:
-                height = height.max(mem.x_axis_thickness.get(&i).copied().unwrap_or_default());
-            }
-
-            let rect = match VPlacement::from(cfg.placement) {
-                VPlacement::Bottom => {
-                    let bottom = rect_left.bottom();
-                    *rect_left.bottom_mut() -= height;
-                    let top = rect_left.bottom();
-                    Rect::from_x_y_ranges(initial_x_range, top..=bottom)
-                }
-                VPlacement::Top => {
-                    let top = rect_left.top();
-                    *rect_left.top_mut() += height;
-                    let bottom = rect_left.top();
-                    Rect::from_x_y_ranges(initial_x_range, top..=bottom)
-                }
-            };
-            x_axis_widgets.push(AxisWidget::new(cfg.clone(), rect));
-        }
-    }
-    if show_axes.y {
-        // We know this, since we've already allocated space for the x axes.
-        let plot_y_range = rect_left.y_range();
-
-        for (i, cfg) in y_axes.iter().enumerate().rev() {
-            let mut width = cfg.min_thickness;
-            if let Some(mem) = mem {
-                // If the labels took up too much space the previous frame, give them more space
-                // now:
-                width = width.max(mem.y_axis_thickness.get(&i).copied().unwrap_or_default());
-            }
-
-            let rect = match HPlacement::from(cfg.placement) {
-                HPlacement::Left => {
-                    let left = rect_left.left();
-                    *rect_left.left_mut() += width;
-                    let right = rect_left.left();
-                    Rect::from_x_y_ranges(left..=right, plot_y_range)
-                }
-                HPlacement::Right => {
-                    let right = rect_left.right();
-                    *rect_left.right_mut() -= width;
-                    let left = rect_left.right();
-                    Rect::from_x_y_ranges(left..=right, plot_y_range)
-                }
-            };
-            y_axis_widgets.push(AxisWidget::new(cfg.clone(), rect));
-        }
-    }
-
-    // The loops iterated through {x,y}_axes in reverse order, so we have to reverse
-    // the {x,y}_axis_widgets vec as well. Otherwise, the indices are messed up
-    // and the plot memory (mem.{x,y}_axis_thickness) will access the wrong axis
-    // given an index.
-    x_axis_widgets.reverse();
-    y_axis_widgets.reverse();
-
-    let mut plot_rect = rect_left;
-
-    // If too little space, remove axis widgets
-    if plot_rect.width() <= 0.0 || plot_rect.height() <= 0.0 {
-        y_axis_widgets.clear();
-        x_axis_widgets.clear();
-        plot_rect = complete_rect;
-    }
-
-    // Now that we know the final x_range of the plot_rect,
-    // assign it to the x_axis_widgets (they are currently too wide):
-    for widget in &mut x_axis_widgets {
-        widget.rect = Rect::from_x_y_ranges(plot_rect.x_range(), widget.rect.y_range());
-    }
-
-    ([x_axis_widgets, y_axis_widgets], plot_rect)
-}
 
 /// User-requested modifications to the plot bounds. We collect them in the plot
 /// build function to later apply them at the right time, as other modifications
