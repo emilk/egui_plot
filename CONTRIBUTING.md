@@ -21,7 +21,7 @@ If you are filing a bug, please provide a way to reproduce it.
 
 For small things, just go ahead an open a PR. For bigger things, please file an issue first (or find an existing one) and announce that you plan to work on something. That way we will avoid having several people doing double work, and you might get useful feedback on the issue before you start working.
 
-You can test your code locally by running `./scripts/check.sh`.
+You can test your code locally by running `./scripts/check.sh` or `make`
 
 When you have something that works, open a draft PR. You may get some helpful feedback early!
 When you feel the PR is ready to go, do a self-review of the code, and then open it for review.
