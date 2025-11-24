@@ -1,9 +1,197 @@
-use egui::emath::NumExt as _;
-use egui::epaint::{Color32, CornerRadius, RectShape, Shape, Stroke};
+use std::ops::RangeInclusive;
 
-use crate::{BoxPlot, Cursor, PlotPoint, PlotTransform};
+use egui::Color32;
+use egui::CornerRadius;
+use egui::Shape;
+use egui::Stroke;
+use egui::Ui;
+use egui::epaint::RectShape;
+use emath::NumExt as _;
+use emath::Pos2;
 
-use super::{Orientation, PlotConfig, RectElement, add_rulers_and_text, highlighted_color};
+use super::add_rulers_and_text;
+use super::find_closest_rect;
+use super::rect_elem::RectElement;
+use super::rect_elem::highlighted_color;
+use crate::ClosestElem;
+use crate::Cursor;
+use crate::Id;
+use crate::LabelFormatter;
+use crate::Orientation;
+use crate::PlotBounds;
+use crate::PlotConfig;
+use crate::PlotGeometry;
+use crate::PlotItem;
+use crate::PlotItemBase;
+use crate::PlotPoint;
+use crate::PlotTransform;
+
+/// A diagram containing a series of [`BoxElem`] elements.
+pub struct BoxPlot {
+    base: PlotItemBase,
+
+    pub(crate) boxes: Vec<BoxElem>,
+    default_color: Color32,
+
+    /// A custom element formatter
+    pub(crate) element_formatter: Option<Box<dyn Fn(&BoxElem, &BoxPlot) -> String>>,
+}
+
+impl BoxPlot {
+    /// Create a plot containing multiple `boxes`. It defaults to vertically
+    /// oriented elements.
+    pub fn new(name: impl Into<String>, boxes: Vec<BoxElem>) -> Self {
+        Self {
+            base: PlotItemBase::new(name.into()),
+            boxes,
+            default_color: Color32::TRANSPARENT,
+            element_formatter: None,
+        }
+    }
+
+    /// Set the default color. It is set on all elements that do not already
+    /// have a specific color. This is the color that shows up in the
+    /// legend. It can be overridden at the element level (see [`BoxElem`]).
+    /// Default is `Color32::TRANSPARENT` which means a color will be
+    /// auto-assigned.
+    #[inline]
+    pub fn color(mut self, color: impl Into<Color32>) -> Self {
+        let plot_color = color.into();
+        self.default_color = plot_color;
+        for box_elem in &mut self.boxes {
+            if box_elem.fill == Color32::TRANSPARENT && box_elem.stroke.color == Color32::TRANSPARENT {
+                box_elem.fill = plot_color.linear_multiply(0.2);
+                box_elem.stroke.color = plot_color;
+            }
+        }
+        self
+    }
+
+    /// Set all elements to be in a vertical orientation.
+    /// Argument axis will be X and values will be on the Y axis.
+    #[inline]
+    pub fn vertical(mut self) -> Self {
+        for box_elem in &mut self.boxes {
+            box_elem.orientation = Orientation::Vertical;
+        }
+        self
+    }
+
+    /// Set all elements to be in a horizontal orientation.
+    /// Argument axis will be Y and values will be on the X axis.
+    #[inline]
+    pub fn horizontal(mut self) -> Self {
+        for box_elem in &mut self.boxes {
+            box_elem.orientation = Orientation::Horizontal;
+        }
+        self
+    }
+
+    /// Add a custom way to format an element.
+    /// Can be used to display a set number of decimals or custom labels.
+    #[inline]
+    pub fn element_formatter(mut self, formatter: Box<dyn Fn(&BoxElem, &Self) -> String>) -> Self {
+        self.element_formatter = Some(formatter);
+        self
+    }
+
+    /// Name of this plot item.
+    ///
+    /// This name will show up in the plot legend, if legends are turned on.
+    ///
+    /// Setting the name via this method does not change the item's id, so you
+    /// can use it to change the name dynamically between frames without
+    /// losing the item's state. You should make sure the name passed to
+    /// [`Self::new`] is unique and stable for each item, or set unique and
+    /// stable ids explicitly via [`Self::id`].
+    #[expect(clippy::needless_pass_by_value)]
+    #[inline]
+    pub fn name(mut self, name: impl ToString) -> Self {
+        self.base_mut().name = name.to_string();
+        self
+    }
+
+    /// Highlight this plot item, typically by scaling it up.
+    ///
+    /// If false, the item may still be highlighted via user interaction.
+    #[inline]
+    pub fn highlight(mut self, highlight: bool) -> Self {
+        self.base_mut().highlight = highlight;
+        self
+    }
+
+    /// Allowed hovering this item in the plot. Default: `true`.
+    #[inline]
+    pub fn allow_hover(mut self, hovering: bool) -> Self {
+        self.base_mut().allow_hover = hovering;
+        self
+    }
+
+    /// Sets the id of this plot item.
+    ///
+    /// By default the id is determined from the name passed to [`Self::new`],
+    /// but it can be explicitly set to a different value.
+    #[inline]
+    pub fn id(mut self, id: impl Into<Id>) -> Self {
+        self.base_mut().id = id.into();
+        self
+    }
+}
+
+impl PlotItem for BoxPlot {
+    fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
+        for b in &self.boxes {
+            b.add_shapes(transform, self.base.highlight, shapes);
+        }
+    }
+
+    fn initialize(&mut self, _x_range: RangeInclusive<f64>) {
+        // nothing to do
+    }
+
+    fn color(&self) -> Color32 {
+        self.default_color
+    }
+
+    fn geometry(&self) -> PlotGeometry<'_> {
+        PlotGeometry::Rects
+    }
+
+    fn bounds(&self) -> PlotBounds {
+        let mut bounds = PlotBounds::NOTHING;
+        for b in &self.boxes {
+            bounds.merge(&b.bounds());
+        }
+        bounds
+    }
+
+    fn find_closest(&self, point: Pos2, transform: &PlotTransform) -> Option<ClosestElem> {
+        find_closest_rect(&self.boxes, point, transform)
+    }
+
+    fn on_hover(
+        &self,
+        _plot_area_response: &egui::Response,
+        elem: ClosestElem,
+        shapes: &mut Vec<Shape>,
+        cursors: &mut Vec<Cursor>,
+        plot: &PlotConfig<'_>,
+        _: &LabelFormatter<'_>,
+    ) {
+        let box_plot = &self.boxes[elem.index];
+
+        box_plot.add_shapes(plot.transform, true, shapes);
+        box_plot.add_rulers_and_text(self, plot, shapes, cursors);
+    }
+
+    fn base(&self) -> &PlotItemBase {
+        &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut PlotItemBase {
+        &mut self.base
+    }
+}
 
 /// Contains the values of a single box in a box plot.
 #[derive(Clone, Debug, PartialEq)]
@@ -29,13 +217,7 @@ pub struct BoxSpread {
 }
 
 impl BoxSpread {
-    pub fn new(
-        lower_whisker: f64,
-        quartile1: f64,
-        median: f64,
-        quartile3: f64,
-        upper_whisker: f64,
-    ) -> Self {
+    pub fn new(lower_whisker: f64, quartile1: f64, median: f64, quartile3: f64, upper_whisker: f64) -> Self {
         Self {
             lower_whisker,
             quartile1,
@@ -48,8 +230,9 @@ impl BoxSpread {
 
 /// A box in a [`BoxPlot`] diagram.
 ///
-/// This is a low-level graphical element; it will not compute quartiles and whiskers, letting one
-/// use their preferred formula. Use [`Points`][`super::Points`] to draw the outliers.
+/// This is a low-level graphical element; it will not compute quartiles and
+/// whiskers, letting one use their preferred formula. Use
+/// [`Points`][`super::Points`] to draw the outliers.
 #[derive(Clone, Debug, PartialEq)]
 pub struct BoxElem {
     /// Name of plot element in the diagram (annotated by default formatter).
@@ -78,7 +261,8 @@ pub struct BoxElem {
 }
 
 impl BoxElem {
-    /// Create a box element. Its `orientation` is set by its [`BoxPlot`] parent.
+    /// Create a box element. Its `orientation` is set by its [`BoxPlot`]
+    /// parent.
     ///
     /// Check [`BoxElem`] fields for detailed description.
     pub fn new(argument: f64, spread: BoxSpread) -> Self {
@@ -144,12 +328,7 @@ impl BoxElem {
         self
     }
 
-    pub(super) fn add_shapes(
-        &self,
-        transform: &PlotTransform,
-        highlighted: bool,
-        shapes: &mut Vec<Shape>,
-    ) {
+    pub(in crate::items) fn add_shapes(&self, transform: &PlotTransform, highlighted: bool, shapes: &mut Vec<Shape>) {
         let (stroke, fill) = if highlighted {
             highlighted_color(self.stroke, self.fill)
         } else {
@@ -171,10 +350,7 @@ impl BoxElem {
 
         let line_between = |v1, v2| {
             Shape::line_segment(
-                [
-                    transform.position_from_point(&v1),
-                    transform.position_from_point(&v2),
-                ],
+                [transform.position_from_point(&v1), transform.position_from_point(&v2)],
                 stroke,
             )
         };
@@ -192,14 +368,8 @@ impl BoxElem {
             shapes.push(high_whisker);
             if self.box_width > 0.0 {
                 let high_whisker_end = line_between(
-                    self.point_at(
-                        self.argument - self.whisker_width / 2.0,
-                        self.spread.upper_whisker,
-                    ),
-                    self.point_at(
-                        self.argument + self.whisker_width / 2.0,
-                        self.spread.upper_whisker,
-                    ),
+                    self.point_at(self.argument - self.whisker_width / 2.0, self.spread.upper_whisker),
+                    self.point_at(self.argument + self.whisker_width / 2.0, self.spread.upper_whisker),
                 );
                 shapes.push(high_whisker_end);
             }
@@ -213,31 +383,22 @@ impl BoxElem {
             shapes.push(low_whisker);
             if self.box_width > 0.0 {
                 let low_whisker_end = line_between(
-                    self.point_at(
-                        self.argument - self.whisker_width / 2.0,
-                        self.spread.lower_whisker,
-                    ),
-                    self.point_at(
-                        self.argument + self.whisker_width / 2.0,
-                        self.spread.lower_whisker,
-                    ),
+                    self.point_at(self.argument - self.whisker_width / 2.0, self.spread.lower_whisker),
+                    self.point_at(self.argument + self.whisker_width / 2.0, self.spread.lower_whisker),
                 );
                 shapes.push(low_whisker_end);
             }
         }
     }
 
-    pub(super) fn add_rulers_and_text(
+    pub(in crate::items) fn add_rulers_and_text(
         &self,
         parent: &BoxPlot,
         plot: &PlotConfig<'_>,
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
     ) {
-        let text: Option<String> = parent
-            .element_formatter
-            .as_ref()
-            .map(|fmt| fmt(self, parent));
+        let text: Option<String> = parent.element_formatter.as_ref().map(|fmt| fmt(self, parent));
 
         add_rulers_and_text(self, plot, text, shapes, cursors);
     }

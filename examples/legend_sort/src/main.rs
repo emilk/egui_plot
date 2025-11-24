@@ -2,7 +2,10 @@
 #![expect(rustdoc::missing_crate_level_docs)] // it's an example
 
 use eframe::egui;
-use egui_plot::{Legend, Line, Plot, PlotPoints};
+use egui_plot::Legend;
+use egui_plot::Line;
+use egui_plot::Plot;
+use egui_plot::PlotPoints;
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
@@ -46,15 +49,9 @@ impl eframe::App for MyApp {
             Plot::new("My Plot")
                 .legend(Legend::default().follow_insertion_order(self.insert_order))
                 .show(ui, |plot_ui| {
-                    plot_ui.line(Line::new(
-                        "3rd Curve",
-                        PlotPoints::from(self.graph3.clone()),
-                    ));
+                    plot_ui.line(Line::new("3rd Curve", PlotPoints::from(self.graph3.clone())));
                     plot_ui.line(Line::new("1st Curve", PlotPoints::from(self.graph.clone())));
-                    plot_ui.line(Line::new(
-                        "2nd Curve",
-                        PlotPoints::from(self.graph2.clone()),
-                    ));
+                    plot_ui.line(Line::new("2nd Curve", PlotPoints::from(self.graph2.clone())));
                 });
             // Remember the position of the plot
         });

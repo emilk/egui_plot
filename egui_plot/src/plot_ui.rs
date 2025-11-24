@@ -1,14 +1,23 @@
 use std::ops::RangeInclusive;
 
-use egui::{Color32, Pos2, Response, Vec2, Vec2b, epaint::Hsva};
+use egui::Color32;
+use egui::Pos2;
+use egui::Response;
+use egui::Vec2;
+use egui::Vec2b;
+use egui::epaint::Hsva;
 
-use crate::{BoundsModification, PlotBounds, PlotItem, PlotPoint, PlotTransform};
-
+use crate::BoundsModification;
 #[expect(unused_imports)] // for links in docstrings
 use crate::Plot;
+use crate::PlotBounds;
+use crate::PlotItem;
+use crate::PlotPoint;
+use crate::PlotTransform;
 
-/// Provides methods to interact with a plot while building it. It is the single argument of the closure
-/// provided to [`Plot::show`]. See [`Plot`] for an example of how to use it.
+/// Provides methods to interact with a plot while building it. It is the single
+/// argument of the closure provided to [`Plot::show`]. See [`Plot`] for an
+/// example of how to use it.
 pub struct PlotUi<'a> {
     pub(crate) ctx: egui::Context,
     pub(crate) items: Vec<Box<dyn PlotItem + 'a>>,
@@ -25,46 +34,49 @@ impl<'a> PlotUi<'a> {
         self.next_auto_color_idx += 1;
         let golden_ratio = (5.0_f32.sqrt() - 1.0) / 2.0; // 0.61803398875
         let h = i as f32 * golden_ratio;
-        Hsva::new(h, 0.85, 0.5, 1.0).into() // TODO(emilk): OkLab or some other perspective color space
+        Hsva::new(h, 0.85, 0.5, 1.0).into() // TODO #165: OkLab or some other perspective color space
     }
 
     pub fn ctx(&self) -> &egui::Context {
         &self.ctx
     }
 
-    /// The plot bounds as they were in the last frame. If called on the first frame and the bounds were not
-    /// further specified in the plot builder, this will return bounds centered on the origin. The bounds do
+    /// The plot bounds as they were in the last frame. If called on the first
+    /// frame and the bounds were not further specified in the plot builder,
+    /// this will return bounds centered on the origin. The bounds do
     /// not change until the plot is drawn.
     pub fn plot_bounds(&self) -> PlotBounds {
         *self.last_plot_transform.bounds()
     }
 
-    /// Set the plot bounds. Can be useful for implementing alternative plot navigation methods.
+    /// Set the plot bounds. Can be useful for implementing alternative plot
+    /// navigation methods.
     pub fn set_plot_bounds(&mut self, plot_bounds: PlotBounds) {
         self.set_plot_bounds_x(plot_bounds.range_x());
         self.set_plot_bounds_y(plot_bounds.range_y());
     }
 
-    /// Set the X bounds. Can be useful for implementing alternative plot navigation methods.
+    /// Set the X bounds. Can be useful for implementing alternative plot
+    /// navigation methods.
     pub fn set_plot_bounds_x(&mut self, range: impl Into<RangeInclusive<f64>>) {
-        self.bounds_modifications
-            .push(BoundsModification::SetX(range.into()));
+        self.bounds_modifications.push(BoundsModification::SetX(range.into()));
     }
 
-    /// Set the Y bounds. Can be useful for implementing alternative plot navigation methods.
+    /// Set the Y bounds. Can be useful for implementing alternative plot
+    /// navigation methods.
     pub fn set_plot_bounds_y(&mut self, range: impl Into<RangeInclusive<f64>>) {
-        self.bounds_modifications
-            .push(BoundsModification::SetY(range.into()));
+        self.bounds_modifications.push(BoundsModification::SetY(range.into()));
     }
 
-    /// Move the plot bounds. Can be useful for implementing alternative plot navigation methods.
+    /// Move the plot bounds. Can be useful for implementing alternative plot
+    /// navigation methods.
     pub fn translate_bounds(&mut self, delta_pos: Vec2) {
-        self.bounds_modifications
-            .push(BoundsModification::Translate(delta_pos));
+        self.bounds_modifications.push(BoundsModification::Translate(delta_pos));
     }
 
-    /// Whether the plot axes were in auto-bounds mode in the last frame. If called on the first
-    /// frame, this is the [`Plot`]'s default auto-bounds mode.
+    /// Whether the plot axes were in auto-bounds mode in the last frame. If
+    /// called on the first frame, this is the [`Plot`]'s default
+    /// auto-bounds mode.
     pub fn auto_bounds(&self) -> Vec2b {
         self.last_auto_bounds
     }
@@ -85,8 +97,10 @@ impl<'a> PlotUi<'a> {
     /// Can be useful for implementing alternative plot navigation methods.
     ///
     /// The plot bounds are divided by `zoom_factor`, therefore:
-    /// - `zoom_factor < 1.0` zooms out, i.e., increases the visible range to show more data.
-    /// - `zoom_factor > 1.0` zooms in, i.e., reduces the visible range to show more detail.
+    /// - `zoom_factor < 1.0` zooms out, i.e., increases the visible range to
+    ///   show more data.
+    /// - `zoom_factor > 1.0` zooms in, i.e., reduces the visible range to show
+    ///   more detail.
     pub fn zoom_bounds(&mut self, zoom_factor: Vec2, center: PlotPoint) {
         self.bounds_modifications
             .push(BoundsModification::Zoom(zoom_factor, center));
@@ -97,17 +111,21 @@ impl<'a> PlotUi<'a> {
     /// Can be useful for implementing alternative plot navigation methods.
     ///
     /// The plot bounds are divided by `zoom_factor`, therefore:
-    /// - `zoom_factor < 1.0` zooms out, i.e., increases the visible range to show more data.
-    /// - `zoom_factor > 1.0` zooms in, i.e., reduces the visible range to show more detail.
+    /// - `zoom_factor < 1.0` zooms out, i.e., increases the visible range to
+    ///   show more data.
+    /// - `zoom_factor > 1.0` zooms in, i.e., reduces the visible range to show
+    ///   more detail.
     pub fn zoom_bounds_around_hovered(&mut self, zoom_factor: Vec2) {
         if let Some(hover_pos) = self.pointer_coordinate() {
             self.zoom_bounds(zoom_factor, hover_pos);
         }
     }
 
-    /// The pointer position in plot coordinates. Independent of whether the pointer is in the plot area.
+    /// The pointer position in plot coordinates. Independent of whether the
+    /// pointer is in the plot area.
     pub fn pointer_coordinate(&self) -> Option<PlotPoint> {
-        // We need to subtract the drag delta to keep in sync with the frame-delayed screen transform:
+        // We need to subtract the drag delta to keep in sync with the frame-delayed
+        // screen transform:
         let last_pos = self.ctx().input(|i| i.pointer.latest_pos())? - self.response.drag_delta();
         let value = self.plot_from_screen(last_pos);
         Some(value)

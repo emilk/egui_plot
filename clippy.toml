@@ -28,7 +28,9 @@ too-many-lines-threshold = 200
 # -----------------------------------------------------------------------------
 
 # https://rust-lang.github.io/rust-clippy/master/index.html#disallowed_macros
-disallowed-macros = ['dbg']
+disallowed-macros = [
+  { path = "std::dbg", reason = "use tracing macros instead" },
+]
 
 # https://rust-lang.github.io/rust-clippy/master/index.html#disallowed_methods
 disallowed-methods = [
