@@ -1,7 +1,8 @@
 use std::{fmt::Debug, ops::RangeInclusive, sync::Arc};
 
 use egui::{
-    Pos2, Rangef, Rect, Response, Sense, TextStyle, TextWrapMode, Ui, Vec2, WidgetText,
+    Color32, FontId, Pos2, Rangef, Rect, Response, Sense, TextStyle, TextWrapMode, Ui, Vec2,
+    WidgetText,
     emath::{Rot2, remap_clamp},
     epaint::TextShape,
 };
@@ -107,8 +108,8 @@ pub struct AxisHints<'a> {
     pub(super) min_thickness: f32,
     pub(super) placement: Placement,
     pub(super) label_spacing: Rangef,
-    pub(super) tick_label_color: Option<egui::Color32>,
-    pub(super) tick_label_font: Option<egui::FontId>,
+    pub(super) tick_label_color: Option<Color32>,
+    pub(super) tick_label_font: Option<FontId>,
 }
 
 impl<'a> AxisHints<'a> {
@@ -206,22 +207,15 @@ impl<'a> AxisHints<'a> {
     }
 
     /// Set the color of the axis tick labels.
-    ///
-    /// As labels get close, they will fade in color until they become invisible. See
-    /// [`Self::label_spacing`].
-    ///
-    /// To change the font of the tick labels see [`Self::tick_label_font`].
     #[inline]
-    pub fn tick_label_color(mut self, color: impl Into<egui::Color32>) -> Self {
+    pub fn tick_label_color(mut self, color: impl Into<Color32>) -> Self {
         self.tick_label_color = Some(color.into());
         self
     }
 
     /// Set the font of the axis tick labels.
-    ///
-    /// To change the color of the tick labels see [`Self::tick_label_color`].
     #[inline]
-    pub fn tick_label_font(mut self, font: egui::FontId) -> Self {
+    pub fn tick_label_font(mut self, font: FontId) -> Self {
         self.tick_label_font = Some(font);
         self
     }
