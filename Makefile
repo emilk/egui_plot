@@ -2,7 +2,7 @@
 THREADS ?= $(shell nproc)
 BROWSER ?= firefox
 TRUNK_OPTS ?=
-CARGO_OPTS ?= --verbose -j $(THREADS)
+CARGO_OPTS ?= -j $(THREADS)
 
 export RUST_LOG ?= debug
 export CARGO_TERM_COLOR ?= always
@@ -25,6 +25,7 @@ CARGO_TOOLS = \
 	cargo-cycles@0.1.0 \
 	cargo-chef@0.1.72 \
 	cargo-public-api@0.50.1 \
+	cargo-deny@0.18.5 \
 	trunk@0.21.14 \
 	wasm-pack@0.13.1
 
@@ -61,6 +62,7 @@ dry_push: check_branch_name \
 		build \
 		run_checks \
 		test \
+		trunk \
 		check_git_clean_status
 	echo "All checks passed, ready to push."
 
@@ -79,9 +81,13 @@ build_linux:
 build_wasm:
 	cargo build -p egui_plot -p demo --all-features --lib --tests --bins --examples --target $(TARGET_WASM) $(CARGO_OPTS) $(BUILD_PROFILE)
 
-# Builds the frontend using trunk.
 trunk:
-	trunk build $(TRUNK_OPTS)
+	for example in examples/*; do \
+		cd $$example && \
+		echo "Building $$example" && \
+		RUST_LOG=info trunk build $(TRUNK_OPTS) && \
+		cd ../..; \
+	done
 
 # -------------------------------- test ----------------------------------------
 
@@ -116,6 +122,8 @@ run_checks: check_no_commented_out_code \
 			check_license \
 			check_cycles \
 			checks_no_unfinished \
+			check_shear \
+			check_deny \
 			check_pub_change_intentional
 
 # Performs a compilation check of all crates in the workspace, without building.
@@ -133,9 +141,9 @@ check_newlines:
 # Runs clippy on all crates in the workspace.
 check_clippy: check_clippy_linux check_clippy_wasm
 check_clippy_linux:
-	cargo clippy --workspace --no-deps --examples --target $(TARGET_LINUX) -j $(THREADS) $(BUILD_PROFILE) -- -D warnings
+	cargo clippy --workspace --no-deps --examples --lib --target $(TARGET_LINUX) -j $(THREADS) $(BUILD_PROFILE) -- -D warnings
 check_clippy_wasm:
-	cargo clippy -p demo -p egui_plot --no-deps --examples --target $(TARGET_WASM) -j $(THREADS) $(BUILD_PROFILE) -- -D warnings
+	cargo clippy -p demo -p egui_plot --no-deps --examples --lib --target $(TARGET_WASM) -j $(THREADS) $(BUILD_PROFILE) -- -D warnings
 check_clippy_docs: check_clippy_docs_linux check_clippy_docs_wasm
 check_clippy_docs_linux:
 	cargo clippy --workspace --no-deps --message-format=short --target $(TARGET_LINUX) -j $(THREADS) $(BUILD_PROFILE) -- -D missing-docs 2>&1 | grep -P 'mod.rs|lib.rs' | grep -vP 'crate|module' && exit 1 || exit 0
@@ -148,7 +156,7 @@ check_license:
 
 # Checks for dependency cycles between modules.
 check_cycles:
-	cargo-cycles --verbose
+	cargo-cycles
 
 check_pub_change_intentional:
 	if [ "$$(cargo public-api diff latest -p egui_plot -sss --deny all)" != "" ]; then \
@@ -199,6 +207,12 @@ check_no_unimplemented:
 check_no_commented_out_code:
 	# There should not be commented out code
 	git ls-files | grep -P '\.rs$$' | xargs grep -Pi '^\s*//(?!/|\!)\S' || exit 0; exit 1
+
+check_shear:
+	cargo shear
+
+check_deny:
+	cargo deny check
 
 clean:
 	cargo clean

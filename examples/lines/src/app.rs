@@ -1,0 +1,190 @@
+use std::f64::consts::TAU;
+use std::sync::Arc;
+
+use eframe::egui::{self, Checkbox, ComboBox, Pos2, Response, ScrollArea, TextWrapMode};
+use egui::NumExt as _;
+use egui_plot::{CoordinatesFormatter, Corner, Legend, Line, LineStyle, Plot, PlotPoints};
+
+#[derive(Copy, Clone, PartialEq)]
+pub struct LineExample {
+    animate: bool,
+    time: f64,
+    circle_radius: f64,
+    circle_center: Pos2,
+    square: bool,
+    proportional: bool,
+    coordinates: bool,
+    show_axes: bool,
+    show_grid: bool,
+    line_style: LineStyle,
+    gradient: bool,
+    gradient_fill: bool,
+    invert_x: bool,
+    invert_y: bool,
+}
+
+impl Default for LineExample {
+    fn default() -> Self {
+        Self {
+            animate: !cfg!(debug_assertions),
+            time: 0.0,
+            circle_radius: 1.5,
+            circle_center: Pos2::new(0.0, 0.0),
+            square: false,
+            proportional: true,
+            coordinates: true,
+            show_axes: true,
+            show_grid: true,
+            line_style: LineStyle::Solid,
+            gradient: false,
+            gradient_fill: false,
+            invert_x: false,
+            invert_y: false,
+        }
+    }
+}
+
+impl LineExample {
+    fn options_ui(&mut self, ui: &mut egui::Ui) {
+        ui.horizontal(|ui| {
+            ui.group(|ui| {
+                ui.vertical(|ui| {
+                    ui.label("Circle:");
+                    ui.add(
+                        egui::DragValue::new(&mut self.circle_radius)
+                            .speed(0.1)
+                            .range(0.0..=f64::INFINITY)
+                            .prefix("r: "),
+                    );
+                    ui.horizontal(|ui| {
+                        ui.add(egui::DragValue::new(&mut self.circle_center.x).speed(0.1).prefix("x: "));
+                        ui.add(egui::DragValue::new(&mut self.circle_center.y).speed(1.0).prefix("y: "));
+                    });
+                });
+            });
+
+            ui.vertical(|ui| {
+                ui.checkbox(&mut self.show_axes, "Show axes");
+                ui.checkbox(&mut self.show_grid, "Show grid");
+                ui.checkbox(&mut self.coordinates, "Show coordinates on hover")
+                    .on_hover_text("Can take a custom formatting function.");
+            });
+
+            ui.vertical(|ui| {
+                ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
+                ui.checkbox(&mut self.animate, "Animate");
+                ui.checkbox(&mut self.square, "Square view")
+                    .on_hover_text("Always keep the viewport square.");
+                ui.checkbox(&mut self.proportional, "Proportional data axes")
+                    .on_hover_text("Tick are the same size on both axes.");
+
+                ComboBox::from_label("Line style")
+                    .selected_text(self.line_style.to_string())
+                    .show_ui(ui, |ui| {
+                        for style in &[
+                            LineStyle::Solid,
+                            LineStyle::dashed_dense(),
+                            LineStyle::dashed_loose(),
+                            LineStyle::dotted_dense(),
+                            LineStyle::dotted_loose(),
+                        ] {
+                            ui.selectable_value(&mut self.line_style, *style, style.to_string());
+                        }
+                    });
+            });
+
+            ui.vertical(|ui| {
+                ui.checkbox(&mut self.gradient, "Gradient line");
+                ui.add_enabled(self.gradient, Checkbox::new(&mut self.gradient_fill, "Gradient fill"));
+            });
+
+            ui.vertical(|ui| {
+                ui.checkbox(&mut self.invert_x, "Invert X axis");
+                ui.checkbox(&mut self.invert_y, "Invert Y axis");
+            });
+        });
+    }
+
+    fn circle<'a>(&self) -> Line<'a> {
+        let n = 512;
+        Line::new(
+            "circle",
+            (0..=n)
+                .map(|i| {
+                    let t = egui::remap(i as f64, 0.0..=(n as f64), 0.0..=TAU);
+                    let r = self.circle_radius;
+                    [
+                        r * t.cos() + self.circle_center.x as f64,
+                        r * t.sin() + self.circle_center.y as f64,
+                    ]
+                })
+                .collect::<PlotPoints<'a>>(),
+        )
+        .color(egui::Color32::from_rgb(100, 200, 100))
+        .style(self.line_style)
+    }
+
+    fn sin<'a>(&self) -> Line<'a> {
+        let time = self.time;
+        Line::new(
+            "wave",
+            PlotPoints::from_explicit_callback(move |x| 0.5 * (2.0 * x).sin() * time.sin(), .., 512),
+        )
+        .color(egui::Color32::from_rgb(200, 100, 100))
+        .style(self.line_style)
+    }
+
+    fn thingy<'a>(&self) -> Line<'a> {
+        let time = self.time;
+        let mut thingy_line = Line::new(
+            "x = sin(2t), y = sin(3t)",
+            PlotPoints::from_parametric_callback(move |t| ((2.0 * t + time).sin(), (3. * t).sin()), 0.0..=TAU, 256),
+        )
+        .style(self.line_style);
+        if self.gradient {
+            thingy_line = thingy_line.gradient_color(
+                Arc::new(|point| {
+                    egui::Color32::BLUE.lerp_to_gamma(egui::Color32::ORANGE, point.x.abs().clamp(0., 1.) as f32)
+                }),
+                self.gradient_fill,
+            );
+            if self.gradient_fill {
+                thingy_line = thingy_line.fill(0.);
+            }
+        } else {
+            thingy_line = thingy_line.color(egui::Color32::from_rgb(100, 150, 250));
+        }
+        thingy_line
+    }
+
+    pub fn ui(&mut self, ui: &mut egui::Ui) -> Response {
+        ScrollArea::horizontal().show(ui, |ui| self.options_ui(ui));
+
+        if self.animate {
+            ui.ctx().request_repaint();
+            self.time += ui.input(|i| i.unstable_dt).at_most(1.0 / 30.0) as f64;
+        }
+        let mut plot = Plot::new("lines_demo")
+            .legend(Legend::default().title("Lines"))
+            .show_axes(self.show_axes)
+            .show_grid(self.show_grid)
+            .invert_x(self.invert_x)
+            .invert_y(self.invert_y);
+
+        if self.square {
+            plot = plot.view_aspect(1.0);
+        }
+        if self.proportional {
+            plot = plot.data_aspect(1.0);
+        }
+        if self.coordinates {
+            plot = plot.coordinates_formatter(Corner::LeftBottom, CoordinatesFormatter::default());
+        }
+        plot.show(ui, |plot_ui| {
+            plot_ui.line(self.circle());
+            plot_ui.line(self.sin());
+            plot_ui.line(self.thingy());
+        })
+        .response
+    }
+}
