@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["egui_plot", "demo", "examples/*"]
+members = ["egui_plot", "demo", "examples/*", "examples_utils"]
 
 
 [workspace.package]
@@ -20,6 +20,22 @@ opt-level = 2
 
 [workspace.dependencies]
 egui_plot = { version = "0.34.0", path = "egui_plot", default-features = false }
+examples_utils = { version = "0.1.0", path = "examples_utils" }
+
+borrow_points = { version = "0.1.0", path = "examples/borrow_points" }
+box_plot = { version = "0.1.0", path = "examples/box_plot" }
+custom_axes = { version = "0.1.0", path = "examples/custom_axes" }
+custom_plot_manipulation = { version = "0.1.0", path = "examples/custom_plot_manipulation" }
+histogram = { version = "0.1.0", path = "examples/histogram" }
+interaction = { version = "0.1.0", path = "examples/interaction" }
+items = { version = "0.1.0", path = "examples/items" }
+legend = { version = "0.1.0", path = "examples/legend" }
+legend_sort = { version = "0.1.0", path = "examples/legend_sort" }
+lines = { version = "0.1.0", path = "examples/lines" }
+linked_axes = { version = "0.1.0", path = "examples/linked_axes" }
+markers = { version = "0.1.0", path = "examples/markers" }
+save_plot = { version = "0.1.0", path = "examples/save_plot" }
+stacked_bar = { version = "0.1.0", path = "examples/stacked_bar" }
 
 ahash = { version = "0.8.11", default-features = false, features = [
     "no-rng", # we don't need DOS-protection, so we let users opt-in to it instead

@@ -588,6 +588,17 @@ dependencies = [
  "eframe",
  "egui_plot",
  "env_logger",
+ "examples_utils",
+]
+
+[[package]]
+name = "box_plot"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui_plot",
+ "env_logger",
+ "examples_utils",
 ]
 
 [[package]]
@@ -856,25 +867,50 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f27ae1dd37df86211c42e150270f82743308803d90a6f6e6651cd730d5e1732f"
 
 [[package]]
+name = "custom_axes"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui_plot",
+ "env_logger",
+ "examples_utils",
+]
+
+[[package]]
 name = "custom_plot_manipulation"
 version = "0.1.0"
 dependencies = [
  "eframe",
  "egui_plot",
  "env_logger",
+ "examples_utils",
 ]
 
 [[package]]
 name = "demo"
 version = "0.34.0"
 dependencies = [
+ "borrow_points",
+ "box_plot",
+ "custom_axes",
+ "custom_plot_manipulation",
  "eframe",
  "egui",
- "egui_kittest",
- "egui_plot",
+ "egui_chip",
  "env_logger",
+ "examples_utils",
+ "histogram",
+ "image",
+ "interaction",
+ "items",
+ "legend",
+ "legend_sort",
+ "lines",
+ "linked_axes",
  "log",
- "serde",
+ "markers",
+ "save_plot",
+ "stacked_bar",
  "wasm-bindgen-futures",
  "web-sys",
 ]
@@ -1066,6 +1102,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "egui_chip"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "17e35f20a867cf197c0ccbd0618aa54808ac882173d9ffac7950199e0d5445af"
+dependencies = [
+ "egui",
+ "serde",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
 name = "egui_glow"
 version = "0.33.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1253,6 +1301,16 @@ checksum = "8be9f3dfaaffdae2972880079a491a1a8bb7cbed0b8dd7a347f668b4150a3b93"
 dependencies = [
  "event-listener",
  "pin-project-lite",
+]
+
+[[package]]
+name = "examples_utils"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui",
+ "egui_kittest",
+ "image",
 ]
 
 [[package]]
@@ -1640,6 +1698,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dfa686283ad6dd069f105e5ab091b04c62850d3e4cf5d67debad1933f55023df"
 
 [[package]]
+name = "histogram"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui_plot",
+ "env_logger",
+ "examples_utils",
+]
+
+[[package]]
 name = "home"
 version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1780,6 +1848,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "interaction"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui_plot",
+ "env_logger",
+ "examples_utils",
+]
+
+[[package]]
 name = "is-docker"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1803,6 +1881,16 @@ name = "is_terminal_polyfill"
 version = "1.70.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7943c866cc5cd64cbc25b2e01621d07fa8eb2a1a23160ee81ce38704e97b8ecf"
+
+[[package]]
+name = "items"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui_plot",
+ "env_logger",
+ "examples_utils",
+]
 
 [[package]]
 name = "jiff"
@@ -1905,12 +1993,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
+name = "legend"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui_plot",
+ "env_logger",
+ "examples_utils",
+]
+
+[[package]]
 name = "legend_sort"
 version = "0.1.0"
 dependencies = [
  "eframe",
  "egui_plot",
  "env_logger",
+ "examples_utils",
 ]
 
 [[package]]
@@ -1944,6 +2043,26 @@ dependencies = [
  "bitflags 2.9.4",
  "libc",
  "redox_syscall 0.5.17",
+]
+
+[[package]]
+name = "lines"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui_plot",
+ "env_logger",
+ "examples_utils",
+]
+
+[[package]]
+name = "linked_axes"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui_plot",
+ "env_logger",
+ "examples_utils",
 ]
 
 [[package]]
@@ -1992,6 +2111,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62bb907fe88d54d8d9ce32a3cceab4218ed2f6b7d35617cafe9adf84e43919cb"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "markers"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui_plot",
+ "env_logger",
+ "examples_utils",
 ]
 
 [[package]]
@@ -2924,6 +3053,7 @@ dependencies = [
  "eframe",
  "egui_plot",
  "env_logger",
+ "examples_utils",
  "image",
  "rfd",
 ]
@@ -3095,6 +3225,16 @@ name = "stable_deref_trait"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
+
+[[package]]
+name = "stacked_bar"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui_plot",
+ "env_logger",
+ "examples_utils",
+]
 
 [[package]]
 name = "static_assertions"

@@ -10,7 +10,6 @@ publish = false
 [lints]
 workspace = true
 
-
 [dependencies]
 eframe = { workspace = true, features = ["default"] }
 egui_plot.workspace = true
@@ -18,3 +17,7 @@ env_logger = { workspace = true, default-features = false, features = [
     "auto-color",
     "humantime",
 ] }
+examples_utils.workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["env_logger"] # used by make_main! macro

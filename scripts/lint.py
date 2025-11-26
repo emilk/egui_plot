@@ -33,6 +33,11 @@ def lint_lines(filepath, lines_in):
     lines_out = []
     prev_line = ""
 
+    if "examples/" in filepath and len(lines_in) > 200:
+        errors.append(
+            f"{filepath}: example code should be shorter than 200 lines, found {len(lines_in)} lines. Please split complex examples into multiple files."
+        )
+
     for line_nr, line in enumerate(lines_in):
         line_nr = line_nr + 1
 
@@ -66,11 +71,8 @@ def lint_lines(filepath, lines_in):
                 )
                 lines_out.append("#[inline]")
 
-
         if re.search(r"TODO[^ \#]", line):
-            errors.append(
-                f"{filepath}:{line_nr}: write 'TODO(username):' instead"
-            )
+            errors.append(f"{filepath}:{line_nr}: write 'TODO(username):' instead")
 
         if (
             "(target_os" in line

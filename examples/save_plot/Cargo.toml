@@ -13,9 +13,15 @@ workspace = true
 [dependencies]
 eframe = { workspace = true, features = ["default"] }
 egui_plot.workspace = true
-image = { workspace = true, features = ["png"] }
-rfd = "0.15.1"
 env_logger = { workspace = true, default-features = false, features = [
     "auto-color",
     "humantime",
 ] }
+examples_utils.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+image = { workspace = true, features = ["png"] }
+rfd = "0.15"
+
+[package.metadata.cargo-shear]
+ignored = ["env_logger"] # used by make_main! macro
