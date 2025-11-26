@@ -1,7 +1,7 @@
 [package]
 name = "legend_sort"
 version = "0.1.0"
-authors = ["hacknus <l_stoeckli@bluewin.ch>"]
+authors = ["Nicolas <bircni@icloud.com>"]
 license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -17,3 +17,7 @@ env_logger = { workspace = true, default-features = false, features = [
     "auto-color",
     "humantime",
 ] }
+examples_utils.workspace = true
+
+[package.metadata.cargo-shear]
+ignored = ["env_logger"] # used by make_main! macro
