@@ -29,7 +29,7 @@ Following crates wrap other plotting libraries:
 
 Name | Description
 -- | --
-[`dear-imgui-rs`](https://crates.io/crates/dear-imgui-rs) | C/C++ bindings to https://github.com/ocornut/imgui
+[`dear-imgui-rs`](https://crates.io/crates/dear-imgui-rs) | C/C++ bindings to https://github.com/ocornut/imgui. IMGUI is probably the most interesting library out there, as it is also immediate-mode based like `egui` and `egui_plot`. 
 [`gnuplot`](https://crates.io/crates/gnuplot) | C/C++ bindings to http://www.gnuplot.info/
 [`plotly`](https://crates.io/crates/plotly) | JS wrapper
 [`charming`](https://crates.io/crates/charming) | JS wrapper
