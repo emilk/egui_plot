@@ -274,4 +274,12 @@ impl<'a> PlotUi<'a> {
         }
         self.items.push(Box::new(chart));
     }
+
+    /// Add a heatmap.
+    pub fn heatmap(&mut self, heatmap: crate::Heatmap) {
+        if heatmap.values.is_empty() {
+            return;
+        }
+        self.items.push(Box::new(heatmap));
+    }
 }

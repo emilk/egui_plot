@@ -32,6 +32,7 @@ borrow_points.workspace = true
 box_plot.workspace = true
 custom_axes.workspace = true
 custom_plot_manipulation.workspace = true
+heatmap.workspace = true
 histogram.workspace = true
 interaction.workspace = true
 items.workspace = true
