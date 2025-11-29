@@ -304,7 +304,7 @@ impl<const RESOLUTION: usize> Heatmap<RESOLUTION> {
     /// Highlight all plot elements.
     #[inline]
     pub fn highlight(mut self, highlight: bool) -> Self {
-        // FIXME: for some reason highlighting is not detected
+        // TODO(#194): for some reason highlighting is not detected
         self.highlight = highlight;
         self
     }
@@ -402,7 +402,6 @@ impl<const RESOLUTION: usize> PlotItem for Heatmap<RESOLUTION> {
         self.name.as_str()
     }
 
-    // FIXME: heatmap has multiple colors
     fn color(&self) -> Color32 {
         Color32::TRANSPARENT
     }

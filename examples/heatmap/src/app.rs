@@ -96,6 +96,7 @@ impl HeatmapDemo {
         let heatmap = egui_plot::Heatmap::<128>::new(values, self.cols)
             .expect("Failed to create heatmap")
             .palette(&self.palette)
+            .highlight(true)
             .show_labels(self.show_labels);
 
         Plot::new("Heatmap Demo")
