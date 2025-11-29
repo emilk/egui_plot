@@ -1,21 +1,35 @@
-use crate::{Axis, utils::find_name_candidate};
-use std::{f32::consts::PI, ops::RangeInclusive};
+use std::f32::consts::PI;
+use std::ops::RangeInclusive;
 
-use egui::{
-    Align2, Color32, Pos2, Rect, Shape, Stroke, TextStyle, Ui, Vec2,
-    epaint::{PathStroke, TextShape},
-    pos2,
-};
+use egui::Align2;
+use egui::Color32;
+use egui::Pos2;
+use egui::Rect;
+use egui::Shape;
+use egui::Stroke;
+use egui::TextStyle;
+use egui::Ui;
+use egui::Vec2;
+use egui::epaint::PathStroke;
+use egui::epaint::TextShape;
+use egui::pos2;
 use emath::TSTransform;
 
-use super::{
-    LineStyle, PlotBounds, PlotGeometry, PlotItem, PlotItemBase, PlotPoint, PlotTransform, rect_elem::highlighted_color,
-};
+use super::LineStyle;
+use super::PlotBounds;
+use super::PlotGeometry;
+use super::PlotItem;
+use super::PlotItemBase;
+use super::PlotPoint;
+use super::PlotTransform;
+use super::rect_elem::highlighted_color;
+use crate::Axis;
+use crate::utils::find_name_candidate;
 
-/// Padding between the label of the span and both the edge of the view and the span borders.
-/// For example, for a horizontal span, this is the padding between the top of the span label
-/// and the top edge of the plot view, but also the margin between the left/right edges of the span
-/// and the span label.
+/// Padding between the label of the span and both the edge of the view and the
+/// span borders. For example, for a horizontal span, this is the padding
+/// between the top of the span label and the top edge of the plot view, but
+/// also the margin between the left/right edges of the span and the span label.
 const LABEL_PADDING: f32 = 4.0;
 
 /// A span covering a range on either axis.
@@ -44,9 +58,9 @@ impl Span {
         }
     }
 
-    /// Select which axis the span applies to. This also sets the label alignment.
-    /// If you want a different label alignment, you need to set it by calling `label_align` after
-    /// this call.
+    /// Select which axis the span applies to. This also sets the label
+    /// alignment. If you want a different label alignment, you need to set
+    /// it by calling `label_align` after this call.
     #[inline]
     pub fn axis(mut self, axis: Axis) -> Self {
         self.axis = axis;
@@ -100,7 +114,8 @@ impl Span {
     }
 
     /// Set the label alignment within the span.
-    /// This should be called after any calls to `axis` as that would overwrite the label alignment
+    /// This should be called after any calls to `axis` as that would overwrite
+    /// the label alignment
     #[inline]
     pub fn label_align(mut self, align: Align2) -> Self {
         self.label_align = align;
@@ -211,7 +226,8 @@ impl Span {
             }
         };
 
-        // Make sure to add half the width/height since the text position is at the center of the text shape
+        // Make sure to add half the width/height since the text position is at the
+        // center of the text shape
         let text_pos = pos2(text_pos_x + width / 2.0, text_pos_y + height / 2.0);
 
         text_shape.transform(TSTransform::from_translation(Vec2::new(text_pos.x, text_pos.y)));

@@ -20,7 +20,7 @@ impl PlotExample for PlotSpanDemo {
     }
 
     fn tags(&self) -> &'static [&'static str] {
-        &["span", "highlight", "range", "annotation"]
+        &["span", "annotation"]
     }
 
     fn thumbnail_bytes(&self) -> &'static [u8] {
@@ -39,4 +39,3 @@ impl PlotExample for PlotSpanDemo {
         self.show_controls(ui)
     }
 }
-

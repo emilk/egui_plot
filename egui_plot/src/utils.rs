@@ -1,11 +1,13 @@
-use egui::{Color32, FontId, Painter};
+use egui::Color32;
+use egui::FontId;
+use egui::Painter;
 
-// Utility function to find a truncated candidate to fit a text label into a given width.
-// If the width is large enough for the text, a string with the full text will be returned.
-// If the width is too small to display the full text, it finds the longest text with "..."
-// appended at the end that we can display within the given width.
-// If the width is too small to display the first character followed by "..." then we return an
-// empty string.
+// Utility function to find a truncated candidate to fit a text label into a
+// given width. If the width is large enough for the text, a string with the
+// full text will be returned. If the width is too small to display the full
+// text, it finds the longest text with "..." appended at the end that we can
+// display within the given width. If the width is too small to display the
+// first character followed by "..." then we return an empty string.
 pub(crate) fn find_name_candidate(name: &str, width: f32, painter: &Painter, font_id: &FontId) -> String {
     let galley = painter.layout_no_wrap(name.to_owned(), font_id.clone(), Color32::BLACK);
 
@@ -13,9 +15,9 @@ pub(crate) fn find_name_candidate(name: &str, width: f32, painter: &Painter, fon
         return name.to_owned();
     }
 
-    // If we don't have enough space for the name to be displayed in the span, we search
-    // for the longest candidate that fits, where a candidate is a truncated version of the
-    // name followed by "...".
+    // If we don't have enough space for the name to be displayed in the span, we
+    // search for the longest candidate that fits, where a candidate is a
+    // truncated version of the name followed by "...".
     let chars: Vec<char> = name.chars().collect();
 
     // First test the minimum candidate which is the first letter followed by "..."

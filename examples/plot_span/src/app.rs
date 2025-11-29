@@ -1,6 +1,14 @@
-use eframe::egui::{self, Align2, Color32, Response};
+use eframe::egui;
+use eframe::egui::Align2;
+use eframe::egui::Color32;
+use eframe::egui::Response;
 use eframe::epaint::Hsva;
-use egui_plot::{Corner, Legend, Line, Plot, PlotPoints, Span};
+use egui_plot::Corner;
+use egui_plot::Legend;
+use egui_plot::Line;
+use egui_plot::Plot;
+use egui_plot::PlotPoints;
+use egui_plot::Span;
 
 #[derive(Default)]
 pub struct PlotSpanDemo {
@@ -15,6 +23,7 @@ impl PlotSpanDemo {
         .response
     }
 
+    #[expect(clippy::needless_pass_by_ref_mut)]
     pub fn show_plot(&mut self, ui: &mut egui::Ui) -> Response {
         let mut plot = Plot::new("Span Demo");
         if self.show_legend {
@@ -64,4 +73,3 @@ impl PlotSpanDemo {
         .response
     }
 }
-

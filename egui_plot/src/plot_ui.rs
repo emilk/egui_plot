@@ -252,8 +252,8 @@ impl<'a> PlotUi<'a> {
 
     /// Add an axis-aligned span.
     ///
-    /// Spans fill the space between two values on one axis. If both the fill and border colors
-    /// are transparent, a color is auto-assigned.
+    /// Spans fill the space between two values on one axis. If both the fill
+    /// and border colors are transparent, a color is auto-assigned.
     pub fn span(&mut self, mut span: Span) {
         let fill_is_transparent = span.fill_color() == Color32::TRANSPARENT;
         let border_is_transparent = span.border_color_value() == Color32::TRANSPARENT;
