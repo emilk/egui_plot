@@ -1,5 +1,9 @@
-use eframe::egui::{self, Color32, Response, vec2};
-use egui_plot::{Legend, Plot};
+use eframe::egui;
+use eframe::egui::Color32;
+use eframe::egui::Response;
+use eframe::egui::vec2;
+use egui_plot::Legend;
+use egui_plot::Plot;
 
 pub const TURBO_COLORMAP: [Color32; 10] = [
     Color32::from_rgb(48, 18, 59),
@@ -76,7 +80,7 @@ impl HeatmapDemo {
         .response
     }
 
-    #[expect(clippy::unused_self)]
+    #[expect(clippy::needless_pass_by_ref_mut)]
     pub fn show_plot(&mut self, ui: &mut egui::Ui) -> Response {
         let mut values = Vec::new();
         for y in 0..self.rows {

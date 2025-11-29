@@ -1,11 +1,28 @@
 use std::ops::RangeInclusive;
 
-use egui::{Color32, Mesh, NumExt as _, Pos2, Rect, Rgba, Shape, TextStyle, Ui, Vec2, WidgetText};
-
-use crate::{ClosestElem, PlotConfig, PlotGeometry, PlotItem, PlotItemBase, PlotPoint};
-
-use super::{Cursor, LabelFormatter, PlotBounds, PlotTransform};
+use egui::Color32;
+use egui::Mesh;
+use egui::NumExt as _;
+use egui::Pos2;
+use egui::Rect;
+use egui::Rgba;
+use egui::Shape;
+use egui::TextStyle;
+use egui::Ui;
+use egui::Vec2;
+use egui::WidgetText;
 use emath::Float as _;
+
+use super::Cursor;
+use super::LabelFormatter;
+use super::PlotBounds;
+use super::PlotTransform;
+use crate::ClosestElem;
+use crate::PlotConfig;
+use crate::PlotGeometry;
+use crate::PlotItem;
+use crate::PlotItemBase;
+use crate::PlotPoint;
 
 /// Default base colors for heatmap palette
 pub const BASE_COLORS: [Color32; 10] = [
@@ -33,10 +50,7 @@ impl std::fmt::Display for HeatmapErr {
         match self {
             Self::ZeroColumns => write!(f, "number of columns must not be zero"),
             Self::ZeroRows => write!(f, "number of rows must not be zero"),
-            Self::BadLength => write!(
-                f,
-                "length of value vector is not divisible by number of columns"
-            ),
+            Self::BadLength => write!(f, "length of value vector is not divisible by number of columns"),
         }
     }
 }
@@ -90,7 +104,8 @@ pub struct Heatmap<const RESOLUTION: usize> {
 }
 
 impl<const RESOLUTION: usize> PartialEq for Heatmap<RESOLUTION> {
-    /// manual implementation of `PartialEq` because formatter and color mapping do not impl `PartialEq`.
+    /// manual implementation of `PartialEq` because formatter and color mapping
+    /// do not impl `PartialEq`.
     ///
     /// > NOTE: custom_mapping and formatter are ignored
     fn eq(&self, other: &Self) -> bool {
@@ -112,7 +127,8 @@ impl<const RESOLUTION: usize> Heatmap<RESOLUTION> {
     /// Create a 2D heatmap. Will automatically infer number of rows.
     ///
     /// - `values` contains magnitude of each tile. The alignment is row by row.
-    /// - `cols` is the number of columns (i.e. the length of each row) and must not be zero.
+    /// - `cols` is the number of columns (i.e. the length of each row) and must
+    ///   not be zero.
     /// - `values.len()` must be a multiple of `cols`.
     ///
     /// Example: To display this
@@ -174,7 +190,8 @@ impl<const RESOLUTION: usize> Heatmap<RESOLUTION> {
         self
     }
 
-    /// Interpolate linear gradient with `RESOLUTION` steps from an arbitrary number of base colors.
+    /// Interpolate linear gradient with `RESOLUTION` steps from an arbitrary
+    /// number of base colors.
     fn linear_gradient_from_base_colors(base_colors: &[Color32]) -> [Color32; RESOLUTION] {
         let mut interpolated = [Color32::TRANSPARENT; RESOLUTION];
         if base_colors.is_empty() {
@@ -213,8 +230,10 @@ impl<const RESOLUTION: usize> Heatmap<RESOLUTION> {
 
     /// Specify custom range of values to map onto color palette.
     ///
-    /// - `min` and everything smaller will be the first color on the color palette.
-    /// - `max` and everything greater will be the last color on the color palette.
+    /// - `min` and everything smaller will be the first color on the color
+    ///   palette.
+    /// - `max` and everything greater will be the last color on the color
+    ///   palette.
     #[inline]
     pub fn range(mut self, min: f64, max: f64) -> Self {
         assert!(min < max, "min must be smaller than max");
@@ -254,8 +273,9 @@ impl<const RESOLUTION: usize> Heatmap<RESOLUTION> {
 
     /// Name of this heatmap.
     ///
-    /// This name will show up in the plot legend, if legends are turned on. Multiple heatmaps may
-    /// share the same name, in which case they will also share an entry in the legend.
+    /// This name will show up in the plot legend, if legends are turned on.
+    /// Multiple heatmaps may share the same name, in which case they will
+    /// also share an entry in the legend.
     #[expect(clippy::needless_pass_by_value)]
     #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
@@ -305,12 +325,7 @@ impl<const RESOLUTION: usize> Heatmap<RESOLUTION> {
         }
     }
 
-    fn tile_view_info(
-        &self,
-        ui: &Ui,
-        transform: &PlotTransform,
-        index: usize,
-    ) -> (Rect, Color32, Shape) {
+    fn tile_view_info(&self, ui: &Ui, transform: &PlotTransform, index: usize) -> (Rect, Color32, Shape) {
         let v = self.values[index];
 
         // calculate color value
@@ -351,9 +366,8 @@ impl<const RESOLUTION: usize> Heatmap<RESOLUTION> {
         let text: WidgetText = (self.formatter)(v).into();
 
         // calculate color that is readable on coloured tiles
-        let luminance = 0.2126 * fill_color.r() as f32
-            + 0.7151 * fill_color.g() as f32
-            + 0.0721 * fill_color.b() as f32;
+        let luminance =
+            0.2126 * fill_color.r() as f32 + 0.7151 * fill_color.g() as f32 + 0.0721 * fill_color.b() as f32;
 
         let inverted_color = if luminance < 140.0 {
             Color32::WHITE
