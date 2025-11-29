@@ -15,6 +15,7 @@ mod memory;
 mod plot;
 mod plot_ui;
 mod transform;
+mod utils;
 
 use std::cmp::Ordering;
 use std::ops::RangeInclusive;
@@ -56,6 +57,7 @@ pub use crate::items::PlotPoint;
 pub use crate::items::PlotPoints;
 pub use crate::items::Points;
 pub use crate::items::Polygon;
+pub use crate::items::Span;
 pub use crate::items::Text;
 pub use crate::items::VLine;
 pub use crate::legend::ColorConflictHandling;

@@ -910,6 +910,7 @@ dependencies = [
  "linked_axes",
  "log",
  "markers",
+ "plot_span",
  "save_plot",
  "stacked_bar",
  "wasm-bindgen-futures",
@@ -2735,6 +2736,16 @@ name = "pkg-config"
 version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7edddbd0b52d732b21ad9a5fab5c704c14cd949e5e9a1ec5929a24fded1b904c"
+
+[[package]]
+name = "plot_span"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui_plot",
+ "env_logger",
+ "examples_utils",
+]
 
 [[package]]
 name = "png"

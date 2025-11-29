@@ -41,6 +41,7 @@ legend_sort.workspace = true
 lines.workspace = true
 linked_axes.workspace = true
 markers.workspace = true
+plot_span.workspace = true
 save_plot.workspace = true
 stacked_bar.workspace = true
 

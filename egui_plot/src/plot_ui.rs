@@ -14,6 +14,7 @@ use crate::PlotBounds;
 use crate::PlotItem;
 use crate::PlotPoint;
 use crate::PlotTransform;
+use crate::Span;
 
 /// Provides methods to interact with a plot while building it. It is the single
 /// argument of the closure provided to [`Plot::show`]. See [`Plot`] for an
@@ -247,6 +248,26 @@ impl<'a> PlotUi<'a> {
             vline.stroke.color = self.auto_color();
         }
         self.items.push(Box::new(vline));
+    }
+
+    /// Add an axis-aligned span.
+    ///
+    /// Spans fill the space between two values on one axis. If both the fill
+    /// and border colors are transparent, a color is auto-assigned.
+    pub fn span(&mut self, mut span: Span) {
+        let fill_is_transparent = span.fill_color() == Color32::TRANSPARENT;
+        let border_is_transparent = span.border_color_value() == Color32::TRANSPARENT;
+
+        // If no color was provided, automatically assign a color to the span
+        if fill_is_transparent && border_is_transparent {
+            let auto_color = self.auto_color();
+            span = span.fill(auto_color.gamma_multiply(0.15)).border_color(auto_color);
+        } else if border_is_transparent && !fill_is_transparent {
+            let fill_color = span.fill_color();
+            span = span.border_color(fill_color);
+        }
+
+        self.items.push(Box::new(span));
     }
 
     /// Add a box plot diagram.
