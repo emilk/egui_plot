@@ -188,8 +188,8 @@ check_branch_name:
 
 check_todos_have_issues:
 	# The code should not have TODOs without issue tracking. Format that must be followed is:
-	# TODO #<issue_number>: <description>
-	git ls-files | grep -P '\.rs$$' | xargs grep -Pi 'TODO(?! #\d+: \w+)' || exit 0; exit 1
+	# TODO(#<issue_number>): <description>
+	git ls-files | grep -P '\.rs$$' | xargs grep -Pi 'TODO(?!\(#\d+\): \w+)' || exit 0; exit 1
 
 check_no_fixme:
 	# The code should not have FIXME comments
