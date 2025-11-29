@@ -35,6 +35,7 @@ legend_sort = { version = "0.1.0", path = "examples/legend_sort" }
 lines = { version = "0.1.0", path = "examples/lines" }
 linked_axes = { version = "0.1.0", path = "examples/linked_axes" }
 markers = { version = "0.1.0", path = "examples/markers" }
+performance = { version = "0.1.0", path = "examples/performance" }
 plot_span = { version = "0.1.0", path = "examples/plot_span" }
 save_plot = { version = "0.1.0", path = "examples/save_plot" }
 stacked_bar = { version = "0.1.0", path = "examples/stacked_bar" }
