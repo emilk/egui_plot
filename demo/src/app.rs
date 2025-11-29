@@ -28,7 +28,7 @@ impl eframe::App for DemoGallery {
 
 impl DemoGallery {
     // Width of a column in the thumbnails panel.
-    // TODO #193: I don't know what units this corresponds to, and should be
+    // TODO(#193): I don't know what units this corresponds to, and should be
     // cleaned up.
     const COL_WIDTH: f32 = 128.0;
 
@@ -89,7 +89,7 @@ impl DemoGallery {
             // Set min_width so the heading is well rendered.
             .min_width(100.0)
             // 3 columns + some space extra for buttons.
-            // TODO #193: get rid of "extra space" calc.
+            // TODO(#193): get rid of "extra space" calc.
             .max_width(Self::COL_WIDTH * 3. + 30.)
             .resizable(true)
             .show(ctx, |ui| {
@@ -191,7 +191,7 @@ impl DemoGallery {
 
         let button = {
             let texture = &self.thumbnail_textures[index];
-            // TODO #193: I don't know what units this corresponds to, and should be
+            // TODO(#193): I don't know what units this corresponds to, and should be
             // cleaned up.
             let image = egui::Image::new((texture.id(), Vec2::splat(110.0 * scale)));
             let mut button = egui::Button::image(image);

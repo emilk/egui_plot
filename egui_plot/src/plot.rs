@@ -1581,7 +1581,7 @@ impl<'a> Plot<'a> {
         let complete_rect = self.calculate_widget_complete_rect(ui);
 
         let (axis_widgets, plot_rect) = axis_widgets(
-            PlotMemory::load(ui.ctx(), plot_id).as_ref(), // TODO #164: avoid loading plot memory twice
+            PlotMemory::load(ui.ctx(), plot_id).as_ref(), // TODO(#164): avoid loading plot memory twice
             self.show_axes,
             complete_rect,
             [&self.x_axes, &self.y_axes],
