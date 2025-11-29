@@ -26,6 +26,7 @@ borrow_points = { version = "0.1.0", path = "examples/borrow_points" }
 box_plot = { version = "0.1.0", path = "examples/box_plot" }
 custom_axes = { version = "0.1.0", path = "examples/custom_axes" }
 custom_plot_manipulation = { version = "0.1.0", path = "examples/custom_plot_manipulation" }
+heatmap = { version = "0.1.0", path = "examples/heatmap" }
 histogram = { version = "0.1.0", path = "examples/histogram" }
 interaction = { version = "0.1.0", path = "examples/interaction" }
 items = { version = "0.1.0", path = "examples/items" }

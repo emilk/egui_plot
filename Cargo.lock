@@ -899,6 +899,7 @@ dependencies = [
  "egui_chip",
  "env_logger",
  "examples_utils",
+ "heatmap",
  "histogram",
  "image",
  "interaction",
@@ -1676,6 +1677,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5419bdc4f6a9207fbeba6d11b604d481addf78ecd10c11ad51e76c2f6482748d"
 dependencies = [
  "foldhash 0.2.0",
+]
+
+[[package]]
+name = "heatmap"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui_plot",
+ "env_logger",
+ "examples_utils",
 ]
 
 [[package]]
