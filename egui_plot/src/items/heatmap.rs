@@ -57,8 +57,11 @@ impl std::fmt::Display for HeatmapErr {
 
 impl std::error::Error for HeatmapErr {}
 
+/// Default resolution for heatmap color palette
+pub const DEFAULT_RESOLUTION: usize = 128;
+
 /// A heatmap.
-pub struct Heatmap<const RESOLUTION: usize> {
+pub struct Heatmap {
     base: PlotItemBase,
 
     /// Occupied space in absolute plot coordinates.
@@ -90,8 +93,11 @@ pub struct Heatmap<const RESOLUTION: usize> {
     /// show labels on tiles
     show_labels: bool,
 
+    /// resolution of the color palette
+    resolution: usize,
+
     /// possible colors, sorted by index
-    palette: [Color32; RESOLUTION],
+    palette: Vec<Color32>,
 
     /// is widget is highlighted
     highlight: bool,
@@ -103,7 +109,7 @@ pub struct Heatmap<const RESOLUTION: usize> {
     tile_size: Vec2,
 }
 
-impl<const RESOLUTION: usize> PartialEq for Heatmap<RESOLUTION> {
+impl PartialEq for Heatmap {
     /// manual implementation of `PartialEq` because formatter and color mapping
     /// do not impl `PartialEq`.
     ///
@@ -116,6 +122,7 @@ impl<const RESOLUTION: usize> PartialEq for Heatmap<RESOLUTION> {
             && self.min == other.min
             && self.max == other.max
             && self.show_labels == other.show_labels
+            && self.resolution == other.resolution
             && self.palette == other.palette
             && self.highlight == other.highlight
             && self.name == other.name
@@ -123,7 +130,7 @@ impl<const RESOLUTION: usize> PartialEq for Heatmap<RESOLUTION> {
     }
 }
 
-impl<const RESOLUTION: usize> Heatmap<RESOLUTION> {
+impl Heatmap {
     /// Create a 2D heatmap. Will automatically infer number of rows.
     ///
     /// - `values` contains magnitude of each tile. The alignment is row by row.
@@ -165,6 +172,8 @@ impl<const RESOLUTION: usize> Heatmap<RESOLUTION> {
             max = max.max(*v);
         }
 
+        let resolution = DEFAULT_RESOLUTION;
+
         Ok(Self {
             base: PlotItemBase::new(String::new()),
             pos: PlotPoint { x: 0.0, y: 0.0 },
@@ -176,34 +185,45 @@ impl<const RESOLUTION: usize> Heatmap<RESOLUTION> {
             formatter: Box::new(|v| format!("{v:.1}")),
             custom_mapping: None,
             show_labels: true,
-            palette: Self::linear_gradient_from_base_colors(&BASE_COLORS),
+            resolution,
+            palette: Self::linear_gradient_from_base_colors(&BASE_COLORS, resolution),
             highlight: false,
             name: String::new(),
             tile_size: Vec2 { x: 1.0, y: 1.0 },
         })
     }
 
-    /// Set color palette by specifying base colors from low to high
+    /// Set the resolution of the color palette.
+    ///
+    /// Higher resolution means smoother color transitions.
+    /// Default is 128.
     #[inline]
-    pub fn palette(mut self, base_colors: &[Color32]) -> Self {
-        self.palette = Self::linear_gradient_from_base_colors(base_colors);
+    pub fn resolution(mut self, resolution: usize) -> Self {
+        self.resolution = resolution;
+        self.palette = Self::linear_gradient_from_base_colors(&BASE_COLORS, resolution);
         self
     }
 
-    /// Interpolate linear gradient with `RESOLUTION` steps from an arbitrary
+    /// Set color palette by specifying base colors from low to high
+    #[inline]
+    pub fn palette(mut self, base_colors: &[Color32]) -> Self {
+        self.palette = Self::linear_gradient_from_base_colors(base_colors, self.resolution);
+        self
+    }
+
+    /// Interpolate linear gradient with given resolution from an arbitrary
     /// number of base colors.
-    fn linear_gradient_from_base_colors(base_colors: &[Color32]) -> [Color32; RESOLUTION] {
-        let mut interpolated = [Color32::TRANSPARENT; RESOLUTION];
-        if base_colors.is_empty() {
+    fn linear_gradient_from_base_colors(base_colors: &[Color32], resolution: usize) -> Vec<Color32> {
+        let mut interpolated = vec![Color32::TRANSPARENT; resolution];
+        if base_colors.is_empty() || resolution == 0 {
             return interpolated;
         }
-        if base_colors.len() == 1 {
+        if base_colors.len() == 1 || resolution == 1 {
             // single color, no gradient
-            interpolated = [base_colors[0]; RESOLUTION];
-            return interpolated;
+            return vec![base_colors[0]; resolution];
         }
         for (i, color) in interpolated.iter_mut().enumerate() {
-            let i_rel: f64 = i as f64 / (RESOLUTION - 1) as f64;
+            let i_rel: f64 = i as f64 / (resolution - 1) as f64;
             if i_rel == 1.0 {
                 // last element
                 *color = *base_colors.last().expect("Base colors should not be empty");
@@ -389,7 +409,7 @@ impl<const RESOLUTION: usize> Heatmap<RESOLUTION> {
     }
 }
 
-impl<const RESOLUTION: usize> PlotItem for Heatmap<RESOLUTION> {
+impl PlotItem for Heatmap {
     fn shapes(&self, ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         self.push_shapes(ui, transform, shapes);
     }

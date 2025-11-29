@@ -276,7 +276,7 @@ impl<'a> PlotUi<'a> {
     }
 
     /// Add a heatmap.
-    pub fn heatmap<const RESOLUTION: usize>(&mut self, heatmap: crate::Heatmap<RESOLUTION>) {
+    pub fn heatmap(&mut self, heatmap: crate::Heatmap) {
         if heatmap.values.is_empty() {
             return;
         }
