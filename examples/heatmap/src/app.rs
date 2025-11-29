@@ -99,6 +99,7 @@ impl HeatmapDemo {
             .allow_zoom(false)
             .allow_scroll(false)
             .allow_drag(false)
+            .allow_axis_zoom_drag(false)
             .allow_boxed_zoom(false)
             .set_margin_fraction(vec2(0.0, 0.0))
             .show(ui, |plot_ui| {
