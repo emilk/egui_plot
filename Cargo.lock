@@ -910,6 +910,7 @@ dependencies = [
  "linked_axes",
  "log",
  "markers",
+ "plot_span",
  "save_plot",
  "stacked_bar",
  "wasm-bindgen-futures",
@@ -2743,6 +2744,7 @@ dependencies = [
  "eframe",
  "egui_plot",
  "env_logger",
+ "examples_utils",
 ]
 
 [[package]]

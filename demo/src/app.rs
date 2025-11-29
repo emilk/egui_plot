@@ -47,6 +47,7 @@ impl DemoGallery {
             Box::new(lines::LineExample::default()),
             Box::new(linked_axes::LinkedAxesExample::default()),
             Box::new(markers::MarkerDemo::default()),
+            Box::new(plot_span::PlotSpanDemo::default()),
             Box::new(save_plot::SavePlotExample::default()),
             Box::new(stacked_bar::StackedBarExample::default()),
         ];
