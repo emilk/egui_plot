@@ -34,8 +34,8 @@ impl Default for HeatmapDemo {
             animate: false,
             show_labels: true,
             palette: TURBO_COLORMAP.to_vec(),
-            rows: 10,
-            cols: 15,
+            rows: 5,
+            cols: 5,
         }
     }
 }
