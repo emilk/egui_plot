@@ -43,6 +43,7 @@ use crate::rect_elem::RectElement;
 mod arrows;
 mod bar_chart;
 mod box_plot;
+mod filled_area;
 mod heatmap;
 mod line;
 mod plot_image;

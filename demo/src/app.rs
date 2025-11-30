@@ -29,7 +29,7 @@ impl eframe::App for DemoGallery {
 impl DemoGallery {
     // Width of a column in the thumbnails panel.
     // TODO(#193): I don't know what units this corresponds to, and should be
-    // cleaned up.
+    // cleaned up...
     const COL_WIDTH: f32 = 128.0;
 
     pub fn new(ctx: &egui::Context) -> Self {
@@ -38,6 +38,7 @@ impl DemoGallery {
             Box::new(box_plot::BoxPlotExample::default()),
             Box::new(custom_axes::CustomAxesExample::default()),
             Box::new(custom_plot_manipulation::CustomPlotManipulationExample::default()),
+            Box::new(filled_area::FilledAreaExample::default()),
             Box::new(heatmap::HeatmapDemo::default()),
             Box::new(histogram::HistogramExample::default()),
             Box::new(interaction::InteractionExample::default()),
