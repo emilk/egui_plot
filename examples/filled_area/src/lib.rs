@@ -20,7 +20,7 @@ impl PlotExample for FilledAreaExample {
     }
 
     fn tags(&self) -> &'static [&'static str] {
-        &["filled_area", "confidence_interval", "range"]
+        &["filled_area", "confidence_interval"]
     }
 
     fn thumbnail_bytes(&self) -> &'static [u8] {
