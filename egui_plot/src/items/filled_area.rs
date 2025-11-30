@@ -20,14 +20,14 @@ use crate::PlotTransform;
 
 /// A filled area between two lines.
 ///
-/// Takes x-coordinates and corresponding y_min and y_max values, and fills the
-/// area between them. Useful for visualizing confidence intervals, ranges, and
-/// uncertainty bands.
+/// Takes x-coordinates and corresponding `y_min` and `y_max` values, and fills
+/// the area between them. Useful for visualizing confidence intervals, ranges,
+/// and uncertainty bands.
 pub struct FilledArea {
     base: PlotItemBase,
-    /// Lower boundary line (x, y_min pairs)
+    /// Lower boundary line (`x`, `y_min` pairs)
     lower_line: Vec<PlotPoint>,
-    /// Upper boundary line (x, y_max pairs)
+    /// Upper boundary line (`x`, `y_max` pairs)
     upper_line: Vec<PlotPoint>,
     /// Fill color for the area
     fill_color: Color32,

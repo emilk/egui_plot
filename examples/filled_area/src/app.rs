@@ -65,12 +65,15 @@ impl FilledAreaExample {
         // Create the center line
         let sin_line = Line::new(
             "sin(x)",
-            PlotPoints::from_iter(xs.iter().zip(ys.iter()).map(|(&x, &y)| [x, y])),
+            xs.iter()
+                .zip(ys.iter())
+                .map(|(&x, &y)| [x, y])
+                .collect::<PlotPoints<'_>>(),
         )
         .color(egui::Color32::from_rgb(200, 100, 100));
 
         // Create the filled area
-        let filled_area = FilledArea::new("Confidence Band", &xs, &ys_min, &ys_max)
+        let filled_area = FilledArea::new("sin(x) +/- δ lower and δ upper", &xs, &ys_min, &ys_max)
             .fill_color(egui::Color32::from_rgba_unmultiplied(100, 200, 100, 50));
 
         Plot::new("Filled Area Demo")

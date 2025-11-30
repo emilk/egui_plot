@@ -11,8 +11,8 @@ This example demonstrates the `FilledArea` plot item which fills the area betwee
 ## Usage
 
 The example shows `sin(x)` with adjustable bounds:
-- **δ lower**: offset for the lower boundary (sin(x) - δ_lower)
-- **δ upper**: offset for the upper boundary (sin(x) + δ_upper)
+- **delta lower**: offset for the lower boundary (`sin(x) - delta_lower`)
+- **delta upper**: offset for the upper boundary (`sin(x) + delta_upper`)
 - **points**: number of sampling points
 
 ## Running
