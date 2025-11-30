@@ -38,6 +38,7 @@ impl DemoGallery {
             Box::new(box_plot::BoxPlotExample::default()),
             Box::new(custom_axes::CustomAxesExample::default()),
             Box::new(custom_plot_manipulation::CustomPlotManipulationExample::default()),
+            Box::new(filled_area::FilledAreaExample::default()),
             Box::new(heatmap::HeatmapDemo::default()),
             Box::new(histogram::HistogramExample::default()),
             Box::new(interaction::InteractionExample::default()),
