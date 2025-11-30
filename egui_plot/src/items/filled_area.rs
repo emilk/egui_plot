@@ -25,6 +25,7 @@ use crate::PlotTransform;
 /// and uncertainty bands.
 pub struct FilledArea {
     base: PlotItemBase,
+
     /// Lower boundary line (`x`, `y_min` pairs)
     lower_line: Vec<PlotPoint>,
 
