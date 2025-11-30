@@ -2,6 +2,7 @@ use std::ops::RangeInclusive;
 
 use egui::Color32;
 use egui::Id;
+use egui::Mesh;
 use egui::Pos2;
 use egui::Shape;
 use egui::Stroke;
@@ -117,30 +118,38 @@ impl FilledArea {
 }
 
 impl PlotItem for FilledArea {
-    fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
+    fn shapes(&self, ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         if self.lower_line.is_empty() {
             return;
         }
 
-        // Build polygon points: go forward through upper line, then backward through lower line
-        let mut polygon_points: Vec<Pos2> = Vec::with_capacity(self.lower_line.len() * 2);
+        let n = self.lower_line.len();
 
-        // Add upper boundary (forward)
+        // Create a mesh for the filled area
+        let mut mesh = Mesh::default();
+        mesh.reserve_triangles((n - 1) * 2);
+        mesh.reserve_vertices(n * 2);
+
+        // Add vertices for upper and lower lines
         for point in &self.upper_line {
-            polygon_points.push(transform.position_from_point(point));
+            let pos = transform.position_from_point(point);
+            mesh.colored_vertex(pos, self.fill_color);
+        }
+        for point in &self.lower_line {
+            let pos = transform.position_from_point(point);
+            mesh.colored_vertex(pos, self.fill_color);
         }
 
-        // Add lower boundary (backward)
-        for point in self.lower_line.iter().rev() {
-            polygon_points.push(transform.position_from_point(point));
+        // Create triangles connecting upper and lower lines
+        for i in 0..(n - 1) {
+            // Each quad is split into two triangles
+            // Triangle 1: upper[i], lower[i], upper[i+1]
+            mesh.add_triangle(i as u32, (n + i) as u32, (i + 1) as u32);
+            // Triangle 2: lower[i], lower[i+1], upper[i+1]
+            mesh.add_triangle((n + i) as u32, (n + i + 1) as u32, (i + 1) as u32);
         }
 
-        // Draw filled polygon
-        shapes.push(Shape::convex_polygon(
-            polygon_points,
-            self.fill_color,
-            Stroke::NONE,
-        ));
+        shapes.push(Shape::Mesh(mesh));
 
         // Draw optional stroke around boundaries
         if let Some(stroke) = self.stroke {
