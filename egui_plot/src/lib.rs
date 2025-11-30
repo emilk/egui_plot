@@ -47,6 +47,7 @@ pub use crate::items::BoxElem;
 pub use crate::items::BoxPlot;
 pub use crate::items::BoxSpread;
 pub use crate::items::ClosestElem;
+pub use crate::items::FilledArea;
 pub use crate::items::HLine;
 pub use crate::items::Heatmap;
 pub use crate::items::Line;
