@@ -1,4 +1,5 @@
 use std::ops::RangeInclusive;
+use std::sync::Arc;
 
 use egui::Color32;
 use egui::Id;
@@ -19,8 +20,9 @@ use crate::PlotTransform;
 
 /// A filled area between two lines.
 ///
-/// Takes x-coordinates and corresponding y_min and y_max values, and fills the area between them.
-/// Useful for visualizing confidence intervals, ranges, and uncertainty bands.
+/// Takes x-coordinates and corresponding y_min and y_max values, and fills the
+/// area between them. Useful for visualizing confidence intervals, ranges, and
+/// uncertainty bands.
 pub struct FilledArea {
     base: PlotItemBase,
     /// Lower boundary line (x, y_min pairs)
@@ -118,7 +120,7 @@ impl FilledArea {
 }
 
 impl PlotItem for FilledArea {
-    fn shapes(&self, ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
+    fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         if self.lower_line.is_empty() {
             return;
         }
@@ -149,7 +151,7 @@ impl PlotItem for FilledArea {
             mesh.add_triangle((n + i) as u32, (n + i + 1) as u32, (i + 1) as u32);
         }
 
-        shapes.push(Shape::Mesh(mesh));
+        shapes.push(Shape::Mesh(Arc::new(mesh)));
 
         // Draw optional stroke around boundaries
         if let Some(stroke) = self.stroke {
