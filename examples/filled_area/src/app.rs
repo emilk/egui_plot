@@ -73,7 +73,7 @@ impl FilledAreaExample {
         .color(egui::Color32::from_rgb(200, 100, 100));
 
         // Create the filled area
-        let filled_area = FilledArea::new("sin(x) +/- δ lower and δ upper", &xs, &ys_min, &ys_max)
+        let filled_area = FilledArea::new("sin(x) +/- deltas", &xs, &ys_min, &ys_max)
             .fill_color(egui::Color32::from_rgba_unmultiplied(100, 200, 100, 50));
 
         Plot::new("Filled Area Demo")
