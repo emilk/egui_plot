@@ -27,10 +27,13 @@ pub struct FilledArea {
     base: PlotItemBase,
     /// Lower boundary line (`x`, `y_min` pairs)
     lower_line: Vec<PlotPoint>,
+
     /// Upper boundary line (`x`, `y_max` pairs)
     upper_line: Vec<PlotPoint>,
+
     /// Fill color for the area
     fill_color: Color32,
+
     /// Optional stroke for the boundaries
     stroke: Option<Stroke>,
 }
