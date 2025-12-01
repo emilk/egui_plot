@@ -1,5 +1,6 @@
+use std::fmt::format;
 use eframe::egui;
-use egui::Color32;
+use egui::{Atom, Button, Color32, Id, Sense};
 use egui::RichText;
 use egui::ScrollArea;
 use egui::TextEdit;
@@ -36,20 +37,20 @@ impl DemoGallery {
         let examples: Vec<Box<dyn PlotExample>> = vec![
             Box::new(borrow_points::BorrowPointsExample::default()),
             Box::new(box_plot::BoxPlotExample::default()),
-            Box::new(custom_axes::CustomAxesExample::default()),
+            // Box::new(custom_axes::CustomAxesExample::default()),
             Box::new(custom_plot_manipulation::CustomPlotManipulationExample::default()),
             Box::new(heatmap::HeatmapDemo::default()),
             Box::new(histogram::HistogramExample::default()),
             Box::new(interaction::InteractionExample::default()),
             Box::new(items::ItemsExample::default()),
             Box::new(legend::LegendExample::default()),
-            Box::new(legend_sort::LegendSortExample::default()),
+            // Box::new(legend_sort::LegendSortExample::default()),
             Box::new(lines::LineExample::default()),
-            Box::new(linked_axes::LinkedAxesExample::default()),
+            // Box::new(linked_axes::LinkedAxesExample::default()),
             Box::new(markers::MarkerDemo::default()),
             Box::new(performance::PerformanceDemo::default()),
             Box::new(plot_span::PlotSpanDemo::default()),
-            Box::new(save_plot::SavePlotExample::default()),
+            // Box::new(save_plot::SavePlotExample::default()),
             Box::new(stacked_bar::StackedBarExample::default()),
         ];
         let thumbnail_textures = Self::load_thumbnails(ctx, &examples);
@@ -193,17 +194,25 @@ impl DemoGallery {
         let is_selected = self.current_example == Some(index);
 
         let button = {
-            let texture = &self.thumbnail_textures[index];
-            // TODO(#193): I don't know what units this corresponds to, and should be
-            // cleaned up.
-            let image = egui::Image::new((texture.id(), Vec2::splat(110.0 * scale)));
-            let mut button = egui::Button::image(image);
+            // the rect of atom_rect_id = what the plot will have
+            let atom_rect_id = Id::new("my_button").with(index);
+            let interaction_id = Id::new("my_interaction").with(index);
+            let response = ui.ctx().read_response(interaction_id);
 
+            let mut button = Button::new(Atom::custom(atom_rect_id, Vec2::splat(110.0 * scale)));
             if is_selected {
                 button = button.fill(ui.visuals().selection.bg_fill);
             }
+            if response.is_some_and(|response| response.hovered()) {
+                button = button.fill(Color32::RED);
+            }
+            let atom = button.atom_ui(ui);
+            let rect = atom.rect(atom_rect_id);
 
-            ui.add(button)
+            if let Some(rect) = rect {
+                ui.place(rect, |ui: &mut egui::Ui| self.examples[index].show_ui(ui));
+            }
+            ui.interact(atom.response.rect, interaction_id, Sense::click_and_drag())
         }
         .on_hover_text_at_pointer(format!(
             "Click to select `{}`\nTags: {}",
