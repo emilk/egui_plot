@@ -76,3 +76,6 @@ pub use crate::grid::uniform_grid_spacer;
 pub use bounds::PlotBounds;
 pub use crate::transform::PlotTransform;
 pub use crate::overlays::CoordinatesFormatter;
+pub use crate::colors::color_from_strength;
+pub use crate::label::format_number;
+pub use crate::label::LabelFormatter;
