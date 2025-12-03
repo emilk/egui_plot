@@ -18,12 +18,13 @@ use egui::Pos2;
 use egui::Shape;
 use egui::TextStyle;
 use egui::Ui;
-use egui::pos2;
 use egui::vec2;
 use emath::Float as _;
 pub use heatmap::Heatmap;
 pub use line::HLine;
 pub use line::VLine;
+pub use line::vertical_line;
+pub use line::horizontal_line;
 pub use plot_image::PlotImage;
 pub use points::Points;
 pub use polygon::Polygon;
@@ -201,22 +202,6 @@ pub trait PlotItem {
 
 // ----------------------------------------------------------------------------
 // Helper functions
-
-pub(crate) fn vertical_line(pointer: Pos2, transform: &PlotTransform, line_color: Color32) -> Shape {
-    let frame = transform.frame();
-    Shape::line_segment(
-        [pos2(pointer.x, frame.top()), pos2(pointer.x, frame.bottom())],
-        (1.0, line_color),
-    )
-}
-
-pub(crate) fn horizontal_line(pointer: Pos2, transform: &PlotTransform, line_color: Color32) -> Shape {
-    let frame = transform.frame();
-    Shape::line_segment(
-        [pos2(frame.left(), pointer.y), pos2(frame.right(), pointer.y)],
-        (1.0, line_color),
-    )
-}
 
 fn add_rulers_and_text(
     elem: &dyn RectElement,
