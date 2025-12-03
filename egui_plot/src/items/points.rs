@@ -9,15 +9,15 @@ use emath::Pos2;
 use emath::pos2;
 use emath::vec2;
 
-use crate::Id;
-use crate::items::PlotGeometry;
-use crate::items::PlotItem;
-use crate::items::PlotItemBase;
-use crate::transform::PlotTransform;
 use crate::aesthetics::MarkerShape;
 use crate::bounds::PlotBounds;
 use crate::data::PlotPoint;
 use crate::data::PlotPoints;
+use crate::items::PlotGeometry;
+use crate::items::PlotItem;
+use crate::items::PlotItemBase;
+use crate::transform::PlotTransform;
+use egui::Id;
 
 impl<'a> Points<'a> {
     pub fn new(name: impl Into<String>, series: impl Into<PlotPoints<'a>>) -> Self {

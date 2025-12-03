@@ -8,14 +8,14 @@ use egui::epaint::PathStroke;
 use emath::Pos2;
 use emath::pos2;
 
-use crate::Id;
+use crate::aesthetics::LineStyle;
+use crate::bounds::PlotBounds;
+use crate::data::PlotPoint;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
 use crate::transform::PlotTransform;
-use crate::aesthetics::LineStyle;
-use crate::bounds::PlotBounds;
-use crate::data::PlotPoint;
+use egui::Id;
 
 /// A horizontal line in a plot, filling the full width
 #[derive(Clone, Debug, PartialEq)]

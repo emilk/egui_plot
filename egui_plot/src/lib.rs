@@ -27,13 +27,12 @@ mod rect_elem;
 mod transform;
 mod utils;
 
-pub use bounds::PlotBounds;
-use egui::Id;
-pub use overlays::ColorConflictHandling;
-pub use overlays::Legend;
-pub use placement::HPlacement;
-pub use placement::Placement;
-pub use placement::VPlacement;
+pub use crate::bounds::PlotBounds;
+pub use crate::overlays::ColorConflictHandling;
+pub use crate::overlays::Legend;
+pub use crate::placement::HPlacement;
+pub use crate::placement::Placement;
+pub use crate::placement::VPlacement;
 
 pub use crate::aesthetics::LineStyle;
 pub use crate::aesthetics::MarkerShape;

@@ -12,13 +12,13 @@ use emath::Rot2;
 use emath::Vec2;
 use emath::pos2;
 
-use crate::Id;
 use crate::bounds::PlotBounds;
 use crate::data::PlotPoint;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
 use crate::transform::PlotTransform;
+use egui::Id;
 
 /// An image in the plot.
 #[derive(Clone)]

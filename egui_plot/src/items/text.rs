@@ -9,7 +9,7 @@ use egui::WidgetText;
 use egui::epaint::TextShape;
 use emath::Align2;
 
-use crate::Id;
+use egui::Id;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;

@@ -13,7 +13,7 @@ use emath::Pos2;
 use emath::Rect;
 use emath::pos2;
 
-use crate::Id;
+use egui::Id;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;

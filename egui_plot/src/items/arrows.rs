@@ -6,7 +6,7 @@ use egui::Stroke;
 use egui::Ui;
 use emath::Rot2;
 
-use crate::Id;
+use egui::Id;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
