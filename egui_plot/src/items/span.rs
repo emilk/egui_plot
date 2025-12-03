@@ -27,9 +27,11 @@ use crate::Axis;
 use crate::utils::find_name_candidate;
 
 /// Padding between the label of the span and both the edge of the view and the
-/// span borders. For example, for a horizontal span, this is the padding
-/// between the top of the span label and the top edge of the plot view, but
-/// also the margin between the left/right edges of the span and the span label.
+/// span borders.
+///
+/// For example, for a horizontal span, this is the padding between the top of the span
+/// label and the top edge of the plot view, but also the margin between the left/right
+/// edges of the span and the span label.
 const LABEL_PADDING: f32 = 4.0;
 
 /// A span covering a range on either axis.
