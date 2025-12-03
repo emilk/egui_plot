@@ -17,13 +17,13 @@ use crate::Id;
 use crate::PlotItem;
 use crate::PlotItemBase;
 use crate::PlotTransform;
+use crate::aesthetics::LineStyle;
 use crate::bounds::PlotBounds;
 use crate::colors::DEFAULT_FILL_ALPHA;
+use crate::data::PlotPoint;
+use crate::data::PlotPoints;
+use crate::items::PlotGeometry;
 use crate::math::y_intersection;
-use crate::values::LineStyle;
-use crate::values::PlotGeometry;
-use crate::values::PlotPoint;
-use crate::values::PlotPoints;
 
 /// A series of values forming a path.
 pub struct Line<'a> {

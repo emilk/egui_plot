@@ -16,15 +16,15 @@ use crate::PlotConfig;
 use crate::PlotItem;
 use crate::PlotItemBase;
 use crate::PlotTransform;
+use crate::aesthetics::Orientation;
 use crate::bounds::PlotBounds;
 use crate::colors::highlighted_color;
+use crate::data::PlotPoint;
+use crate::items::ClosestElem;
+use crate::items::PlotGeometry;
 use crate::label::LabelFormatter;
 use crate::math::find_closest_rect;
 use crate::rect_elem::RectElement;
-use crate::values::ClosestElem;
-use crate::values::Orientation;
-use crate::values::PlotGeometry;
-use crate::values::PlotPoint;
 
 /// A diagram containing a series of [`BoxElem`] elements.
 pub struct BoxPlot {

@@ -17,8 +17,8 @@ use crate::PlotItem;
 use crate::PlotItemBase;
 use crate::PlotTransform;
 use crate::bounds::PlotBounds;
-use crate::values::PlotGeometry;
-use crate::values::PlotPoint;
+use crate::data::PlotPoint;
+use crate::items::PlotGeometry;
 
 /// An image in the plot.
 #[derive(Clone)]

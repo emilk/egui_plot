@@ -1,16 +1,11 @@
-use std::ops::Bound;
+use std::collections::Bound;
+use std::iter::FromIterator;
 use std::ops::RangeBounds;
 use std::ops::RangeInclusive;
 
-use egui::Pos2;
-use egui::Rect;
-use egui::Shape;
-use egui::Stroke;
-use egui::Vec2;
-use egui::epaint::ColorMode;
-use egui::epaint::PathStroke;
-use egui::lerp;
-use egui::pos2;
+use emath::Pos2;
+use emath::Vec2;
+use emath::lerp;
 
 use crate::bounds::PlotBounds;
 
@@ -54,110 +49,6 @@ impl PlotPoint {
         Vec2::new(self.x as f32, self.y as f32)
     }
 }
-
-// ----------------------------------------------------------------------------
-
-/// Solid, dotted, dashed, etc.
-#[derive(Debug, PartialEq, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
-pub enum LineStyle {
-    Solid,
-    Dotted { spacing: f32 },
-    Dashed { length: f32 },
-}
-
-impl LineStyle {
-    pub fn dashed_loose() -> Self {
-        Self::Dashed { length: 10.0 }
-    }
-
-    pub fn dashed_dense() -> Self {
-        Self::Dashed { length: 5.0 }
-    }
-
-    pub fn dotted_loose() -> Self {
-        Self::Dotted { spacing: 10.0 }
-    }
-
-    pub fn dotted_dense() -> Self {
-        Self::Dotted { spacing: 5.0 }
-    }
-
-    pub(super) fn style_line(&self, line: Vec<Pos2>, mut stroke: PathStroke, highlight: bool, shapes: &mut Vec<Shape>) {
-        let path_stroke_color = match &stroke.color {
-            ColorMode::Solid(c) => *c,
-            ColorMode::UV(callback) => callback(Rect::from_min_max(pos2(0., 0.), pos2(0., 0.)), pos2(0., 0.)),
-        };
-        match line.len() {
-            0 => {}
-            1 => {
-                let mut radius = stroke.width / 2.0;
-                if highlight {
-                    radius *= 2f32.sqrt();
-                }
-                shapes.push(Shape::circle_filled(line[0], radius, path_stroke_color));
-            }
-            _ => {
-                match self {
-                    Self::Solid => {
-                        if highlight {
-                            stroke.width *= 2.0;
-                        }
-                        shapes.push(Shape::line(line, stroke));
-                    }
-                    Self::Dotted { spacing } => {
-                        // Take the stroke width for the radius even though it's not "correct",
-                        // otherwise the dots would become too small.
-                        let mut radius = stroke.width;
-                        if highlight {
-                            radius *= 2f32.sqrt();
-                        }
-                        shapes.extend(Shape::dotted_line(&line, path_stroke_color, *spacing, radius));
-                    }
-                    Self::Dashed { length } => {
-                        if highlight {
-                            stroke.width *= 2.0;
-                        }
-                        let golden_ratio = (5.0_f32.sqrt() - 1.0) / 2.0; // 0.61803398875
-                        shapes.extend(Shape::dashed_line(
-                            &line,
-                            Stroke::new(stroke.width, path_stroke_color),
-                            *length,
-                            length * golden_ratio,
-                        ));
-                    }
-                }
-            }
-        }
-    }
-}
-
-impl std::fmt::Display for LineStyle {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Solid => write!(f, "Solid"),
-            Self::Dotted { spacing } => write!(f, "Dotted({spacing} px)"),
-            Self::Dashed { length } => write!(f, "Dashed({length} px)"),
-        }
-    }
-}
-
-// ----------------------------------------------------------------------------
-
-/// Determines whether a plot element is vertically or horizontally oriented.
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Orientation {
-    Horizontal,
-    Vertical,
-}
-
-impl Default for Orientation {
-    fn default() -> Self {
-        Self::Vertical
-    }
-}
-
-// ----------------------------------------------------------------------------
 
 /// Represents many [`PlotPoint`]s.
 ///
@@ -286,7 +177,7 @@ impl<'a> PlotPoints<'a> {
 
     /// Returns true if there are no data points available and there is no
     /// function to generate any.
-    pub(crate) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         match self {
             Self::Owned(points) => points.is_empty(),
             Self::Generator(_) => false,
@@ -296,7 +187,7 @@ impl<'a> PlotPoints<'a> {
 
     /// If initialized with a generator function, this will generate `n` evenly
     /// spaced points in the given range.
-    pub(super) fn generate_points(&mut self, x_range: RangeInclusive<f64>) {
+    pub fn generate_points(&mut self, x_range: RangeInclusive<f64>) {
         if let Self::Generator(generator) = self {
             *self = Self::range_intersection(&x_range, &generator.x_range)
                 .map(|intersection| {
@@ -320,7 +211,7 @@ impl<'a> PlotPoints<'a> {
         (start < end).then_some(start..=end)
     }
 
-    pub(super) fn bounds(&self) -> PlotBounds {
+    pub fn bounds(&self) -> PlotBounds {
         match self {
             Self::Owned(points) => {
                 let mut bounds = PlotBounds::NOTHING;
@@ -340,62 +231,6 @@ impl<'a> PlotPoints<'a> {
         }
     }
 }
-
-// ----------------------------------------------------------------------------
-
-/// Circle, Diamond, Square, Cross, …
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum MarkerShape {
-    Circle,
-    Diamond,
-    Square,
-    Cross,
-    Plus,
-    Up,
-    Down,
-    Left,
-    Right,
-    Asterisk,
-}
-
-impl MarkerShape {
-    /// Get a vector containing all marker shapes.
-    pub fn all() -> impl ExactSizeIterator<Item = Self> {
-        [
-            Self::Circle,
-            Self::Diamond,
-            Self::Square,
-            Self::Cross,
-            Self::Plus,
-            Self::Up,
-            Self::Down,
-            Self::Left,
-            Self::Right,
-            Self::Asterisk,
-        ]
-        .iter()
-        .copied()
-    }
-}
-
-// ----------------------------------------------------------------------------
-
-/// Query the points of the plot, for geometric relations like closest checks
-pub enum PlotGeometry<'a> {
-    /// No geometry based on single elements (examples: text, image,
-    /// horizontal/vertical line)
-    None,
-
-    /// Point values (X-Y graphs)
-    Points(&'a [PlotPoint]),
-
-    /// Rectangles (examples: boxes or bars)
-    // Has currently no data, as it would require copying rects or iterating a list of pointers.
-    // Instead, geometry-based functions are directly implemented in the respective PlotItem impl.
-    Rects,
-}
-
-// ----------------------------------------------------------------------------
 
 /// Describes a function y = f(x) with an optional range for x and a number of
 /// points.
@@ -446,17 +281,4 @@ impl ExplicitGenerator<'_> {
 
         bounds
     }
-}
-
-// ----------------------------------------------------------------------------
-
-/// Result of [`super::PlotItem::find_closest()`] search, identifies an element
-/// inside the item for immediate use
-pub struct ClosestElem {
-    /// Position of hovered-over value (or bar/box-plot/…) in `PlotItem`
-    pub index: usize,
-
-    /// Squared distance from the mouse cursor (needed to compare against other
-    /// `PlotItems`, which might be nearer)
-    pub dist_sq: f32,
 }

@@ -20,10 +20,10 @@ use crate::PlotItem;
 use crate::PlotItemBase;
 use crate::bounds::PlotBounds;
 use crate::colors::BASE_COLORS;
+use crate::data::PlotPoint;
+use crate::items::ClosestElem;
+use crate::items::PlotGeometry;
 use crate::label::LabelFormatter;
-use crate::values::ClosestElem;
-use crate::values::PlotGeometry;
-use crate::values::PlotPoint;
 
 /// Default resolution for heatmap color palette
 pub const DEFAULT_RESOLUTION: usize = 128;

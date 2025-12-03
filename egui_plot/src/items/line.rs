@@ -12,10 +12,10 @@ use crate::Id;
 use crate::PlotItem;
 use crate::PlotItemBase;
 use crate::PlotTransform;
+use crate::aesthetics::LineStyle;
 use crate::bounds::PlotBounds;
-use crate::values::LineStyle;
-use crate::values::PlotGeometry;
-use crate::values::PlotPoint;
+use crate::data::PlotPoint;
+use crate::items::PlotGeometry;
 
 /// A horizontal line in a plot, filling the full width
 #[derive(Clone, Debug, PartialEq)]
