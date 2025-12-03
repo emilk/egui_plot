@@ -55,8 +55,8 @@ impl HeatmapDemo {
             });
             ui.group(|ui| {
                 ui.vertical(|ui| {
-                    ui.add(egui::Slider::new(&mut self.rows, 1..=50).text("Rows"));
-                    ui.add(egui::Slider::new(&mut self.cols, 1..=50).text("Columns"));
+                    ui.add(egui::Slider::new(&mut self.rows, 0..=50).text("Rows"));
+                    ui.add(egui::Slider::new(&mut self.cols, 0..=50).text("Columns"));
                 });
             });
             ui.group(|ui| {
