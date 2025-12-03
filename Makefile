@@ -119,6 +119,7 @@ run_checks: check_no_commented_out_code \
 			checks_no_unfinished \
 			check_shear \
 			check_deny \
+			check_linter \
 			check_pub_change_intentional
 
 # Performs a compilation check of all crates in the workspace, without building.
@@ -152,6 +153,9 @@ check_license:
 # Checks for dependency cycles between modules.
 check_cycles:
 	cargo-cycles
+
+check_linter:
+	python3 ./scripts/lint.py
 
 check_pub_change_intentional:
 	if [ "$$(cargo public-api diff latest -p egui_plot -sss --deny all)" != "" ]; then \
