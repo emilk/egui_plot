@@ -29,7 +29,7 @@ use crate::Axis;
 use crate::AxisHints;
 use crate::bounds::BoundsLinkGroups;
 use crate::bounds::BoundsModification;
-use crate::CoordinatesFormatter;
+use crate::overlays::CoordinatesFormatter;
 use crate::placement::Corner;
 use crate::Cursor;
 use crate::CursorLinkGroups;

@@ -1,4 +1,4 @@
-//! Contains items that can be added to a plot.
+//! Contains items that can be added to a plot at some plot coordinates.
 #![expect(clippy::type_complexity)] // TODO(#163): simplify some of the callback types with type aliases
 
 use std::ops::RangeInclusive;
