@@ -33,9 +33,9 @@ use crate::CoordinatesFormatter;
 use crate::placement::Corner;
 use crate::Cursor;
 use crate::CursorLinkGroups;
-use crate::GridInput;
-use crate::GridMark;
-use crate::GridSpacer;
+use crate::grid::GridInput;
+use crate::grid::GridMark;
+use crate::grid::GridSpacer;
 use crate::placement::HPlacement;
 use crate::LabelFormatter;
 use crate::Legend;
@@ -177,7 +177,7 @@ impl<'a> Plot<'a> {
 
             show_grid: true.into(),
             grid_spacing: Rangef::new(8.0, 300.0),
-            grid_spacers: [crate::log_grid_spacer(10), crate::log_grid_spacer(10)],
+            grid_spacers: [crate::grid::log_grid_spacer(10), crate::grid::log_grid_spacer(10)],
             clamp_grid: false,
 
             sense: egui::Sense::click_and_drag(),
@@ -434,7 +434,7 @@ impl<'a> Plot<'a> {
     /// drawn. For example, if x = 80..=230 is visible and you want big
     /// marks at steps of 100 and small ones at 25, you can return:
     /// ```no_run
-    /// # use egui_plot::GridMark;
+    /// # use egui_plot::grid::GridMark;
     /// vec![
     ///     // 100s
     ///     GridMark {
@@ -466,8 +466,8 @@ impl<'a> Plot<'a> {
     /// # ()
     /// ```
     ///
-    /// There are helpers for common cases, see [`crate::log_grid_spacer`] and
-    /// [`crate::uniform_grid_spacer`].
+    /// There are helpers for common cases, see [`crate::grid::log_grid_spacer`] and
+    /// [`crate::grid::uniform_grid_spacer`].
     #[inline]
     pub fn x_grid_spacer(mut self, spacer: impl Fn(GridInput) -> Vec<GridMark> + 'a) -> Self {
         self.grid_spacers[0] = Box::new(spacer);

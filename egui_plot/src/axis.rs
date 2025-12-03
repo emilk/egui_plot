@@ -16,7 +16,7 @@ use egui::emath::Rot2;
 use egui::emath::remap_clamp;
 use egui::epaint::TextShape;
 use crate::placement::{HPlacement, Placement, VPlacement};
-use super::GridMark;
+use crate::grid::GridMark;
 use super::transform::PlotTransform;
 
 // Gap between tick labels and axis label in units of the axis label height
