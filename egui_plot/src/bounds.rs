@@ -5,7 +5,7 @@ use egui::Id;
 use emath::Vec2;
 use emath::Vec2b;
 
-use crate::PlotPoint;
+use crate::data::PlotPoint;
 
 /// 2D bounding box of f64 precision.
 ///

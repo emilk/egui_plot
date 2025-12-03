@@ -10,9 +10,9 @@ use emath::pos2;
 
 use super::PlotGeometry;
 use crate::Id;
-use crate::PlotItem;
-use crate::PlotItemBase;
-use crate::PlotTransform;
+use super::PlotItem;
+use super::PlotItemBase;
+use crate::transform::PlotTransform;
 use crate::aesthetics::LineStyle;
 use crate::bounds::PlotBounds;
 use crate::data::PlotPoint;

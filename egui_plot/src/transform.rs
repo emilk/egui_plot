@@ -6,7 +6,7 @@ use egui::pos2;
 use egui::remap;
 
 use super::PlotPoint;
-use crate::Axis;
+use crate::axis::Axis;
 use crate::bounds::PlotBounds;
 
 /// Contains the screen rectangle and the plot bounds and provides methods to

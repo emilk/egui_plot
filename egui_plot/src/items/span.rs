@@ -20,7 +20,7 @@ use super::PlotItem;
 use super::PlotItemBase;
 use super::PlotPoint;
 use super::PlotTransform;
-use crate::Axis;
+use crate::axis::Axis;
 use crate::aesthetics::LineStyle;
 use crate::bounds::PlotBounds;
 use crate::colors::highlighted_color;
