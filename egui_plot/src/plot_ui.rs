@@ -14,7 +14,7 @@ use crate::PlotTransform;
 use crate::Span;
 use crate::bounds::BoundsModification;
 use crate::bounds::PlotBounds;
-use crate::values::PlotPoint;
+use crate::data::PlotPoint;
 
 /// Provides methods to interact with a plot while building it. It is the single
 /// argument of the closure provided to [`Plot::show`]. See [`Plot`] for an

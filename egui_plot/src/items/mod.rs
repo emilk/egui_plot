@@ -34,14 +34,11 @@ pub use text::Text;
 
 use super::Cursor;
 use super::PlotTransform;
+use crate::aesthetics::Orientation;
 use crate::bounds::PlotBounds;
+use crate::data::PlotPoint;
 use crate::label::LabelFormatter;
 use crate::rect_elem::RectElement;
-use crate::values::ClosestElem;
-use crate::values::LineStyle;
-use crate::values::Orientation;
-use crate::values::PlotGeometry;
-use crate::values::PlotPoint;
 
 mod arrows;
 mod bar_chart;
@@ -325,4 +322,30 @@ pub(super) fn rulers_and_tooltip_at_value(
         ui.set_max_width(tooltip_width);
         ui.label(text);
     });
+}
+
+/// Query the points of the plot, for geometric relations like closest checks
+pub enum PlotGeometry<'a> {
+    /// No geometry based on single elements (examples: text, image,
+    /// horizontal/vertical line)
+    None,
+
+    /// Point values (X-Y graphs)
+    Points(&'a [PlotPoint]),
+
+    /// Rectangles (examples: boxes or bars)
+    // Has currently no data, as it would require copying rects or iterating a list of pointers.
+    // Instead, geometry-based functions are directly implemented in the respective PlotItem impl.
+    Rects,
+}
+
+/// Result of [`PlotItem::find_closest()`] search, identifies an element
+/// inside the item for immediate use
+pub struct ClosestElem {
+    /// Position of hovered-over value (or bar/box-plot/…) in `PlotItem`
+    pub index: usize,
+
+    /// Squared distance from the mouse cursor (needed to compare against other
+    /// `PlotItems`, which might be nearer)
+    pub dist_sq: f32,
 }

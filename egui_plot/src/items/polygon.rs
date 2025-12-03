@@ -7,14 +7,14 @@ use egui::Stroke;
 use egui::Ui;
 use egui::epaint::PathStroke;
 
+use super::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
 use crate::PlotTransform;
+use crate::aesthetics::LineStyle;
 use crate::bounds::PlotBounds;
 use crate::colors::DEFAULT_FILL_ALPHA;
-use crate::values::LineStyle;
-use crate::values::PlotGeometry;
-use crate::values::PlotPoints;
+use crate::data::PlotPoints;
 
 /// A convex polygon.
 pub struct Polygon<'a> {

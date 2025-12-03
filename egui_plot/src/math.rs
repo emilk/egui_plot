@@ -1,8 +1,8 @@
 use emath::Float as _;
 use emath::Pos2;
 
-use crate::ClosestElem;
 use crate::PlotTransform;
+use crate::items::ClosestElem;
 use crate::rect_elem::RectElement;
 
 /// Returns the x-coordinate of a possible intersection between a line segment

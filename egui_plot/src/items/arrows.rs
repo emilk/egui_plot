@@ -6,13 +6,13 @@ use egui::Stroke;
 use egui::Ui;
 use emath::Rot2;
 
+use super::PlotGeometry;
 use crate::Id;
 use crate::PlotItem;
 use crate::PlotItemBase;
 use crate::PlotTransform;
 use crate::bounds::PlotBounds;
-use crate::values::PlotGeometry;
-use crate::values::PlotPoints;
+use crate::data::PlotPoints;
 
 impl<'a> Arrows<'a> {
     pub fn new(name: impl Into<String>, origins: impl Into<PlotPoints<'a>>, tips: impl Into<PlotPoints<'a>>) -> Self {

@@ -8,10 +8,12 @@
 #![cfg_attr(feature = "document-features", doc = document_features::document_features!())]
 //!
 
+mod aesthetics;
 mod axis;
 mod bounds;
 mod colors;
 mod cursor;
+mod data;
 mod grid;
 mod items;
 mod label;
@@ -24,7 +26,6 @@ mod plot_ui;
 mod rect_elem;
 mod transform;
 mod utils;
-mod values;
 
 pub use bounds::PlotBounds;
 use egui::Id;
@@ -34,12 +35,17 @@ pub use placement::HPlacement;
 pub use placement::Placement;
 pub use placement::VPlacement;
 
+pub use crate::aesthetics::LineStyle;
+pub use crate::aesthetics::MarkerShape;
+pub use crate::aesthetics::Orientation;
 pub use crate::axis::Axis;
 pub use crate::axis::AxisHints;
 pub use crate::colors::color_from_strength;
 pub use crate::cursor::Cursor;
 pub(crate) use crate::cursor::CursorLinkGroups;
 pub(crate) use crate::cursor::PlotFrameCursors;
+pub use crate::data::PlotPoint;
+pub use crate::data::PlotPoints;
 pub use crate::grid::GridInput;
 pub use crate::grid::GridMark;
 pub use crate::grid::log_grid_spacer;
@@ -50,10 +56,12 @@ pub use crate::items::BarChart;
 pub use crate::items::BoxElem;
 pub use crate::items::BoxPlot;
 pub use crate::items::BoxSpread;
+pub use crate::items::ClosestElem;
 pub use crate::items::HLine;
 pub use crate::items::Heatmap;
 pub use crate::items::Line;
 pub use crate::items::PlotConfig;
+pub use crate::items::PlotGeometry;
 pub use crate::items::PlotImage;
 pub use crate::items::PlotItem;
 pub use crate::items::PlotItemBase;
@@ -71,10 +79,3 @@ pub use crate::plot::Plot;
 pub use crate::plot::PlotResponse;
 pub use crate::plot_ui::PlotUi;
 pub use crate::transform::PlotTransform;
-pub use crate::values::ClosestElem;
-pub use crate::values::LineStyle;
-pub use crate::values::MarkerShape;
-pub use crate::values::Orientation;
-pub use crate::values::PlotGeometry;
-pub use crate::values::PlotPoint;
-pub use crate::values::PlotPoints;

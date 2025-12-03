@@ -41,6 +41,7 @@ use crate::bounds::BoundsModification;
 use crate::bounds::LinkedBounds;
 use crate::bounds::PlotBounds;
 use crate::colors::rulers_color;
+use crate::data::PlotPoint;
 use crate::grid::GridInput;
 use crate::grid::GridMark;
 use crate::grid::GridSpacer;
@@ -53,7 +54,6 @@ use crate::overlays::legend::LegendWidget;
 use crate::placement::Corner;
 use crate::placement::HPlacement;
 use crate::placement::VPlacement;
-use crate::values::PlotPoint;
 
 /// Combined axis widgets: `[x_axis_widgets, y_axis_widgets]`
 type AxisWidgets<'a> = [Vec<crate::axis::AxisWidget<'a>>; 2];

@@ -1,5 +1,5 @@
-use super::Orientation;
 use super::PlotPoint;
+use crate::aesthetics::Orientation;
 use crate::bounds::PlotBounds;
 use crate::transform::PlotTransform;
 
