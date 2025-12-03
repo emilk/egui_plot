@@ -27,7 +27,6 @@ mod label;
 mod cursor;
 
 use egui::Id;
-use egui::Response;
 
 pub use crate::axis::Axis;
 pub use crate::axis::AxisHints;
@@ -64,6 +63,7 @@ pub use crate::placement::Corner;
 pub use crate::legend::Legend;
 pub use crate::memory::PlotMemory;
 pub use crate::plot::Plot;
+pub use crate::plot::PlotResponse;
 pub use crate::plot_ui::PlotUi;
 pub use crate::cursor::Cursor;
 pub(crate) use crate::cursor::PlotFrameCursors;
@@ -110,26 +110,3 @@ impl Default for CoordinatesFormatter<'_> {
         Self::with_decimals(3)
     }
 }
-
-
-/// What [`Plot::show`] returns.
-pub struct PlotResponse<R> {
-    /// What the user closure returned.
-    pub inner: R,
-
-    /// The response of the plot.
-    pub response: Response,
-
-    /// The transform between screen coordinates and plot coordinates.
-    pub transform: PlotTransform,
-
-    /// The id of a currently hovered item if any.
-    ///
-    /// This is `None` if either no item was hovered.
-    /// A plot item can be hovered either by hovering its representation in the
-    /// plot (line, marker, etc.) or by hovering the item in the legend.
-    pub hovered_plot_item: Option<Id>,
-}
-
-// ----------------------------------------------------------------------------
-
