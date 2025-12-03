@@ -13,7 +13,7 @@ use emath::Pos2;
 use super::add_rulers_and_text;
 use super::find_closest_rect;
 use super::rect_elem::RectElement;
-use super::rect_elem::highlighted_color;
+use crate::colors::highlighted_color;
 use crate::ClosestElem;
 use crate::Cursor;
 use crate::Id;

@@ -22,7 +22,7 @@ use super::PlotItem;
 use super::PlotItemBase;
 use super::PlotPoint;
 use super::PlotTransform;
-use super::rect_elem::highlighted_color;
+use crate::colors::highlighted_color;
 use crate::Axis;
 use crate::utils::find_name_candidate;
 
