@@ -1479,7 +1479,7 @@ impl<'a> Plot<'a> {
 
             let line_strength = remap_clamp(spacing_in_points, self.grid_spacing, 0.0..=1.0);
 
-            let line_color = crate::color_from_strength(ui, line_strength);
+            let line_color = crate::colors::color_from_strength(ui, line_strength);
 
             let mut p0 = pos_in_gui;
             let mut p1 = pos_in_gui;

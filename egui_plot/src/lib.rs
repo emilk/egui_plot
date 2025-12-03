@@ -26,10 +26,8 @@ mod grid;
 mod label;
 mod cursor;
 
-use egui::Color32;
 use egui::Id;
 use egui::Response;
-use egui::Ui;
 
 pub use crate::axis::Axis;
 pub use crate::axis::AxisHints;
@@ -135,8 +133,3 @@ pub struct PlotResponse<R> {
 
 // ----------------------------------------------------------------------------
 
-/// Determine a color from a 0-1 strength value.
-pub fn color_from_strength(ui: &Ui, strength: f32) -> Color32 {
-    let base_color = ui.visuals().text_color();
-    base_color.gamma_multiply(strength.sqrt())
-}

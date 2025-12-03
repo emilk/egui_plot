@@ -15,6 +15,7 @@ use egui::WidgetText;
 use egui::emath::Rot2;
 use egui::emath::remap_clamp;
 use egui::epaint::TextShape;
+use crate::colors;
 use crate::placement::{HPlacement, Placement, VPlacement};
 use crate::grid::GridMark;
 use super::transform::PlotTransform;
@@ -266,7 +267,7 @@ impl<'a> AxisWidget<'a> {
                 // Fade in labels as they get further apart:
                 let strength = remap_clamp(spacing_in_points, label_spacing, 0.0..=1.0);
 
-                let text_color = super::color_from_strength(ui, strength);
+                let text_color = colors::color_from_strength(ui, strength);
                 let galley = painter.layout_no_wrap(text, font_id.clone(), text_color);
                 let galley_size = match axis {
                     Axis::X => galley.size(),

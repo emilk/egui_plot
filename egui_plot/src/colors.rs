@@ -39,3 +39,9 @@ pub const BASE_COLORS: [Color32; 10] = [
     Color32::from_rgb(213, 68, 2),
     Color32::from_rgb(122, 4, 2),
 ];
+
+/// Determine a color from a 0-1 strength value.
+pub fn color_from_strength(ui: &Ui, strength: f32) -> Color32 {
+    let base_color = ui.visuals().text_color();
+    base_color.gamma_multiply(strength.sqrt())
+}
