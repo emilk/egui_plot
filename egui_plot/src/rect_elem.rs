@@ -1,7 +1,7 @@
 use crate::bounds::PlotPoint;
 use crate::aesthetics::Orientation;
 use crate::bounds::PlotBounds;
-use crate::transform::PlotTransform;
+use crate::axis::PlotTransform;
 
 /// Trait that abstracts from rectangular 'Value'-like elements, such as bars or
 /// boxes

@@ -1,7 +1,7 @@
 use emath::Float as _;
 use emath::Pos2;
 
-use crate::transform::PlotTransform;
+use crate::axis::PlotTransform;
 use crate::items::ClosestElem;
 use crate::rect_elem::RectElement;
 

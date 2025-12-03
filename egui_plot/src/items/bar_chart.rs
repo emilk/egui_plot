@@ -17,7 +17,7 @@ use crate::items::PlotConfig;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
-use crate::transform::PlotTransform;
+use crate::axis::PlotTransform;
 use egui::Id;
 use crate::aesthetics::Orientation;
 use crate::bounds::PlotBounds;

@@ -13,7 +13,7 @@ use egui::Id;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
-use crate::transform::PlotTransform;
+use crate::axis::PlotTransform;
 use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
 

@@ -53,7 +53,7 @@ use crate::placement::Corner;
 use crate::placement::HPlacement;
 use crate::placement::VPlacement;
 use crate::plot_ui::PlotUi;
-use crate::transform::PlotTransform;
+use crate::axis::PlotTransform;
 
 /// Combined axis widgets: `[x_axis_widgets, y_axis_widgets]`
 type AxisWidgets<'a> = [Vec<crate::axis::AxisWidget<'a>>; 2];

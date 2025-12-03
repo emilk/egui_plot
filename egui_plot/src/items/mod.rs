@@ -33,7 +33,7 @@ pub use span::Span;
 pub use text::Text;
 
 use crate::cursor::Cursor;
-use crate::transform::PlotTransform;
+use crate::axis::PlotTransform;
 use crate::aesthetics::Orientation;
 use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;

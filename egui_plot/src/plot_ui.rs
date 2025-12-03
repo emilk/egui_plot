@@ -11,7 +11,7 @@ use crate::items::PlotItem;
 use crate::items::Span;
 #[expect(unused_imports)] // for links in docstrings
 use crate::plot::Plot;
-use crate::transform::PlotTransform;
+use crate::axis::PlotTransform;
 use crate::bounds::BoundsModification;
 use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;

@@ -17,7 +17,7 @@ use crate::bounds::PlotPoint;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
-use crate::transform::PlotTransform;
+use crate::axis::PlotTransform;
 use egui::Id;
 
 /// An image in the plot.

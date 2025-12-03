@@ -19,7 +19,7 @@ use crate::items::PlotConfig;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
-use crate::transform::PlotTransform;
+use crate::axis::PlotTransform;
 use crate::bounds::PlotBounds;
 use crate::colors::BASE_COLORS;
 use crate::bounds::PlotPoint;

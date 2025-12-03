@@ -24,7 +24,6 @@ mod placement;
 mod plot;
 mod plot_ui;
 mod rect_elem;
-mod transform;
 mod utils;
 
 pub use crate::bounds::PlotBounds;
@@ -75,4 +74,4 @@ pub use crate::placement::Corner;
 pub use crate::plot::Plot;
 pub use crate::plot::PlotResponse;
 pub use crate::plot_ui::PlotUi;
-pub use crate::transform::PlotTransform;
+pub use crate::axis::PlotTransform;
