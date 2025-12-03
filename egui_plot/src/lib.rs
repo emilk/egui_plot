@@ -16,6 +16,7 @@ mod plot;
 mod plot_ui;
 mod transform;
 mod utils;
+mod math;
 
 use std::cmp::Ordering;
 use std::ops::RangeInclusive;

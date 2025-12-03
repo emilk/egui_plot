@@ -14,7 +14,7 @@ use emath::Rect;
 use emath::pos2;
 
 use super::DEFAULT_FILL_ALPHA;
-use super::y_intersection;
+use crate::math::y_intersection;
 use crate::Id;
 use crate::LineStyle;
 use crate::PlotBounds;
