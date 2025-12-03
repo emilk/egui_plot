@@ -10,13 +10,13 @@ use emath::pos2;
 use emath::vec2;
 
 use crate::Id;
-use crate::MarkerShape;
+use crate::values::MarkerShape;
 use crate::PlotBounds;
-use crate::PlotGeometry;
+use crate::values::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
-use crate::PlotPoint;
-use crate::PlotPoints;
+use crate::values::PlotPoint;
+use crate::values::PlotPoints;
 use crate::PlotTransform;
 
 impl<'a> Points<'a> {

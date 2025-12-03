@@ -31,13 +31,11 @@ use crate::rect_elem::RectElement;
 pub use series::Line;
 pub use span::Span;
 pub use text::Text;
-pub use values::ClosestElem;
-pub use values::LineStyle;
-pub use values::MarkerShape;
-pub use values::Orientation;
-pub use values::PlotGeometry;
-pub use values::PlotPoint;
-pub use values::PlotPoints;
+use crate::values::ClosestElem;
+use crate::values::LineStyle;
+use crate::values::Orientation;
+use crate::values::PlotGeometry;
+use crate::values::PlotPoint;
 
 use super::Cursor;
 use super::LabelFormatter;
@@ -55,7 +53,6 @@ mod polygon;
 mod series;
 mod span;
 mod text;
-mod values;
 
 const DEFAULT_FILL_ALPHA: f32 = 0.05;
 

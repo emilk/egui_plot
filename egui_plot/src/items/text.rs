@@ -11,10 +11,10 @@ use emath::Align2;
 
 use crate::Id;
 use crate::PlotBounds;
-use crate::PlotGeometry;
+use crate::values::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
-use crate::PlotPoint;
+use crate::values::PlotPoint;
 use crate::PlotTransform;
 
 impl Text {

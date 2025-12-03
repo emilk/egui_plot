@@ -16,13 +16,13 @@ use emath::pos2;
 use super::DEFAULT_FILL_ALPHA;
 use crate::math::y_intersection;
 use crate::Id;
-use crate::LineStyle;
+use crate::values::LineStyle;
 use crate::PlotBounds;
-use crate::PlotGeometry;
+use crate::values::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
-use crate::PlotPoint;
-use crate::PlotPoints;
+use crate::values::PlotPoint;
+use crate::values::PlotPoints;
 use crate::PlotTransform;
 
 /// A series of values forming a path.

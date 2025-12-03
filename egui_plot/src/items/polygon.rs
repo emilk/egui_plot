@@ -8,12 +8,12 @@ use egui::Ui;
 use egui::epaint::PathStroke;
 
 use super::DEFAULT_FILL_ALPHA;
-use crate::LineStyle;
+use crate::values::LineStyle;
 use crate::PlotBounds;
-use crate::PlotGeometry;
+use crate::values::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
-use crate::PlotPoints;
+use crate::values::PlotPoints;
 use crate::PlotTransform;
 
 /// A convex polygon.

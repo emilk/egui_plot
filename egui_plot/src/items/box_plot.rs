@@ -13,17 +13,17 @@ use super::add_rulers_and_text;
 use super::find_closest_rect;
 use crate::rect_elem::RectElement;
 use crate::colors::highlighted_color;
-use crate::ClosestElem;
+use crate::values::ClosestElem;
 use crate::Cursor;
 use crate::Id;
 use crate::LabelFormatter;
-use crate::Orientation;
+use crate::values::Orientation;
 use crate::PlotBounds;
 use crate::PlotConfig;
-use crate::PlotGeometry;
+use crate::values::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
-use crate::PlotPoint;
+use crate::values::PlotPoint;
 use crate::PlotTransform;
 
 /// A diagram containing a series of [`BoxElem`] elements.

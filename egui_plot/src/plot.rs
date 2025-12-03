@@ -44,7 +44,7 @@ use crate::PlotBounds;
 use crate::PlotFrameCursors;
 use crate::PlotItem;
 use crate::PlotMemory;
-use crate::PlotPoint;
+use crate::values::PlotPoint;
 use crate::PlotResponse;
 use crate::PlotTransform;
 use crate::PlotUi;

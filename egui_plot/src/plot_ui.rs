@@ -12,7 +12,7 @@ use crate::BoundsModification;
 use crate::Plot;
 use crate::PlotBounds;
 use crate::PlotItem;
-use crate::PlotPoint;
+use crate::values::PlotPoint;
 use crate::PlotTransform;
 use crate::Span;
 

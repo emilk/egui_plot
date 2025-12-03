@@ -8,10 +8,10 @@ use emath::Rot2;
 
 use crate::Id;
 use crate::PlotBounds;
-use crate::PlotGeometry;
+use crate::values::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
-use crate::PlotPoints;
+use crate::values::PlotPoints;
 use crate::PlotTransform;
 
 impl<'a> Arrows<'a> {

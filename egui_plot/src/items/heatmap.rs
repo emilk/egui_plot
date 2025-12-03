@@ -17,12 +17,12 @@ use super::Cursor;
 use super::LabelFormatter;
 use super::PlotBounds;
 use super::PlotTransform;
-use crate::ClosestElem;
+use crate::values::ClosestElem;
 use crate::PlotConfig;
-use crate::PlotGeometry;
+use crate::values::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
-use crate::PlotPoint;
+use crate::values::PlotPoint;
 
 /// Default base colors for heatmap palette
 pub const BASE_COLORS: [Color32; 10] = [

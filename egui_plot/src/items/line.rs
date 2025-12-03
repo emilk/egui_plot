@@ -7,12 +7,12 @@ use egui::Ui;
 use egui::epaint::PathStroke;
 
 use crate::Id;
-use crate::LineStyle;
+use crate::values::LineStyle;
 use crate::PlotBounds;
-use crate::PlotGeometry;
+use crate::values::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
-use crate::PlotPoint;
+use crate::values::PlotPoint;
 use crate::PlotTransform;
 
 /// A horizontal line in a plot, filling the full width
