@@ -17,7 +17,7 @@ use crate::colors::highlighted_color;
 use crate::values::ClosestElem;
 use crate::Cursor;
 use crate::Id;
-use crate::LabelFormatter;
+use crate::label::LabelFormatter;
 use crate::values::Orientation;
 use crate::bounds::PlotBounds;
 use crate::PlotConfig;
@@ -414,6 +414,6 @@ impl RectElement for Bar {
             Orientation::Vertical => scale[1],
         };
         let decimals = ((-scale.abs().log10()).ceil().at_least(0.0) as usize).at_most(6);
-        crate::format_number(self.value, decimals)
+        crate::label::format_number(self.value, decimals)
     }
 }

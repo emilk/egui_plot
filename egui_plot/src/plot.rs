@@ -37,7 +37,7 @@ use crate::grid::GridInput;
 use crate::grid::GridMark;
 use crate::grid::GridSpacer;
 use crate::placement::HPlacement;
-use crate::LabelFormatter;
+use crate::label::LabelFormatter;
 use crate::Legend;
 use crate::bounds::LinkedBounds;
 use crate::bounds::PlotBounds;

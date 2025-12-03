@@ -14,7 +14,7 @@ use egui::WidgetText;
 use emath::Float as _;
 use crate::colors::BASE_COLORS;
 use super::Cursor;
-use super::LabelFormatter;
+use crate::label::LabelFormatter;
 use crate::bounds::PlotBounds;
 use super::PlotTransform;
 use crate::values::ClosestElem;

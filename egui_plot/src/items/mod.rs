@@ -39,7 +39,7 @@ use crate::values::PlotGeometry;
 use crate::values::PlotPoint;
 
 use super::Cursor;
-use super::LabelFormatter;
+use crate::label::LabelFormatter;
 use crate::bounds::PlotBounds;
 use super::PlotTransform;
 

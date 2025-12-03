@@ -16,7 +16,7 @@ use crate::colors::highlighted_color;
 use crate::values::ClosestElem;
 use crate::Cursor;
 use crate::Id;
-use crate::LabelFormatter;
+use crate::label::LabelFormatter;
 use crate::values::Orientation;
 use crate::bounds::PlotBounds;
 use crate::PlotConfig;
