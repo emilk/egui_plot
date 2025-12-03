@@ -53,7 +53,7 @@ use crate::items;
 use crate::items::horizontal_line;
 use crate::colors::rulers_color;
 use crate::items::vertical_line;
-use crate::legend::LegendWidget;
+use crate::overlays::legend::LegendWidget;
 
 /// Combined axis widgets: `[x_axis_widgets, y_axis_widgets]`
 type AxisWidgets<'a> = [Vec<crate::axis::AxisWidget<'a>>; 2];

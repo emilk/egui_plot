@@ -22,7 +22,7 @@ use egui::epaint::CircleShape;
 use egui::pos2;
 use egui::vec2;
 use crate::placement::Corner;
-use super::items::PlotItem;
+use crate::PlotItem;
 
 /// How to handle multiple conflicting color for a legend item.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -209,7 +209,7 @@ impl LegendEntry {
 }
 
 #[derive(Clone)]
-pub(super) struct LegendWidget {
+pub(crate) struct LegendWidget {
     rect: Rect,
     entries: Vec<LegendEntry>,
     config: Legend,
@@ -218,7 +218,7 @@ pub(super) struct LegendWidget {
 impl LegendWidget {
     /// Create a new legend from items, the names of items that are hidden and
     /// the style of the text. Returns `None` if the legend has no entries.
-    pub(super) fn try_new<'a>(
+    pub(crate) fn try_new<'a>(
         rect: Rect,
         config: Legend,
         items: &[Box<dyn PlotItem + 'a>],
