@@ -547,3 +547,14 @@ pub struct LinkedBounds {
 
 #[derive(Default, Clone)]
 pub struct BoundsLinkGroups(pub HashMap<Id, LinkedBounds>);
+
+/// User-requested modifications to the plot bounds. We collect them in the plot
+/// build function to later apply them at the right time, as other modifications
+/// need to happen first.
+pub enum BoundsModification {
+    SetX(RangeInclusive<f64>),
+    SetY(RangeInclusive<f64>),
+    Translate(Vec2),
+    AutoBounds(Vec2b),
+    Zoom(Vec2, PlotPoint),
+}

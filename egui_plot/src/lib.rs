@@ -167,17 +167,6 @@ pub struct PlotResponse<R> {
 
 // ----------------------------------------------------------------------------
 
-/// User-requested modifications to the plot bounds. We collect them in the plot
-/// build function to later apply them at the right time, as other modifications
-/// need to happen first.
-enum BoundsModification {
-    SetX(RangeInclusive<f64>),
-    SetY(RangeInclusive<f64>),
-    Translate(Vec2),
-    AutoBounds(Vec2b),
-    Zoom(Vec2, PlotPoint),
-}
-
 // ----------------------------------------------------------------------------
 // Grid
 

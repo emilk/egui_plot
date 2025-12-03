@@ -28,7 +28,7 @@ use emath::vec2;
 use crate::Axis;
 use crate::AxisHints;
 use crate::transform::BoundsLinkGroups;
-use crate::BoundsModification;
+use crate::transform::BoundsModification;
 use crate::CoordinatesFormatter;
 use crate::placement::Corner;
 use crate::Cursor;
