@@ -55,8 +55,6 @@ mod series;
 mod span;
 mod text;
 
-const DEFAULT_FILL_ALPHA: f32 = 0.05;
-
 /// Base data shared by all plot items.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PlotItemBase {

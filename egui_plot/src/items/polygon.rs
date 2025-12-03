@@ -7,7 +7,7 @@ use egui::Stroke;
 use egui::Ui;
 use egui::epaint::PathStroke;
 
-use super::DEFAULT_FILL_ALPHA;
+use crate::colors::DEFAULT_FILL_ALPHA;
 use crate::values::LineStyle;
 use crate::PlotBounds;
 use crate::values::PlotGeometry;

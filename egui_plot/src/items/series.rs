@@ -13,7 +13,7 @@ use emath::Pos2;
 use emath::Rect;
 use emath::pos2;
 
-use super::DEFAULT_FILL_ALPHA;
+use crate::colors::DEFAULT_FILL_ALPHA;
 use crate::math::y_intersection;
 use crate::Id;
 use crate::values::LineStyle;

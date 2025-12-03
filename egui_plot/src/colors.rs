@@ -24,3 +24,5 @@ pub(crate) fn highlighted_color(mut stroke: Stroke, fill: Color32) -> (Stroke, C
 
     (stroke, fill.into())
 }
+
+pub const DEFAULT_FILL_ALPHA: f32 = 0.05;
