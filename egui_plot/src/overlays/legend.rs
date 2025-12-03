@@ -22,7 +22,7 @@ use egui::epaint::CircleShape;
 use egui::pos2;
 use egui::vec2;
 
-use crate::PlotItem;
+use crate::items::PlotItem;
 use crate::placement::Corner;
 
 /// How to handle multiple conflicting color for a legend item.
@@ -210,7 +210,7 @@ impl LegendEntry {
 }
 
 #[derive(Clone)]
-pub(crate) struct LegendWidget {
+pub struct LegendWidget {
     rect: Rect,
     entries: Vec<LegendEntry>,
     config: Legend,

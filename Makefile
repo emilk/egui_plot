@@ -152,7 +152,7 @@ check_license:
 
 # Checks for dependency cycles between modules.
 check_cycles:
-	cargo-cycles
+	cargo-cycles --check-public-api --check-absolute-paths
 
 check_linter:
 	python3 ./scripts/lint.py
