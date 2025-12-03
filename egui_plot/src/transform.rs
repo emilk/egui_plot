@@ -1,12 +1,12 @@
 use std::ops::RangeInclusive;
 
-use egui::Pos2;
+use egui::{Id, Pos2};
 use egui::Rect;
 use egui::Vec2;
 use egui::Vec2b;
 use egui::pos2;
 use egui::remap;
-
+use ahash::HashMap;
 use super::PlotPoint;
 use crate::Axis;
 
@@ -538,3 +538,12 @@ impl PlotTransform {
         }
     }
 }
+
+#[derive(Clone)]
+pub struct LinkedBounds {
+    pub bounds: PlotBounds,
+    pub auto_bounds: Vec2b,
+}
+
+#[derive(Default, Clone)]
+pub struct BoundsLinkGroups(pub HashMap<Id, LinkedBounds>);

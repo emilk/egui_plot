@@ -27,7 +27,7 @@ use emath::vec2;
 
 use crate::Axis;
 use crate::AxisHints;
-use crate::BoundsLinkGroups;
+use crate::transform::BoundsLinkGroups;
 use crate::BoundsModification;
 use crate::CoordinatesFormatter;
 use crate::placement::Corner;
@@ -39,7 +39,7 @@ use crate::GridSpacer;
 use crate::placement::HPlacement;
 use crate::LabelFormatter;
 use crate::Legend;
-use crate::LinkedBounds;
+use crate::transform::LinkedBounds;
 use crate::PlotBounds;
 use crate::PlotFrameCursors;
 use crate::PlotItem;

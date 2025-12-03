@@ -144,15 +144,6 @@ struct PlotFrameCursors {
 #[derive(Default, Clone)]
 struct CursorLinkGroups(HashMap<Id, Vec<PlotFrameCursors>>);
 
-#[derive(Clone)]
-struct LinkedBounds {
-    bounds: PlotBounds,
-    auto_bounds: Vec2b,
-}
-
-#[derive(Default, Clone)]
-struct BoundsLinkGroups(HashMap<Id, LinkedBounds>);
-
 // ----------------------------------------------------------------------------
 
 /// What [`Plot::show`] returns.
