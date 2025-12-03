@@ -13,6 +13,7 @@ use emath::Pos2;
 use emath::Rect;
 use emath::pos2;
 
+use super::PlotGeometry;
 use crate::Id;
 use crate::PlotItem;
 use crate::PlotItemBase;
@@ -22,7 +23,6 @@ use crate::bounds::PlotBounds;
 use crate::colors::DEFAULT_FILL_ALPHA;
 use crate::data::PlotPoint;
 use crate::data::PlotPoints;
-use crate::items::PlotGeometry;
 use crate::math::y_intersection;
 
 /// A series of values forming a path.

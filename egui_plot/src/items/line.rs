@@ -8,6 +8,7 @@ use egui::epaint::PathStroke;
 use emath::Pos2;
 use emath::pos2;
 
+use super::PlotGeometry;
 use crate::Id;
 use crate::PlotItem;
 use crate::PlotItemBase;
@@ -15,7 +16,6 @@ use crate::PlotTransform;
 use crate::aesthetics::LineStyle;
 use crate::bounds::PlotBounds;
 use crate::data::PlotPoint;
-use crate::items::PlotGeometry;
 
 /// A horizontal line in a plot, filling the full width
 #[derive(Clone, Debug, PartialEq)]

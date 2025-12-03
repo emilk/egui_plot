@@ -9,13 +9,13 @@ use egui::WidgetText;
 use egui::epaint::TextShape;
 use emath::Align2;
 
+use super::PlotGeometry;
 use crate::Id;
 use crate::PlotItem;
 use crate::PlotItemBase;
 use crate::PlotTransform;
 use crate::bounds::PlotBounds;
 use crate::data::PlotPoint;
-use crate::items::PlotGeometry;
 
 impl Text {
     pub fn new(name: impl Into<String>, position: PlotPoint, text: impl Into<WidgetText>) -> Self {

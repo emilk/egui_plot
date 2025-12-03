@@ -13,7 +13,9 @@ use egui::Vec2;
 use egui::WidgetText;
 use emath::Float as _;
 
+use super::ClosestElem;
 use super::Cursor;
+use super::PlotGeometry;
 use super::PlotTransform;
 use crate::PlotConfig;
 use crate::PlotItem;
@@ -21,8 +23,6 @@ use crate::PlotItemBase;
 use crate::bounds::PlotBounds;
 use crate::colors::BASE_COLORS;
 use crate::data::PlotPoint;
-use crate::items::ClosestElem;
-use crate::items::PlotGeometry;
 use crate::label::LabelFormatter;
 
 /// Default resolution for heatmap color palette
