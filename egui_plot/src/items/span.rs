@@ -15,7 +15,7 @@ use egui::epaint::TextShape;
 use egui::pos2;
 use emath::TSTransform;
 
-use crate::data::PlotPoint;
+use crate::bounds::PlotPoint;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;

@@ -21,7 +21,7 @@ use crate::transform::PlotTransform;
 use crate::aesthetics::LineStyle;
 use crate::bounds::PlotBounds;
 use crate::colors::DEFAULT_FILL_ALPHA;
-use crate::data::PlotPoint;
+use crate::bounds::PlotPoint;
 use crate::data::PlotPoints;
 use crate::math::y_intersection;
 

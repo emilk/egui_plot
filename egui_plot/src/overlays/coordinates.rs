@@ -1,5 +1,5 @@
 use crate::bounds::PlotBounds;
-use crate::data::PlotPoint;
+use crate::bounds::PlotPoint;
 
 type CoordinatesFormatterFn<'a> = dyn Fn(&PlotPoint, &PlotBounds) -> String + 'a;
 

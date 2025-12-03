@@ -15,7 +15,7 @@ use crate::items::PlotItem;
 use crate::items::PlotItemBase;
 use crate::transform::PlotTransform;
 use crate::bounds::PlotBounds;
-use crate::data::PlotPoint;
+use crate::bounds::PlotPoint;
 
 impl Text {
     pub fn new(name: impl Into<String>, position: PlotPoint, text: impl Into<WidgetText>) -> Self {

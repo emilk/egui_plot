@@ -36,7 +36,7 @@ use crate::colors::rulers_color;
 use crate::cursor::Cursor;
 use crate::cursor::CursorLinkGroups;
 use crate::cursor::PlotFrameCursors;
-use crate::data::PlotPoint;
+use crate::bounds::PlotPoint;
 use crate::grid::GridInput;
 use crate::grid::GridMark;
 use crate::grid::GridSpacer;

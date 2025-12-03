@@ -13,7 +13,7 @@ use emath::Vec2;
 use emath::pos2;
 
 use crate::bounds::PlotBounds;
-use crate::data::PlotPoint;
+use crate::bounds::PlotPoint;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;

@@ -1,6 +1,6 @@
 use emath::NumExt as _;
 
-use crate::data::PlotPoint;
+use crate::bounds::PlotPoint;
 
 /// Helper for formatting a number so that we always show at least a few
 /// decimals, unless it is an integer, in which case we never show any decimals.

@@ -41,7 +41,7 @@ pub use crate::axis::Axis;
 pub use crate::axis::AxisHints;
 pub use crate::colors::color_from_strength;
 pub use crate::cursor::Cursor;
-pub use crate::data::PlotPoint;
+pub use crate::bounds::PlotPoint;
 pub use crate::data::PlotPoints;
 pub use crate::grid::GridInput;
 pub use crate::grid::GridMark;

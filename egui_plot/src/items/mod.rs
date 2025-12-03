@@ -36,7 +36,7 @@ use crate::cursor::Cursor;
 use crate::transform::PlotTransform;
 use crate::aesthetics::Orientation;
 use crate::bounds::PlotBounds;
-use crate::data::PlotPoint;
+use crate::bounds::PlotPoint;
 use crate::label::LabelFormatter;
 use crate::rect_elem::RectElement;
 

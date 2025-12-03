@@ -22,7 +22,7 @@ use egui::Id;
 use crate::aesthetics::Orientation;
 use crate::bounds::PlotBounds;
 use crate::colors::highlighted_color;
-use crate::data::PlotPoint;
+use crate::bounds::PlotPoint;
 use crate::label::LabelFormatter;
 use crate::math::find_closest_rect;
 use crate::rect_elem::RectElement;

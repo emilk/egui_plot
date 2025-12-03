@@ -22,7 +22,7 @@ use crate::items::PlotItemBase;
 use crate::transform::PlotTransform;
 use crate::bounds::PlotBounds;
 use crate::colors::BASE_COLORS;
-use crate::data::PlotPoint;
+use crate::bounds::PlotPoint;
 use crate::label::LabelFormatter;
 
 /// Default resolution for heatmap color palette

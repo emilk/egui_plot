@@ -2,10 +2,50 @@ use std::ops::RangeInclusive;
 
 use ahash::HashMap;
 use egui::Id;
-use emath::Vec2;
+use emath::{Pos2, Vec2};
 use emath::Vec2b;
 
-use crate::data::PlotPoint;
+/// A point coordinate in the plot.
+///
+/// Uses f64 for improved accuracy to enable plotting
+/// large values (e.g. unix time on x axis).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PlotPoint {
+    /// This is often something monotonically increasing, such as time, but
+    /// doesn't have to be. Goes from left to right.
+    pub x: f64,
+
+    /// Goes from bottom to top (inverse of everything else in egui!).
+    pub y: f64,
+}
+
+impl From<[f64; 2]> for PlotPoint {
+    #[inline]
+    fn from([x, y]: [f64; 2]) -> Self {
+        Self { x, y }
+    }
+}
+
+impl PlotPoint {
+    #[inline(always)]
+    pub fn new(x: impl Into<f64>, y: impl Into<f64>) -> Self {
+        Self {
+            x: x.into(),
+            y: y.into(),
+        }
+    }
+
+    #[inline(always)]
+    pub fn to_pos2(self) -> Pos2 {
+        Pos2::new(self.x as f32, self.y as f32)
+    }
+
+    #[inline(always)]
+    pub fn to_vec2(self) -> Vec2 {
+        Vec2::new(self.x as f32, self.y as f32)
+    }
+}
+
 
 /// 2D bounding box of f64 precision.
 ///

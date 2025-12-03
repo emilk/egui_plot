@@ -11,7 +11,7 @@ use emath::vec2;
 
 use crate::aesthetics::MarkerShape;
 use crate::bounds::PlotBounds;
-use crate::data::PlotPoint;
+use crate::bounds::PlotPoint;
 use crate::data::PlotPoints;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
