@@ -3,12 +3,6 @@
 
 use std::ops::RangeInclusive;
 
-pub use arrows::Arrows;
-pub use bar_chart::Bar;
-pub use bar_chart::BarChart;
-pub use box_plot::BoxElem;
-pub use box_plot::BoxPlot;
-pub use box_plot::BoxSpread;
 use egui::Align2;
 use egui::Color32;
 use egui::Id;
@@ -20,23 +14,29 @@ use egui::TextStyle;
 use egui::Ui;
 use egui::vec2;
 use emath::Float as _;
-pub use heatmap::Heatmap;
-pub use line::HLine;
-pub use line::VLine;
-pub use line::horizontal_line;
-pub use line::vertical_line;
-pub use plot_image::PlotImage;
-pub use points::Points;
-pub use polygon::Polygon;
-pub use series::Line;
-pub use span::Span;
-pub use text::Text;
 
-use crate::cursor::Cursor;
-use crate::axis::PlotTransform;
 use crate::aesthetics::Orientation;
+use crate::axis::PlotTransform;
 use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
+use crate::cursor::Cursor;
+pub use crate::items::arrows::Arrows;
+pub use crate::items::bar_chart::Bar;
+pub use crate::items::bar_chart::BarChart;
+pub use crate::items::box_plot::BoxElem;
+pub use crate::items::box_plot::BoxPlot;
+pub use crate::items::box_plot::BoxSpread;
+pub use crate::items::heatmap::Heatmap;
+pub use crate::items::line::HLine;
+pub use crate::items::line::VLine;
+pub use crate::items::line::horizontal_line;
+pub use crate::items::line::vertical_line;
+pub use crate::items::plot_image::PlotImage;
+pub use crate::items::points::Points;
+pub use crate::items::polygon::Polygon;
+pub use crate::items::series::Line;
+pub use crate::items::span::Span;
+pub use crate::items::text::Text;
 use crate::label::LabelFormatter;
 use crate::rect_elem::RectElement;
 

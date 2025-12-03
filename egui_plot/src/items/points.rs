@@ -1,6 +1,7 @@
 use std::ops::RangeInclusive;
 
 use egui::Color32;
+use egui::Id;
 use egui::Shape;
 use egui::Stroke;
 use egui::Ui;
@@ -10,14 +11,13 @@ use emath::pos2;
 use emath::vec2;
 
 use crate::aesthetics::MarkerShape;
+use crate::axis::PlotTransform;
 use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
 use crate::data::PlotPoints;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
-use crate::axis::PlotTransform;
-use egui::Id;
 
 impl<'a> Points<'a> {
     pub fn new(name: impl Into<String>, series: impl Into<PlotPoints<'a>>) -> Self {

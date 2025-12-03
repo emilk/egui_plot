@@ -15,15 +15,15 @@ use egui::epaint::TextShape;
 use egui::pos2;
 use emath::TSTransform;
 
+use crate::aesthetics::LineStyle;
+use crate::axis::Axis;
+use crate::axis::PlotTransform;
+use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
+use crate::colors::highlighted_color;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
-use crate::axis::PlotTransform;
-use crate::axis::Axis;
-use crate::aesthetics::LineStyle;
-use crate::bounds::PlotBounds;
-use crate::colors::highlighted_color;
 use crate::utils::find_name_candidate;
 
 /// Padding between the label of the span and both the edge of the view and the

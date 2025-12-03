@@ -5,7 +5,8 @@ use std::ops::RangeInclusive;
 
 use emath::lerp;
 
-use crate::bounds::{PlotBounds, PlotPoint};
+use crate::bounds::PlotBounds;
+use crate::bounds::PlotPoint;
 
 /// Represents many [`PlotPoint`]s.
 ///

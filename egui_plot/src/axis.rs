@@ -15,8 +15,13 @@ use egui::WidgetText;
 use egui::emath::Rot2;
 use egui::emath::remap_clamp;
 use egui::epaint::TextShape;
-use emath::{pos2, remap, Vec2b};
-use crate::{colors, PlotBounds, PlotPoint};
+use emath::Vec2b;
+use emath::pos2;
+use emath::remap;
+
+use crate::bounds::PlotBounds;
+use crate::bounds::PlotPoint;
+use crate::colors;
 use crate::grid::GridMark;
 use crate::placement::HPlacement;
 use crate::placement::Placement;

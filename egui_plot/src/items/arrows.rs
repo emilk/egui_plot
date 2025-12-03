@@ -1,18 +1,18 @@
 use std::ops::RangeInclusive;
 
 use egui::Color32;
+use egui::Id;
 use egui::Shape;
 use egui::Stroke;
 use egui::Ui;
 use emath::Rot2;
 
-use egui::Id;
-use crate::items::PlotGeometry;
-use crate::items::PlotItem;
-use crate::items::PlotItemBase;
 use crate::axis::PlotTransform;
 use crate::bounds::PlotBounds;
 use crate::data::PlotPoints;
+use crate::items::PlotGeometry;
+use crate::items::PlotItem;
+use crate::items::PlotItemBase;
 
 impl<'a> Arrows<'a> {
     pub fn new(name: impl Into<String>, origins: impl Into<PlotPoints<'a>>, tips: impl Into<PlotPoints<'a>>) -> Self {

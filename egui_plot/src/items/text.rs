@@ -1,6 +1,7 @@
 use std::ops::RangeInclusive;
 
 use egui::Color32;
+use egui::Id;
 use egui::Shape;
 use egui::Stroke;
 use egui::TextStyle;
@@ -9,13 +10,12 @@ use egui::WidgetText;
 use egui::epaint::TextShape;
 use emath::Align2;
 
-use egui::Id;
-use crate::items::PlotGeometry;
-use crate::items::PlotItem;
-use crate::items::PlotItemBase;
 use crate::axis::PlotTransform;
 use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
+use crate::items::PlotGeometry;
+use crate::items::PlotItem;
+use crate::items::PlotItemBase;
 
 impl Text {
     pub fn new(name: impl Into<String>, position: PlotPoint, text: impl Into<WidgetText>) -> Self {

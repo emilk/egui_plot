@@ -2,6 +2,7 @@ use std::ops::RangeInclusive;
 use std::sync::Arc;
 
 use egui::Color32;
+use egui::Id;
 use egui::Mesh;
 use egui::Rgba;
 use egui::Shape;
@@ -13,16 +14,15 @@ use emath::Pos2;
 use emath::Rect;
 use emath::pos2;
 
-use egui::Id;
+use crate::aesthetics::LineStyle;
+use crate::axis::PlotTransform;
+use crate::bounds::PlotBounds;
+use crate::bounds::PlotPoint;
+use crate::colors::DEFAULT_FILL_ALPHA;
+use crate::data::PlotPoints;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
-use crate::axis::PlotTransform;
-use crate::aesthetics::LineStyle;
-use crate::bounds::PlotBounds;
-use crate::colors::DEFAULT_FILL_ALPHA;
-use crate::bounds::PlotPoint;
-use crate::data::PlotPoints;
 use crate::math::y_intersection;
 
 /// A series of values forming a path.

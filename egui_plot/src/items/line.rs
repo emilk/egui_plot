@@ -1,6 +1,7 @@
 use std::ops::RangeInclusive;
 
 use egui::Color32;
+use egui::Id;
 use egui::Shape;
 use egui::Stroke;
 use egui::Ui;
@@ -9,13 +10,12 @@ use emath::Pos2;
 use emath::pos2;
 
 use crate::aesthetics::LineStyle;
+use crate::axis::PlotTransform;
 use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
-use crate::axis::PlotTransform;
-use egui::Id;
 
 /// A horizontal line in a plot, filling the full width
 #[derive(Clone, Debug, PartialEq)]

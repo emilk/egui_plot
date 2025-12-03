@@ -2,7 +2,8 @@ use std::ops::RangeInclusive;
 
 use ahash::HashMap;
 use egui::Id;
-use emath::{Pos2, Vec2};
+use emath::Pos2;
+use emath::Vec2;
 use emath::Vec2b;
 
 /// A point coordinate in the plot.
@@ -45,7 +46,6 @@ impl PlotPoint {
         Vec2::new(self.x as f32, self.y as f32)
     }
 }
-
 
 /// 2D bounding box of f64 precision.
 ///

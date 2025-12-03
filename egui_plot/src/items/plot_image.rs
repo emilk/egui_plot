@@ -2,6 +2,7 @@ use std::ops::RangeInclusive;
 
 use egui::Color32;
 use egui::CornerRadius;
+use egui::Id;
 use egui::ImageOptions;
 use egui::Shape;
 use egui::Stroke;
@@ -12,13 +13,12 @@ use emath::Rot2;
 use emath::Vec2;
 use emath::pos2;
 
+use crate::axis::PlotTransform;
 use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
-use crate::axis::PlotTransform;
-use egui::Id;
 
 /// An image in the plot.
 #[derive(Clone)]
