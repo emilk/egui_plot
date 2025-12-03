@@ -21,26 +21,8 @@ use egui::WidgetType;
 use egui::epaint::CircleShape;
 use egui::pos2;
 use egui::vec2;
-
+use crate::placement::Corner;
 use super::items::PlotItem;
-
-/// Where to place the plot legend.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
-pub enum Corner {
-    LeftTop,
-    RightTop,
-    LeftBottom,
-    RightBottom,
-}
-
-impl Corner {
-    pub fn all() -> impl Iterator<Item = Self> {
-        [Self::LeftTop, Self::RightTop, Self::LeftBottom, Self::RightBottom]
-            .iter()
-            .copied()
-    }
-}
 
 /// How to handle multiple conflicting color for a legend item.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

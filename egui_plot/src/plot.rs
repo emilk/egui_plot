@@ -30,7 +30,7 @@ use crate::AxisHints;
 use crate::BoundsLinkGroups;
 use crate::BoundsModification;
 use crate::CoordinatesFormatter;
-use crate::Corner;
+use crate::placement::Corner;
 use crate::Cursor;
 use crate::CursorLinkGroups;
 use crate::GridInput;

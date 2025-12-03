@@ -61,3 +61,21 @@ impl From<Placement> for VPlacement {
         }
     }
 }
+
+/// Where to place the plot legend.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+pub enum Corner {
+    LeftTop,
+    RightTop,
+    LeftBottom,
+    RightBottom,
+}
+
+impl Corner {
+    pub fn all() -> impl Iterator<Item = Self> {
+        [Self::LeftTop, Self::RightTop, Self::LeftBottom, Self::RightBottom]
+            .iter()
+            .copied()
+    }
+}
