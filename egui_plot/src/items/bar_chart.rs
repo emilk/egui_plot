@@ -11,7 +11,7 @@ use emath::NumExt as _;
 use emath::Pos2;
 
 use super::add_rulers_and_text;
-use super::find_closest_rect;
+use crate::math::find_closest_rect;
 use crate::rect_elem::RectElement;
 use crate::colors::highlighted_color;
 use crate::values::ClosestElem;

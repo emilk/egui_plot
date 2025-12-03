@@ -344,22 +344,3 @@ pub(super) fn rulers_and_tooltip_at_value(
     });
 }
 
-fn find_closest_rect<'a, T>(
-    rects: impl IntoIterator<Item = &'a T>,
-    point: Pos2,
-    transform: &PlotTransform,
-) -> Option<ClosestElem>
-where
-    T: 'a + RectElement,
-{
-    rects
-        .into_iter()
-        .enumerate()
-        .map(|(index, bar)| {
-            let bar_rect = transform.rect_from_values(&bar.bounds_min(), &bar.bounds_max());
-            let dist_sq = bar_rect.distance_sq_to_pos(point);
-
-            ClosestElem { index, dist_sq }
-        })
-        .min_by_key(|e| e.dist_sq.ord())
-}
