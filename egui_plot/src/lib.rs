@@ -9,15 +9,16 @@
 //!
 
 mod axis;
+mod colors;
 mod items;
 mod legend;
+mod math;
 mod memory;
 mod plot;
 mod plot_ui;
+mod rect_elem;
 mod transform;
 mod utils;
-mod math;
-mod colors;
 
 use std::cmp::Ordering;
 use std::ops::RangeInclusive;
