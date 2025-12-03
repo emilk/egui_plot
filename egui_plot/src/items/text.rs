@@ -9,10 +9,10 @@ use egui::WidgetText;
 use egui::epaint::TextShape;
 use emath::Align2;
 
-use super::PlotGeometry;
 use crate::Id;
-use super::PlotItem;
-use super::PlotItemBase;
+use crate::items::PlotGeometry;
+use crate::items::PlotItem;
+use crate::items::PlotItemBase;
 use crate::transform::PlotTransform;
 use crate::bounds::PlotBounds;
 use crate::data::PlotPoint;

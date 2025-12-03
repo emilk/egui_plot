@@ -15,11 +15,11 @@ use egui::epaint::TextShape;
 use egui::pos2;
 use emath::TSTransform;
 
-use super::PlotGeometry;
-use super::PlotItem;
-use super::PlotItemBase;
-use super::PlotPoint;
-use super::PlotTransform;
+use crate::data::PlotPoint;
+use crate::items::PlotGeometry;
+use crate::items::PlotItem;
+use crate::items::PlotItemBase;
+use crate::transform::PlotTransform;
 use crate::axis::Axis;
 use crate::aesthetics::LineStyle;
 use crate::bounds::PlotBounds;

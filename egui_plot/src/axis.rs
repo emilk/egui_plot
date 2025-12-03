@@ -16,7 +16,7 @@ use egui::emath::Rot2;
 use egui::emath::remap_clamp;
 use egui::epaint::TextShape;
 
-use super::transform::PlotTransform;
+use crate::transform::PlotTransform;
 use crate::colors;
 use crate::grid::GridMark;
 use crate::placement::HPlacement;

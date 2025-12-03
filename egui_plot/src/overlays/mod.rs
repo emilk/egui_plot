@@ -2,6 +2,9 @@
 //! coordinates.
 
 mod coordinates;
-pub mod legend;
+mod legend;
 
 pub use coordinates::CoordinatesFormatter;
+pub use legend::ColorConflictHandling;
+pub use legend::Legend;
+pub use legend::LegendWidget;

@@ -210,7 +210,7 @@ impl LegendEntry {
 }
 
 #[derive(Clone)]
-pub(crate) struct LegendWidget {
+pub struct LegendWidget {
     rect: Rect,
     entries: Vec<LegendEntry>,
     config: Legend,

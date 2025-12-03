@@ -5,7 +5,7 @@ use egui::Vec2b;
 use egui::pos2;
 use egui::remap;
 
-use super::PlotPoint;
+use crate::data::PlotPoint;
 use crate::axis::Axis;
 use crate::bounds::PlotBounds;
 

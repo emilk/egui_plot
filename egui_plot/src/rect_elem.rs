@@ -1,4 +1,4 @@
-use super::PlotPoint;
+use crate::data::PlotPoint;
 use crate::aesthetics::Orientation;
 use crate::bounds::PlotBounds;
 use crate::transform::PlotTransform;

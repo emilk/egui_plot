@@ -7,13 +7,13 @@ use egui::Stroke;
 use egui::Ui;
 use egui::epaint::PathStroke;
 
-use super::PlotGeometry;
-use super::PlotItem;
-use super::PlotItemBase;
 use crate::aesthetics::LineStyle;
 use crate::bounds::PlotBounds;
 use crate::colors::DEFAULT_FILL_ALPHA;
 use crate::data::PlotPoints;
+use crate::items::PlotGeometry;
+use crate::items::PlotItem;
+use crate::items::PlotItemBase;
 use crate::transform::PlotTransform;
 
 /// A convex polygon.

@@ -32,8 +32,8 @@ pub use series::Line;
 pub use span::Span;
 pub use text::Text;
 
-use super::Cursor;
-use super::PlotTransform;
+use crate::cursor::Cursor;
+use crate::transform::PlotTransform;
 use crate::aesthetics::Orientation;
 use crate::bounds::PlotBounds;
 use crate::data::PlotPoint;
