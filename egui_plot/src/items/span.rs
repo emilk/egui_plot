@@ -16,14 +16,14 @@ use egui::pos2;
 use emath::TSTransform;
 
 use super::LineStyle;
-use crate::bounds::PlotBounds;
 use super::PlotGeometry;
 use super::PlotItem;
 use super::PlotItemBase;
 use super::PlotPoint;
 use super::PlotTransform;
-use crate::colors::highlighted_color;
 use crate::Axis;
+use crate::bounds::PlotBounds;
+use crate::colors::highlighted_color;
 use crate::utils::find_name_candidate;
 
 /// Padding between the label of the span and both the edge of the view and the

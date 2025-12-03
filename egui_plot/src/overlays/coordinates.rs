@@ -4,7 +4,7 @@ use crate::values::PlotPoint;
 type CoordinatesFormatterFn<'a> = dyn Fn(&PlotPoint, &PlotBounds) -> String + 'a;
 
 /// Specifies the coordinates formatting when passed to
-/// [`Plot::coordinates_formatter`].
+/// [`crate::Plot::coordinates_formatter`].
 pub struct CoordinatesFormatter<'a> {
     function: Box<CoordinatesFormatterFn<'a>>,
 }

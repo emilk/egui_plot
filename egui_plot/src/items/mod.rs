@@ -23,25 +23,25 @@ use emath::Float as _;
 pub use heatmap::Heatmap;
 pub use line::HLine;
 pub use line::VLine;
-pub use line::vertical_line;
 pub use line::horizontal_line;
+pub use line::vertical_line;
 pub use plot_image::PlotImage;
 pub use points::Points;
 pub use polygon::Polygon;
-use crate::rect_elem::RectElement;
 pub use series::Line;
 pub use span::Span;
 pub use text::Text;
+
+use super::Cursor;
+use super::PlotTransform;
+use crate::bounds::PlotBounds;
+use crate::label::LabelFormatter;
+use crate::rect_elem::RectElement;
 use crate::values::ClosestElem;
 use crate::values::LineStyle;
 use crate::values::Orientation;
 use crate::values::PlotGeometry;
 use crate::values::PlotPoint;
-
-use super::Cursor;
-use crate::label::LabelFormatter;
-use crate::bounds::PlotBounds;
-use super::PlotTransform;
 
 mod arrows;
 mod bar_chart;
@@ -326,4 +326,3 @@ pub(super) fn rulers_and_tooltip_at_value(
         ui.label(text);
     });
 }
-

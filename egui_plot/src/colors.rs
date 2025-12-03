@@ -1,5 +1,8 @@
-use egui::{Color32, Rgba, Stroke, Ui};
-use emath::NumExt;
+use egui::Color32;
+use egui::Rgba;
+use egui::Stroke;
+use egui::Ui;
+use emath::NumExt as _;
 
 pub(crate) fn rulers_color(ui: &Ui) -> Color32 {
     if ui.visuals().dark_mode {

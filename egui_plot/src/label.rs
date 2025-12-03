@@ -1,4 +1,5 @@
-use emath::NumExt;
+use emath::NumExt as _;
+
 use crate::PlotPoint;
 
 /// Helper for formatting a number so that we always show at least a few

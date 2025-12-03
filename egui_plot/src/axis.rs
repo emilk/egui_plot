@@ -15,10 +15,13 @@ use egui::WidgetText;
 use egui::emath::Rot2;
 use egui::emath::remap_clamp;
 use egui::epaint::TextShape;
-use crate::colors;
-use crate::placement::{HPlacement, Placement, VPlacement};
-use crate::grid::GridMark;
+
 use super::transform::PlotTransform;
+use crate::colors;
+use crate::grid::GridMark;
+use crate::placement::HPlacement;
+use crate::placement::Placement;
+use crate::placement::VPlacement;
 
 // Gap between tick labels and axis label in units of the axis label height
 const AXIS_LABEL_GAP: f32 = 0.25;

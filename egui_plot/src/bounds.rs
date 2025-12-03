@@ -1,7 +1,10 @@
 use std::ops::RangeInclusive;
+
 use ahash::HashMap;
 use egui::Id;
-use emath::{Vec2, Vec2b};
+use emath::Vec2;
+use emath::Vec2b;
+
 use crate::PlotPoint;
 
 /// 2D bounding box of f64 precision.

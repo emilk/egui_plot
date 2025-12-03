@@ -5,15 +5,17 @@ use egui::Shape;
 use egui::Stroke;
 use egui::Ui;
 use egui::epaint::PathStroke;
-use emath::{pos2, Pos2};
+use emath::Pos2;
+use emath::pos2;
+
 use crate::Id;
-use crate::values::LineStyle;
-use crate::bounds::PlotBounds;
-use crate::values::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
-use crate::values::PlotPoint;
 use crate::PlotTransform;
+use crate::bounds::PlotBounds;
+use crate::values::LineStyle;
+use crate::values::PlotGeometry;
+use crate::values::PlotPoint;
 
 /// A horizontal line in a plot, filling the full width
 #[derive(Clone, Debug, PartialEq)]

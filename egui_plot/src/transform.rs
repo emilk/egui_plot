@@ -4,6 +4,7 @@ use egui::Vec2;
 use egui::Vec2b;
 use egui::pos2;
 use egui::remap;
+
 use super::PlotPoint;
 use crate::Axis;
 use crate::bounds::PlotBounds;
@@ -281,4 +282,3 @@ impl PlotTransform {
         }
     }
 }
-

@@ -27,33 +27,33 @@ use emath::vec2;
 
 use crate::Axis;
 use crate::AxisHints;
-use crate::bounds::BoundsLinkGroups;
-use crate::bounds::BoundsModification;
-use crate::overlays::CoordinatesFormatter;
-use crate::placement::Corner;
 use crate::Cursor;
 use crate::CursorLinkGroups;
-use crate::grid::GridInput;
-use crate::grid::GridMark;
-use crate::grid::GridSpacer;
-use crate::placement::HPlacement;
-use crate::label::LabelFormatter;
 use crate::Legend;
-use crate::bounds::LinkedBounds;
-use crate::bounds::PlotBounds;
 use crate::PlotFrameCursors;
 use crate::PlotItem;
 use crate::PlotMemory;
-use crate::values::PlotPoint;
 use crate::PlotTransform;
 use crate::PlotUi;
-use crate::placement::VPlacement;
 use crate::axis::AxisWidget;
+use crate::bounds::BoundsLinkGroups;
+use crate::bounds::BoundsModification;
+use crate::bounds::LinkedBounds;
+use crate::bounds::PlotBounds;
+use crate::colors::rulers_color;
+use crate::grid::GridInput;
+use crate::grid::GridMark;
+use crate::grid::GridSpacer;
 use crate::items;
 use crate::items::horizontal_line;
-use crate::colors::rulers_color;
 use crate::items::vertical_line;
+use crate::label::LabelFormatter;
+use crate::overlays::CoordinatesFormatter;
 use crate::overlays::legend::LegendWidget;
+use crate::placement::Corner;
+use crate::placement::HPlacement;
+use crate::placement::VPlacement;
+use crate::values::PlotPoint;
 
 /// Combined axis widgets: `[x_axis_widgets, y_axis_widgets]`
 type AxisWidgets<'a> = [Vec<crate::axis::AxisWidget<'a>>; 2];
@@ -465,8 +465,8 @@ impl<'a> Plot<'a> {
     /// # ()
     /// ```
     ///
-    /// There are helpers for common cases, see [`crate::grid::log_grid_spacer`] and
-    /// [`crate::grid::uniform_grid_spacer`].
+    /// There are helpers for common cases, see [`crate::grid::log_grid_spacer`]
+    /// and [`crate::grid::uniform_grid_spacer`].
     #[inline]
     pub fn x_grid_spacer(mut self, spacer: impl Fn(GridInput) -> Vec<GridMark> + 'a) -> Self {
         self.grid_spacers[0] = Box::new(spacer);

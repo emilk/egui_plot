@@ -10,12 +10,12 @@ use egui::epaint::TextShape;
 use emath::Align2;
 
 use crate::Id;
-use crate::bounds::PlotBounds;
-use crate::values::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
-use crate::values::PlotPoint;
 use crate::PlotTransform;
+use crate::bounds::PlotBounds;
+use crate::values::PlotGeometry;
+use crate::values::PlotPoint;
 
 impl Text {
     pub fn new(name: impl Into<String>, position: PlotPoint, text: impl Into<WidgetText>) -> Self {
