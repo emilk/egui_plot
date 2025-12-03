@@ -7,10 +7,10 @@ use egui::Vec2;
 use egui::Vec2b;
 use egui::epaint::Hsva;
 
-use crate::transform::BoundsModification;
+use crate::bounds::BoundsModification;
 #[expect(unused_imports)] // for links in docstrings
 use crate::Plot;
-use crate::PlotBounds;
+use crate::bounds::PlotBounds;
 use crate::PlotItem;
 use crate::values::PlotPoint;
 use crate::PlotTransform;

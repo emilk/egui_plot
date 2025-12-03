@@ -16,7 +16,7 @@ use egui::pos2;
 use emath::TSTransform;
 
 use super::LineStyle;
-use super::PlotBounds;
+use crate::bounds::PlotBounds;
 use super::PlotGeometry;
 use super::PlotItem;
 use super::PlotItemBase;

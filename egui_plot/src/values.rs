@@ -12,7 +12,7 @@ use egui::epaint::PathStroke;
 use egui::lerp;
 use egui::pos2;
 
-use crate::transform::PlotBounds;
+use crate::bounds::PlotBounds;
 
 /// A point coordinate in the plot.
 ///

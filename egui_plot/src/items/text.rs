@@ -10,7 +10,7 @@ use egui::epaint::TextShape;
 use emath::Align2;
 
 use crate::Id;
-use crate::PlotBounds;
+use crate::bounds::PlotBounds;
 use crate::values::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;

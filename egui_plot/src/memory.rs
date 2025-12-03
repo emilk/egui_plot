@@ -5,7 +5,7 @@ use egui::Id;
 use egui::Pos2;
 use egui::Vec2b;
 
-use crate::PlotBounds;
+use crate::bounds::PlotBounds;
 use crate::PlotTransform;
 
 /// Information about the plot that has to persist between frames.

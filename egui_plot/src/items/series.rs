@@ -17,7 +17,7 @@ use crate::colors::DEFAULT_FILL_ALPHA;
 use crate::math::y_intersection;
 use crate::Id;
 use crate::values::LineStyle;
-use crate::PlotBounds;
+use crate::bounds::PlotBounds;
 use crate::values::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;

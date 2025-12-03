@@ -21,9 +21,9 @@ mod transform;
 mod utils;
 mod values;
 mod placement;
+mod bounds;
 
 use std::cmp::Ordering;
-use std::ops::RangeInclusive;
 
 use ahash::HashMap;
 use egui::Color32;
@@ -31,8 +31,6 @@ use egui::Id;
 use egui::NumExt as _;
 use egui::Response;
 use egui::Ui;
-use egui::Vec2;
-use egui::Vec2b;
 
 pub use crate::axis::Axis;
 pub use crate::axis::AxisHints;
@@ -70,7 +68,7 @@ pub use crate::legend::Legend;
 pub use crate::memory::PlotMemory;
 pub use crate::plot::Plot;
 pub use crate::plot_ui::PlotUi;
-pub use crate::transform::PlotBounds;
+pub use bounds::PlotBounds;
 pub use crate::transform::PlotTransform;
 
 type LabelFormatterFn<'a> = dyn Fn(&str, &PlotPoint) -> String + 'a;

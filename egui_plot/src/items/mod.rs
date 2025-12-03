@@ -40,7 +40,7 @@ use crate::values::PlotPoint;
 
 use super::Cursor;
 use super::LabelFormatter;
-use super::PlotBounds;
+use crate::bounds::PlotBounds;
 use super::PlotTransform;
 
 mod arrows;

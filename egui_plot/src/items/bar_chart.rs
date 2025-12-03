@@ -19,7 +19,7 @@ use crate::Cursor;
 use crate::Id;
 use crate::LabelFormatter;
 use crate::values::Orientation;
-use crate::PlotBounds;
+use crate::bounds::PlotBounds;
 use crate::PlotConfig;
 use crate::values::PlotGeometry;
 use crate::PlotItem;

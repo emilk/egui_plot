@@ -8,7 +8,7 @@ use egui::epaint::PathStroke;
 use emath::{pos2, Pos2};
 use crate::Id;
 use crate::values::LineStyle;
-use crate::PlotBounds;
+use crate::bounds::PlotBounds;
 use crate::values::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
