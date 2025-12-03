@@ -24,11 +24,10 @@ mod placement;
 mod bounds;
 mod grid;
 mod label;
+mod cursor;
 
-use ahash::HashMap;
 use egui::Color32;
 use egui::Id;
-use egui::NumExt as _;
 use egui::Response;
 use egui::Ui;
 
@@ -68,6 +67,9 @@ pub use crate::legend::Legend;
 pub use crate::memory::PlotMemory;
 pub use crate::plot::Plot;
 pub use crate::plot_ui::PlotUi;
+pub use crate::cursor::Cursor;
+pub(crate) use crate::cursor::PlotFrameCursors;
+pub(crate) use crate::cursor::CursorLinkGroups;
 pub use crate::grid::GridInput;
 pub use crate::grid::GridMark;
 pub use crate::grid::GridSpacer;
@@ -111,35 +113,6 @@ impl Default for CoordinatesFormatter<'_> {
     }
 }
 
-// ----------------------------------------------------------------------------
-
-/// Indicates a vertical or horizontal cursor line in plot coordinates.
-#[derive(Copy, Clone, PartialEq)]
-pub enum Cursor {
-    /// Horizontal cursor line at the given y-coordinate.
-    Horizontal {
-        /// Y-coordinate of the horizontal cursor line.
-        y: f64,
-    },
-
-    /// Vertical cursor line at the given x-coordinate.
-    Vertical {
-        /// X-coordinate of the vertical cursor line.
-        x: f64,
-    },
-}
-
-/// Contains the cursors drawn for a plot widget in a single frame.
-#[derive(PartialEq, Clone)]
-struct PlotFrameCursors {
-    id: Id,
-    cursors: Vec<Cursor>,
-}
-
-#[derive(Default, Clone)]
-struct CursorLinkGroups(HashMap<Id, Vec<PlotFrameCursors>>);
-
-// ----------------------------------------------------------------------------
 
 /// What [`Plot::show`] returns.
 pub struct PlotResponse<R> {
