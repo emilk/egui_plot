@@ -7,12 +7,12 @@ use egui::Ui;
 use emath::Rot2;
 
 use crate::Id;
-use crate::PlotBounds;
-use crate::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
-use crate::PlotPoints;
 use crate::PlotTransform;
+use crate::bounds::PlotBounds;
+use crate::values::PlotGeometry;
+use crate::values::PlotPoints;
 
 impl<'a> Arrows<'a> {
     pub fn new(name: impl Into<String>, origins: impl Into<PlotPoints<'a>>, tips: impl Into<PlotPoints<'a>>) -> Self {

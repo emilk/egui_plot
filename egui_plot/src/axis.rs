@@ -16,8 +16,12 @@ use egui::emath::Rot2;
 use egui::emath::remap_clamp;
 use egui::epaint::TextShape;
 
-use super::GridMark;
 use super::transform::PlotTransform;
+use crate::colors;
+use crate::grid::GridMark;
+use crate::placement::HPlacement;
+use crate::placement::Placement;
+use crate::placement::VPlacement;
 
 // Gap between tick labels and axis label in units of the axis label height
 const AXIS_LABEL_GAP: f32 = 0.25;
@@ -40,70 +44,6 @@ impl From<Axis> for usize {
         match value {
             Axis::X => 0,
             Axis::Y => 1,
-        }
-    }
-}
-
-/// Placement of the horizontal X-Axis.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum VPlacement {
-    Top,
-    Bottom,
-}
-
-/// Placement of the vertical Y-Axis.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum HPlacement {
-    Left,
-    Right,
-}
-
-/// Placement of an axis.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Placement {
-    /// Bottom for X-axis, or left for Y-axis.
-    LeftBottom,
-
-    /// Top for x-axis and right for y-axis.
-    RightTop,
-}
-
-impl From<HPlacement> for Placement {
-    #[inline]
-    fn from(placement: HPlacement) -> Self {
-        match placement {
-            HPlacement::Left => Self::LeftBottom,
-            HPlacement::Right => Self::RightTop,
-        }
-    }
-}
-
-impl From<Placement> for HPlacement {
-    #[inline]
-    fn from(placement: Placement) -> Self {
-        match placement {
-            Placement::LeftBottom => Self::Left,
-            Placement::RightTop => Self::Right,
-        }
-    }
-}
-
-impl From<VPlacement> for Placement {
-    #[inline]
-    fn from(placement: VPlacement) -> Self {
-        match placement {
-            VPlacement::Top => Self::RightTop,
-            VPlacement::Bottom => Self::LeftBottom,
-        }
-    }
-}
-
-impl From<Placement> for VPlacement {
-    #[inline]
-    fn from(placement: Placement) -> Self {
-        match placement {
-            Placement::LeftBottom => Self::Bottom,
-            Placement::RightTop => Self::Top,
         }
     }
 }
@@ -330,7 +270,7 @@ impl<'a> AxisWidget<'a> {
                 // Fade in labels as they get further apart:
                 let strength = remap_clamp(spacing_in_points, label_spacing, 0.0..=1.0);
 
-                let text_color = super::color_from_strength(ui, strength);
+                let text_color = colors::color_from_strength(ui, strength);
                 let galley = painter.layout_no_wrap(text, font_id.clone(), text_color);
                 let galley_size = match axis {
                     Axis::X => galley.size(),

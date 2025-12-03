@@ -13,17 +13,17 @@ use emath::Pos2;
 use emath::Rect;
 use emath::pos2;
 
-use super::DEFAULT_FILL_ALPHA;
-use super::y_intersection;
 use crate::Id;
-use crate::LineStyle;
-use crate::PlotBounds;
-use crate::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
-use crate::PlotPoint;
-use crate::PlotPoints;
 use crate::PlotTransform;
+use crate::bounds::PlotBounds;
+use crate::colors::DEFAULT_FILL_ALPHA;
+use crate::math::y_intersection;
+use crate::values::LineStyle;
+use crate::values::PlotGeometry;
+use crate::values::PlotPoint;
+use crate::values::PlotPoints;
 
 /// A series of values forming a path.
 pub struct Line<'a> {

@@ -14,29 +14,16 @@ use egui::WidgetText;
 use emath::Float as _;
 
 use super::Cursor;
-use super::LabelFormatter;
-use super::PlotBounds;
 use super::PlotTransform;
-use crate::ClosestElem;
 use crate::PlotConfig;
-use crate::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
-use crate::PlotPoint;
-
-/// Default base colors for heatmap palette
-pub const BASE_COLORS: [Color32; 10] = [
-    Color32::from_rgb(48, 18, 59),
-    Color32::from_rgb(35, 106, 141),
-    Color32::from_rgb(30, 160, 140),
-    Color32::from_rgb(88, 200, 98),
-    Color32::from_rgb(164, 223, 39),
-    Color32::from_rgb(228, 223, 14),
-    Color32::from_rgb(250, 187, 13),
-    Color32::from_rgb(246, 135, 8),
-    Color32::from_rgb(213, 68, 2),
-    Color32::from_rgb(122, 4, 2),
-];
+use crate::bounds::PlotBounds;
+use crate::colors::BASE_COLORS;
+use crate::label::LabelFormatter;
+use crate::values::ClosestElem;
+use crate::values::PlotGeometry;
+use crate::values::PlotPoint;
 
 /// Default resolution for heatmap color palette
 pub const DEFAULT_RESOLUTION: usize = 128;

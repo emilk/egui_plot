@@ -5,15 +5,17 @@ use egui::Shape;
 use egui::Stroke;
 use egui::Ui;
 use egui::epaint::PathStroke;
+use emath::Pos2;
+use emath::pos2;
 
 use crate::Id;
-use crate::LineStyle;
-use crate::PlotBounds;
-use crate::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
-use crate::PlotPoint;
 use crate::PlotTransform;
+use crate::bounds::PlotBounds;
+use crate::values::LineStyle;
+use crate::values::PlotGeometry;
+use crate::values::PlotPoint;
 
 /// A horizontal line in a plot, filling the full width
 #[derive(Clone, Debug, PartialEq)]
@@ -283,4 +285,20 @@ impl PlotItem for VLine {
         bounds.max[0] = self.x;
         bounds
     }
+}
+
+pub fn vertical_line(pointer: Pos2, transform: &PlotTransform, line_color: Color32) -> Shape {
+    let frame = transform.frame();
+    Shape::line_segment(
+        [pos2(pointer.x, frame.top()), pos2(pointer.x, frame.bottom())],
+        (1.0, line_color),
+    )
+}
+
+pub fn horizontal_line(pointer: Pos2, transform: &PlotTransform, line_color: Color32) -> Shape {
+    let frame = transform.frame();
+    Shape::line_segment(
+        [pos2(frame.left(), pointer.y), pos2(frame.right(), pointer.y)],
+        (1.0, line_color),
+    )
 }

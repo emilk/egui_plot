@@ -27,34 +27,33 @@ use emath::vec2;
 
 use crate::Axis;
 use crate::AxisHints;
-use crate::BoundsLinkGroups;
-use crate::BoundsModification;
-use crate::CoordinatesFormatter;
-use crate::Corner;
 use crate::Cursor;
 use crate::CursorLinkGroups;
-use crate::GridInput;
-use crate::GridMark;
-use crate::GridSpacer;
-use crate::HPlacement;
-use crate::LabelFormatter;
 use crate::Legend;
-use crate::LinkedBounds;
-use crate::PlotBounds;
 use crate::PlotFrameCursors;
 use crate::PlotItem;
 use crate::PlotMemory;
-use crate::PlotPoint;
-use crate::PlotResponse;
 use crate::PlotTransform;
 use crate::PlotUi;
-use crate::VPlacement;
 use crate::axis::AxisWidget;
+use crate::bounds::BoundsLinkGroups;
+use crate::bounds::BoundsModification;
+use crate::bounds::LinkedBounds;
+use crate::bounds::PlotBounds;
+use crate::colors::rulers_color;
+use crate::grid::GridInput;
+use crate::grid::GridMark;
+use crate::grid::GridSpacer;
 use crate::items;
 use crate::items::horizontal_line;
-use crate::items::rulers_color;
 use crate::items::vertical_line;
-use crate::legend::LegendWidget;
+use crate::label::LabelFormatter;
+use crate::overlays::CoordinatesFormatter;
+use crate::overlays::legend::LegendWidget;
+use crate::placement::Corner;
+use crate::placement::HPlacement;
+use crate::placement::VPlacement;
+use crate::values::PlotPoint;
 
 /// Combined axis widgets: `[x_axis_widgets, y_axis_widgets]`
 type AxisWidgets<'a> = [Vec<crate::axis::AxisWidget<'a>>; 2];
@@ -177,7 +176,7 @@ impl<'a> Plot<'a> {
 
             show_grid: true.into(),
             grid_spacing: Rangef::new(8.0, 300.0),
-            grid_spacers: [crate::log_grid_spacer(10), crate::log_grid_spacer(10)],
+            grid_spacers: [crate::grid::log_grid_spacer(10), crate::grid::log_grid_spacer(10)],
             clamp_grid: false,
 
             sense: egui::Sense::click_and_drag(),
@@ -466,8 +465,8 @@ impl<'a> Plot<'a> {
     /// # ()
     /// ```
     ///
-    /// There are helpers for common cases, see [`crate::log_grid_spacer`] and
-    /// [`crate::uniform_grid_spacer`].
+    /// There are helpers for common cases, see [`crate::grid::log_grid_spacer`]
+    /// and [`crate::grid::uniform_grid_spacer`].
     #[inline]
     pub fn x_grid_spacer(mut self, spacer: impl Fn(GridInput) -> Vec<GridMark> + 'a) -> Self {
         self.grid_spacers[0] = Box::new(spacer);
@@ -1479,7 +1478,7 @@ impl<'a> Plot<'a> {
 
             let line_strength = remap_clamp(spacing_in_points, self.grid_spacing, 0.0..=1.0);
 
-            let line_color = crate::color_from_strength(ui, line_strength);
+            let line_color = crate::colors::color_from_strength(ui, line_strength);
 
             let mut p0 = pos_in_gui;
             let mut p1 = pos_in_gui;
@@ -1816,4 +1815,23 @@ fn axis_widgets<'a>(
     }
 
     ([x_axis_widgets, y_axis_widgets], plot_rect)
+}
+
+/// What [`Plot::show`] returns.
+pub struct PlotResponse<R> {
+    /// What the user closure returned.
+    pub inner: R,
+
+    /// The response of the plot.
+    pub response: Response,
+
+    /// The transform between screen coordinates and plot coordinates.
+    pub transform: PlotTransform,
+
+    /// The id of a currently hovered item if any.
+    ///
+    /// This is `None` if either no item was hovered.
+    /// A plot item can be hovered either by hovering its representation in the
+    /// plot (line, marker, etc.) or by hovering the item in the legend.
+    pub hovered_plot_item: Option<Id>,
 }

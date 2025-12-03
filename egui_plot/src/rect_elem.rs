@@ -1,11 +1,6 @@
-use egui::emath::NumExt as _;
-use egui::epaint::Color32;
-use egui::epaint::Rgba;
-use egui::epaint::Stroke;
-
 use super::Orientation;
 use super::PlotPoint;
-use crate::transform::PlotBounds;
+use crate::bounds::PlotBounds;
 use crate::transform::PlotTransform;
 
 /// Trait that abstracts from rectangular 'Value'-like elements, such as bars or
@@ -60,19 +55,3 @@ pub(super) trait RectElement {
 
 // ----------------------------------------------------------------------------
 // Helper functions
-
-pub(super) fn highlighted_color(mut stroke: Stroke, fill: Color32) -> (Stroke, Color32) {
-    stroke.width *= 2.0;
-
-    let mut fill = Rgba::from(fill);
-    if fill.is_additive() {
-        // Make slightly brighter
-        fill = 1.3 * fill;
-    } else {
-        // Make more opaque:
-        let fill_alpha = (2.0 * fill.a()).at_most(1.0);
-        fill = fill.to_opaque().multiply(fill_alpha);
-    }
-
-    (stroke, fill.into())
-}

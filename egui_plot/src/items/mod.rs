@@ -1,4 +1,4 @@
-//! Contains items that can be added to a plot.
+//! Contains items that can be added to a plot at some plot coordinates.
 #![expect(clippy::type_complexity)] // TODO(#163): simplify some of the callback types with type aliases
 
 use std::ops::RangeInclusive;
@@ -18,31 +18,30 @@ use egui::Pos2;
 use egui::Shape;
 use egui::TextStyle;
 use egui::Ui;
-use egui::pos2;
 use egui::vec2;
 use emath::Float as _;
 pub use heatmap::Heatmap;
 pub use line::HLine;
 pub use line::VLine;
+pub use line::horizontal_line;
+pub use line::vertical_line;
 pub use plot_image::PlotImage;
 pub use points::Points;
 pub use polygon::Polygon;
-use rect_elem::RectElement;
 pub use series::Line;
 pub use span::Span;
 pub use text::Text;
-pub use values::ClosestElem;
-pub use values::LineStyle;
-pub use values::MarkerShape;
-pub use values::Orientation;
-pub use values::PlotGeometry;
-pub use values::PlotPoint;
-pub use values::PlotPoints;
 
 use super::Cursor;
-use super::LabelFormatter;
-use super::PlotBounds;
 use super::PlotTransform;
+use crate::bounds::PlotBounds;
+use crate::label::LabelFormatter;
+use crate::rect_elem::RectElement;
+use crate::values::ClosestElem;
+use crate::values::LineStyle;
+use crate::values::Orientation;
+use crate::values::PlotGeometry;
+use crate::values::PlotPoint;
 
 mod arrows;
 mod bar_chart;
@@ -52,13 +51,9 @@ mod line;
 mod plot_image;
 mod points;
 mod polygon;
-mod rect_elem;
 mod series;
 mod span;
 mod text;
-mod values;
-
-const DEFAULT_FILL_ALPHA: f32 = 0.05;
 
 /// Base data shared by all plot items.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -204,40 +199,7 @@ pub trait PlotItem {
 }
 
 // ----------------------------------------------------------------------------
-
-/// Returns the x-coordinate of a possible intersection between a line segment
-/// from `p1` to `p2` and a horizontal line at the given y-coordinate.
-fn y_intersection(p1: &Pos2, p2: &Pos2, y: f32) -> Option<f32> {
-    ((p1.y > y && p2.y < y) || (p1.y < y && p2.y > y))
-        .then_some(((y * (p1.x - p2.x)) - (p1.x * p2.y - p1.y * p2.x)) / (p1.y - p2.y))
-}
-
-// ----------------------------------------------------------------------------
 // Helper functions
-
-pub(crate) fn rulers_color(ui: &Ui) -> Color32 {
-    if ui.visuals().dark_mode {
-        Color32::from_gray(100).additive()
-    } else {
-        Color32::from_black_alpha(180)
-    }
-}
-
-pub(crate) fn vertical_line(pointer: Pos2, transform: &PlotTransform, line_color: Color32) -> Shape {
-    let frame = transform.frame();
-    Shape::line_segment(
-        [pos2(pointer.x, frame.top()), pos2(pointer.x, frame.bottom())],
-        (1.0, line_color),
-    )
-}
-
-pub(crate) fn horizontal_line(pointer: Pos2, transform: &PlotTransform, line_color: Color32) -> Shape {
-    let frame = transform.frame();
-    Shape::line_segment(
-        [pos2(frame.left(), pointer.y), pos2(frame.right(), pointer.y)],
-        (1.0, line_color),
-    )
-}
 
 fn add_rulers_and_text(
     elem: &dyn RectElement,
@@ -363,24 +325,4 @@ pub(super) fn rulers_and_tooltip_at_value(
         ui.set_max_width(tooltip_width);
         ui.label(text);
     });
-}
-
-fn find_closest_rect<'a, T>(
-    rects: impl IntoIterator<Item = &'a T>,
-    point: Pos2,
-    transform: &PlotTransform,
-) -> Option<ClosestElem>
-where
-    T: 'a + RectElement,
-{
-    rects
-        .into_iter()
-        .enumerate()
-        .map(|(index, bar)| {
-            let bar_rect = transform.rect_from_values(&bar.bounds_min(), &bar.bounds_max());
-            let dist_sq = bar_rect.distance_sq_to_pos(point);
-
-            ClosestElem { index, dist_sq }
-        })
-        .min_by_key(|e| e.dist_sq.ord())
 }

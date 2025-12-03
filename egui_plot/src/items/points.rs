@@ -10,14 +10,14 @@ use emath::pos2;
 use emath::vec2;
 
 use crate::Id;
-use crate::MarkerShape;
-use crate::PlotBounds;
-use crate::PlotGeometry;
 use crate::PlotItem;
 use crate::PlotItemBase;
-use crate::PlotPoint;
-use crate::PlotPoints;
 use crate::PlotTransform;
+use crate::bounds::PlotBounds;
+use crate::values::MarkerShape;
+use crate::values::PlotGeometry;
+use crate::values::PlotPoint;
+use crate::values::PlotPoints;
 
 impl<'a> Points<'a> {
     pub fn new(name: impl Into<String>, series: impl Into<PlotPoints<'a>>) -> Self {
