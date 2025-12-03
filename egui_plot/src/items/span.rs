@@ -27,9 +27,11 @@ use crate::Axis;
 use crate::utils::find_name_candidate;
 
 /// Padding between the label of the span and both the edge of the view and the
-/// span borders. For example, for a horizontal span, this is the padding
-/// between the top of the span label and the top edge of the plot view, but
-/// also the margin between the left/right edges of the span and the span label.
+/// span borders.
+///
+/// For example, for a horizontal span, this is the padding between the top of the span
+/// label and the top edge of the plot view, but also the margin between the left/right
+/// edges of the span and the span label.
 const LABEL_PADDING: f32 = 4.0;
 
 /// A span covering a range on either axis.
@@ -238,7 +240,17 @@ impl Span {
 
 impl PlotItem for Span {
     fn shapes(&self, ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
+        let plot_bounds = match self.axis {
+            Axis::X => transform.bounds().range_x(),
+            Axis::Y => transform.bounds().range_y(),
+        };
+
         let (range_min, range_max) = self.range_sorted();
+
+        // If the span is outside of the visible range, don't draw anything.
+        if range_max < *plot_bounds.start() || range_min > *plot_bounds.end() {
+            return;
+        }
 
         let mut stroke = self.border_stroke;
         let mut fill = self.fill;
@@ -246,23 +258,19 @@ impl PlotItem for Span {
             (stroke, fill) = highlighted_color(stroke, fill);
         }
 
-        let range_min = range_min.clamp(
-            transform.bounds().min[self.axis as usize],
-            transform.bounds().max[self.axis as usize],
-        );
-        let range_max = range_max.clamp(
-            transform.bounds().min[self.axis as usize],
-            transform.bounds().max[self.axis as usize],
-        );
+        // Clamp the range to support (half-)infinite spans
+        let range_min_clamped = range_min.max(*plot_bounds.start());
+        let range_max_clamped = range_max.min(*plot_bounds.end());
 
+        // Draw the rect first with the clamped range
         let span_rect = match self.axis {
             Axis::X => transform.rect_from_values(
-                &PlotPoint::new(range_min, transform.bounds().min[1]),
-                &PlotPoint::new(range_max, transform.bounds().max[1]),
+                &PlotPoint::new(range_min_clamped, transform.bounds().min[1]),
+                &PlotPoint::new(range_max_clamped, transform.bounds().max[1]),
             ),
             Axis::Y => transform.rect_from_values(
-                &PlotPoint::new(transform.bounds().min[0], range_min),
-                &PlotPoint::new(transform.bounds().max[0], range_max),
+                &PlotPoint::new(transform.bounds().min[0], range_min_clamped),
+                &PlotPoint::new(transform.bounds().max[0], range_max_clamped),
             ),
         };
 
@@ -270,13 +278,14 @@ impl PlotItem for Span {
             shapes.push(Shape::rect_filled(span_rect, 0.0, fill));
         }
 
-        let mut border_values = vec![range_min, range_max];
-        if (range_max - range_min).abs() <= f64::EPSILON {
-            border_values.truncate(1);
+        // Draw the first border if it is in bounds
+        if plot_bounds.contains(&range_min) {
+            self.draw_border(range_min, stroke, transform, shapes);
         }
 
-        for value in border_values {
-            self.draw_border(value, stroke, transform, shapes);
+        // Draw the second border if it is in bounds
+        if plot_bounds.contains(&range_max) {
+            self.draw_border(range_max, stroke, transform, shapes);
         }
 
         self.draw_name(ui, transform, shapes, &span_rect);
