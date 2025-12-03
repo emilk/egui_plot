@@ -20,6 +20,7 @@ mod rect_elem;
 mod transform;
 mod utils;
 mod values;
+mod placement;
 
 use std::cmp::Ordering;
 use std::ops::RangeInclusive;
@@ -35,9 +36,9 @@ use egui::Vec2b;
 
 pub use crate::axis::Axis;
 pub use crate::axis::AxisHints;
-pub use crate::axis::HPlacement;
-pub use crate::axis::Placement;
-pub use crate::axis::VPlacement;
+pub use placement::HPlacement;
+pub use placement::Placement;
+pub use placement::VPlacement;
 pub use crate::items::Arrows;
 pub use crate::items::Bar;
 pub use crate::items::BarChart;

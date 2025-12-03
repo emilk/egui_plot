@@ -15,7 +15,7 @@ use egui::WidgetText;
 use egui::emath::Rot2;
 use egui::emath::remap_clamp;
 use egui::epaint::TextShape;
-
+use crate::placement::{HPlacement, Placement, VPlacement};
 use super::GridMark;
 use super::transform::PlotTransform;
 
@@ -40,70 +40,6 @@ impl From<Axis> for usize {
         match value {
             Axis::X => 0,
             Axis::Y => 1,
-        }
-    }
-}
-
-/// Placement of the horizontal X-Axis.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum VPlacement {
-    Top,
-    Bottom,
-}
-
-/// Placement of the vertical Y-Axis.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum HPlacement {
-    Left,
-    Right,
-}
-
-/// Placement of an axis.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Placement {
-    /// Bottom for X-axis, or left for Y-axis.
-    LeftBottom,
-
-    /// Top for x-axis and right for y-axis.
-    RightTop,
-}
-
-impl From<HPlacement> for Placement {
-    #[inline]
-    fn from(placement: HPlacement) -> Self {
-        match placement {
-            HPlacement::Left => Self::LeftBottom,
-            HPlacement::Right => Self::RightTop,
-        }
-    }
-}
-
-impl From<Placement> for HPlacement {
-    #[inline]
-    fn from(placement: Placement) -> Self {
-        match placement {
-            Placement::LeftBottom => Self::Left,
-            Placement::RightTop => Self::Right,
-        }
-    }
-}
-
-impl From<VPlacement> for Placement {
-    #[inline]
-    fn from(placement: VPlacement) -> Self {
-        match placement {
-            VPlacement::Top => Self::RightTop,
-            VPlacement::Bottom => Self::LeftBottom,
-        }
-    }
-}
-
-impl From<Placement> for VPlacement {
-    #[inline]
-    fn from(placement: Placement) -> Self {
-        match placement {
-            Placement::LeftBottom => Self::Bottom,
-            Placement::RightTop => Self::Top,
         }
     }
 }
