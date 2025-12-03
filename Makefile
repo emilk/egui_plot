@@ -82,7 +82,7 @@ build_wasm:
 	cargo build -p egui_plot -p demo --all-features --lib --tests --bins --examples --target $(TARGET_WASM) $(CARGO_OPTS) $(BUILD_PROFILE)
 
 trunk:
-	trunk build $(TRUNK_OPTS)
+	cd demo && trunk build $(TRUNK_OPTS)
 
 # -------------------------------- test ----------------------------------------
 
