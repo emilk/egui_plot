@@ -206,14 +206,6 @@ pub trait PlotItem {
 // ----------------------------------------------------------------------------
 // Helper functions
 
-pub(crate) fn rulers_color(ui: &Ui) -> Color32 {
-    if ui.visuals().dark_mode {
-        Color32::from_gray(100).additive()
-    } else {
-        Color32::from_black_alpha(180)
-    }
-}
-
 pub(crate) fn vertical_line(pointer: Pos2, transform: &PlotTransform, line_color: Color32) -> Shape {
     let frame = transform.frame();
     Shape::line_segment(

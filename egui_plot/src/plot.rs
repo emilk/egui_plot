@@ -52,7 +52,7 @@ use crate::VPlacement;
 use crate::axis::AxisWidget;
 use crate::items;
 use crate::items::horizontal_line;
-use crate::items::rulers_color;
+use crate::colors::rulers_color;
 use crate::items::vertical_line;
 use crate::legend::LegendWidget;
 
