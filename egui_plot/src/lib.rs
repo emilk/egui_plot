@@ -22,7 +22,6 @@ mod memory;
 mod overlays;
 mod placement;
 mod plot;
-mod plot_ui;
 mod rect_elem;
 mod utils;
 
@@ -73,5 +72,5 @@ pub use crate::overlays::CoordinatesFormatter;
 pub use crate::placement::Corner;
 pub use crate::plot::Plot;
 pub use crate::plot::PlotResponse;
-pub use crate::plot_ui::PlotUi;
+pub use crate::plot::PlotUi;
 pub use crate::axis::PlotTransform;
