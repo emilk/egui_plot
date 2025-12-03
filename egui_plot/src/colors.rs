@@ -29,6 +29,7 @@ pub(crate) fn highlighted_color(mut stroke: Stroke, fill: Color32) -> (Stroke, C
 }
 
 pub const DEFAULT_FILL_ALPHA: f32 = 0.05;
+
 /// Default base colors. Used for now only in heatmap palette.
 pub const BASE_COLORS: [Color32; 10] = [
     Color32::from_rgb(48, 18, 59),

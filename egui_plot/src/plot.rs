@@ -433,7 +433,7 @@ impl<'a> Plot<'a> {
     /// drawn. For example, if x = 80..=230 is visible and you want big
     /// marks at steps of 100 and small ones at 25, you can return:
     /// ```no_run
-    /// # use egui_plot::grid::GridMark;
+    /// # use egui_plot::GridMark;
     /// vec![
     ///     // 100s
     ///     GridMark {

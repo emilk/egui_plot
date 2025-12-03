@@ -17,5 +17,6 @@ pub fn format_number(number: f64, num_decimals: usize) -> String {
 }
 
 type LabelFormatterFn<'a> = dyn Fn(&str, &PlotPoint) -> String + 'a;
+
 /// Optional label formatter function for customizing hover labels.
 pub type LabelFormatter<'a> = Option<Box<LabelFormatterFn<'a>>>;
