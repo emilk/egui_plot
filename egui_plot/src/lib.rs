@@ -43,7 +43,6 @@ pub use crate::items::BoxSpread;
 pub use crate::items::ClosestElem;
 pub use crate::items::HLine;
 pub use crate::items::Heatmap;
-pub use crate::items::HeatmapErr;
 pub use crate::items::Line;
 pub use crate::items::LineStyle;
 pub use crate::items::MarkerShape;

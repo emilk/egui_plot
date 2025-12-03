@@ -38,25 +38,6 @@ pub const BASE_COLORS: [Color32; 10] = [
     Color32::from_rgb(122, 4, 2),
 ];
 
-#[derive(Debug)]
-pub enum HeatmapErr {
-    ZeroColumns,
-    ZeroRows,
-    BadLength,
-}
-
-impl std::fmt::Display for HeatmapErr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::ZeroColumns => write!(f, "number of columns must not be zero"),
-            Self::ZeroRows => write!(f, "number of rows must not be zero"),
-            Self::BadLength => write!(f, "length of value vector is not divisible by number of columns"),
-        }
-    }
-}
-
-impl std::error::Error for HeatmapErr {}
-
 /// Default resolution for heatmap color palette
 pub const DEFAULT_RESOLUTION: usize = 128;
 
@@ -134,9 +115,8 @@ impl Heatmap {
     /// Create a 2D heatmap. Will automatically infer number of rows.
     ///
     /// - `values` contains magnitude of each tile. The alignment is row by row.
-    /// - `cols` is the number of columns (i.e. the length of each row) and must
-    ///   not be zero.
-    /// - `values.len()` must be a multiple of `cols`.
+    /// - `cols` is the number of columns (i.e. the length of each row).
+    /// - `values.len()` should be a multiple of `cols`.
     ///
     /// Example: To display this
     ///
@@ -146,23 +126,15 @@ impl Heatmap {
     ///
     /// pass `values = vec![0.0, 0.1, 0.3, 0.4]` and `cols = 2`.
     ///
-    /// Returns error type if provided parameters are inconsistent
-    ///
-    /// # Errors
-    /// - `HeatmapErr::ZeroColumns` if `cols` is zero
-    /// - `HeatmapErr::ZeroRows` if `values` is empty
-    /// - `HeatmapErr::BadLength` if `values.len()` is not divisible by `cols`
-    pub fn new(values: Vec<f64>, cols: usize) -> Result<Self, HeatmapErr> {
-        if cols == 0 {
-            return Err(HeatmapErr::ZeroColumns);
+    /// If parameters are invalid (e.g., `cols` is zero, `values` is empty, or
+    /// `values.len()` is not divisible by `cols`), an empty heatmap is created.
+    pub fn new(values: Vec<f64>, cols: usize) -> Self {
+        // Handle invalid parameters by creating an empty heatmap
+        if cols == 0 || values.is_empty() || (values.len() % cols) != 0 {
+            return Self::empty();
         }
-        if (values.len() % cols) != 0 {
-            return Err(HeatmapErr::BadLength);
-        }
+
         let rows = values.len() / cols;
-        if rows == 0 {
-            return Err(HeatmapErr::ZeroRows);
-        }
 
         // determine range
         let mut min = f64::MAX;
@@ -174,7 +146,7 @@ impl Heatmap {
 
         let resolution = DEFAULT_RESOLUTION;
 
-        Ok(Self {
+        Self {
             base: PlotItemBase::new(String::new()),
             pos: PlotPoint { x: 0.0, y: 0.0 },
             values,
@@ -190,7 +162,29 @@ impl Heatmap {
             highlight: false,
             name: String::new(),
             tile_size: Vec2 { x: 1.0, y: 1.0 },
-        })
+        }
+    }
+
+    /// Create an empty heatmap (no tiles).
+    fn empty() -> Self {
+        let resolution = DEFAULT_RESOLUTION;
+        Self {
+            base: PlotItemBase::new(String::new()),
+            pos: PlotPoint { x: 0.0, y: 0.0 },
+            values: Vec::new(),
+            cols: 0,
+            rows: 0,
+            min: 0.0,
+            max: 0.0,
+            formatter: Box::new(|v| format!("{v:.1}")),
+            custom_mapping: None,
+            show_labels: true,
+            resolution,
+            palette: Self::linear_gradient_from_base_colors(&BASE_COLORS, resolution),
+            highlight: false,
+            name: String::new(),
+            tile_size: Vec2 { x: 1.0, y: 1.0 },
+        }
     }
 
     /// Set the resolution of the color palette.

@@ -22,7 +22,6 @@ use egui::pos2;
 use egui::vec2;
 use emath::Float as _;
 pub use heatmap::Heatmap;
-pub use heatmap::HeatmapErr;
 pub use line::HLine;
 pub use line::VLine;
 pub use plot_image::PlotImage;
