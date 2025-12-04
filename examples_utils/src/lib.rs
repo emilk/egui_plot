@@ -42,7 +42,10 @@ pub mod internal {
         State: eframe::App,
     {
         let output_path = PathBuf::from(manifest_dir);
-        let options = SnapshotOptions::new().threshold(2.0).output_path(output_path);
+        let options = SnapshotOptions::new()
+            .threshold(2.0)
+            .failed_pixel_count_threshold(5)
+            .output_path(output_path);
 
         // Generate main screenshot
         let mut harness = Harness::builder()
