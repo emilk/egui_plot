@@ -9,14 +9,14 @@ use egui::Shape;
 use egui::Stroke;
 use egui::Ui;
 
-use super::DEFAULT_FILL_ALPHA;
-use crate::PlotBounds;
-use crate::PlotGeometry;
-use crate::PlotItem;
-use crate::PlotItemBase;
-use crate::PlotPoint;
-use crate::PlotPoints;
-use crate::PlotTransform;
+use crate::axis::PlotTransform;
+use crate::bounds::PlotBounds;
+use crate::bounds::PlotPoint;
+use crate::colors::DEFAULT_FILL_ALPHA;
+use crate::data::PlotPoints;
+use crate::items::PlotGeometry;
+use crate::items::PlotItem;
+use crate::items::PlotItemBase;
 
 /// A filled area between two lines.
 ///
