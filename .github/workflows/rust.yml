@@ -147,4 +147,4 @@ jobs:
         if: always()
         with:
           name: test-results
-          path: "*.png"
+          path: "**/*.png"
