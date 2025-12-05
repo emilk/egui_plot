@@ -21,7 +21,7 @@ examples_utils.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 image = { workspace = true, features = ["png"] }
-rfd = "0.15"
+rfd = "0.16"
 
 [package.metadata.cargo-shear]
 ignored = ["env_logger"] # used by make_main! macro
