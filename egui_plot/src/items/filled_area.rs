@@ -94,7 +94,7 @@ impl FilledArea {
     /// Name of this plot item.
     ///
     /// This name will show up in the plot legend, if legends are turned on.
-    #[expect(clippy::needless_pass_by_value)]
+    #[expect(clippy::needless_pass_by_value, reason = "to allow various string types")]
     #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
         self.base_mut().name = name.to_string();

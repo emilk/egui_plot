@@ -28,7 +28,7 @@ impl BorrowPointsExample {
             .response
     }
 
-    #[expect(clippy::unused_self)]
+    #[expect(clippy::unused_self, reason = "required by the example template")]
     pub fn show_controls(&self, ui: &mut egui::Ui) -> Response {
         ui.scope(|_ui| {}).response
     }

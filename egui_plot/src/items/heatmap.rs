@@ -207,7 +207,7 @@ impl Heatmap {
             let i_rel: f64 = i as f64 / (resolution - 1) as f64;
             if i_rel == 1.0 {
                 // last element
-                *color = *base_colors.last().expect("Base colors should not be empty");
+                *color = base_colors[base_colors.len() - 1];
             } else {
                 let base_index_float: f64 = i_rel * (base_colors.len() - 1) as f64;
                 let base_index: usize = base_index_float as usize;
@@ -277,7 +277,7 @@ impl Heatmap {
     /// This name will show up in the plot legend, if legends are turned on.
     /// Multiple heatmaps may share the same name, in which case they will
     /// also share an entry in the legend.
-    #[expect(clippy::needless_pass_by_value)]
+    #[expect(clippy::needless_pass_by_value, reason = "to allow various string types")]
     #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
         self.name = name.to_string();
