@@ -49,7 +49,7 @@ stacked_bar.workspace = true
 
 # native:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-env_logger = { version = "0.11.6", default-features = false, features = [
+env_logger = { version = "0.11.8", default-features = false, features = [
     "auto-color",
     "humantime",
 ] }
