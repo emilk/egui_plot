@@ -23,7 +23,7 @@ impl PlotSpanDemo {
         .response
     }
 
-    #[expect(clippy::needless_pass_by_ref_mut)]
+    #[expect(clippy::needless_pass_by_ref_mut, reason = "to allow mutation of self")]
     pub fn show_plot(&mut self, ui: &mut egui::Ui) -> Response {
         let mut plot = Plot::new("Span Demo");
         if self.show_legend {

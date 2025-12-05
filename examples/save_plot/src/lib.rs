@@ -1,4 +1,4 @@
-#![expect(clippy::print_stderr)]
+#![expect(clippy::print_stderr, reason = "example template")]
 #![doc = include_str!("../README.md")]
 
 use eframe::egui;

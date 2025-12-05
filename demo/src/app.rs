@@ -131,6 +131,7 @@ impl DemoGallery {
 
                 ui.horizontal(|ui| {
                     ui.label("Tags:");
+                    #[expect(clippy::expect_used, reason = "tags are non-empty strings")]
                     egui_chip::ChipEditBuilder::new(",")
                         .expect("failed to create ChipEditBuilder")
                         .texts(example.tags())

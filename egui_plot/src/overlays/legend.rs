@@ -320,6 +320,10 @@ impl Widget for &mut LegendWidget {
                         }
                         let mut focus_on_item = None;
 
+                        #[expect(
+                            clippy::expect_used,
+                            reason = "we checked that entries is not empty when creating the legend"
+                        )]
                         let response_union = entries
                             .iter_mut()
                             .map(|entry| {

@@ -30,7 +30,7 @@ impl CustomAxesExample {
         Line::new("logistic fn", values)
     }
 
-    #[expect(clippy::needless_pass_by_value)]
+    #[expect(clippy::needless_pass_by_value, reason = "to allow various range types")]
     fn x_grid(input: GridInput) -> Vec<GridMark> {
         let mut marks = vec![];
 
@@ -58,7 +58,7 @@ impl CustomAxesExample {
         marks
     }
 
-    #[expect(clippy::unused_self)]
+    #[expect(clippy::unused_self, reason = "required by the example template")]
     pub fn show_plot(&self, ui: &mut egui::Ui) -> Response {
         const MINS_PER_DAY: f64 = CustomAxesExample::MINS_PER_DAY;
         const MINS_PER_H: f64 = CustomAxesExample::MINS_PER_H;
@@ -137,7 +137,7 @@ impl CustomAxesExample {
             .response
     }
 
-    #[expect(clippy::unused_self)]
+    #[expect(clippy::unused_self, reason = "required by the example template")]
     pub fn show_controls(&self, ui: &mut egui::Ui) -> Response {
         ui.label("Zoom in on the X-axis to see hours and minutes")
     }
