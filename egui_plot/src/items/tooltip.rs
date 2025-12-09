@@ -102,20 +102,27 @@ pub struct PinnedPoints {
 pub struct TooltipOptions {
     /// Fill the vertical band region for visual feedback.
     pub draw_band_fill: bool,
+
     /// Draw a 1D guide line at the current pointer X.
     pub draw_vertical_guide: bool,
+
     /// Color for the band fill (typically a faint translucent blue).
     pub band_fill: Color32,
+
     /// Stroke for the vertical guide line.
     pub guide_stroke: Stroke,
+
     /// Show markers at hit points on each series (similar to pin markers).
     pub show_markers: bool,
+
     /// Radius of the on-canvas hit markers (in pixels).
     pub marker_radius: f32,
+
     /// If `Some(distance)`, highlight lines whose nearest point is within
     /// `distance` pixels (Manhattan distance: |dx| + |dy|) from the crosshair.
     /// If `None`, no lines are highlighted.
     pub highlight_lines_distance: Option<f32>,
+
     /// Show a small panel listing the current pins at the top-right.
     pub show_pins_panel: bool,
 
@@ -138,7 +145,7 @@ impl Default for TooltipOptions {
             band_fill: Color32::from_rgba_unmultiplied(120, 160, 255, 24),
             guide_stroke: Stroke::new(1.0, Color32::WHITE),
             show_markers: true,
-            marker_radius: 3.5,
+            marker_radius: 5.0,
             highlight_lines_distance: Some(50.0),
             show_pins_panel: true,
             radius_px: 50.0,
@@ -335,12 +342,8 @@ impl PlotUi<'_> {
             return;
         }
 
-        hits.sort_by(|a, b| {
-            a.screen_dx
-                .partial_cmp(&b.screen_dx)
-                .unwrap_or(std::cmp::Ordering::Equal)
-                .then_with(|| a.series_name.cmp(&b.series_name))
-        });
+        // Sort by series name for stable ordering in the tooltip
+        hits.sort_by(|a, b| a.series_name.cmp(&b.series_name));
 
         if let Some(highlight_distance) = options.highlight_lines_distance {
             // Mark hits within the highlight distance and highlight their corresponding lines
@@ -554,9 +557,6 @@ fn show_pins_panel(ctx: &egui::Context, frame: Rect, pins: &[PinnedPoints]) {
 
 /// Default tooltip content: a compact table with a row per hit (series).
 fn default_tooltip_ui(ui: &mut egui::Ui, hits: &[HitPoint], pins: &[PinnedPoints]) {
-    ui.strong("Nearest per series (band)");
-    ui.add_space(4.0);
-
     let x_dec = 3usize;
     let y_dec = 3usize;
 
@@ -566,19 +566,17 @@ fn default_tooltip_ui(ui: &mut egui::Ui, hits: &[HitPoint], pins: &[PinnedPoints
         .striped(true)
         .show(ui, |ui| {
             ui.weak("");
-            ui.weak("series");
             ui.weak("x");
             ui.weak("y");
             ui.end_row();
             for h in hits {
-                ui.label(RichText::new("●").color(h.color));
                 // Highlight the row if it's within the highlight distance
                 if h.is_highlighted {
-                    ui.strong(&h.series_name);
+                    ui.label(RichText::new(&h.series_name).color(h.color).strong());
                     ui.strong(format!("{:.x_dec$}", h.value.x));
                     ui.strong(format!("{:.y_dec$}", h.value.y));
                 } else {
-                    ui.label(&h.series_name);
+                    ui.label(RichText::new(&h.series_name).color(h.color));
                     ui.label(format!("{:.x_dec$}", h.value.x));
                     ui.label(format!("{:.y_dec$}", h.value.y));
                 }
