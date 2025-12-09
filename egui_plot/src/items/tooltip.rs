@@ -108,6 +108,8 @@ pub struct TooltipOptions {
     pub band_fill: Color32,
     /// Stroke for the vertical guide line.
     pub guide_stroke: Stroke,
+    /// Show markers at hit points on each series (similar to pin markers).
+    pub show_markers: bool,
     /// Radius of the on-canvas hit markers (in pixels).
     pub marker_radius: f32,
     /// If `Some(distance)`, highlight lines whose nearest point is within
@@ -135,6 +137,7 @@ impl Default for TooltipOptions {
             draw_vertical_guide: true,
             band_fill: Color32::from_rgba_unmultiplied(120, 160, 255, 24),
             guide_stroke: Stroke::new(1.0, Color32::WHITE),
+            show_markers: true,
             marker_radius: 3.5,
             highlight_lines_distance: Some(50.0),
             show_pins_panel: true,
@@ -154,6 +157,14 @@ impl TooltipOptions {
     #[inline]
     pub fn highlight_lines_distance(mut self, distance: Option<f32>) -> Self {
         self.highlight_lines_distance = distance;
+        self
+    }
+
+    /// Toggle whether to show markers at hit points on each series.
+    /// These markers move with the crosshair, similar to pin markers.
+    #[inline]
+    pub fn show_markers(mut self, on: bool) -> Self {
+        self.show_markers = on;
         self
     }
 
@@ -388,13 +399,21 @@ impl PlotUi<'_> {
                     options.guide_stroke,
                 );
             }
+        }
 
+        // Draw markers on foreground layer so they appear above plot content
+        if options.show_markers {
+            let marker_painter = egui::Painter::new(
+                ctx.clone(),
+                egui::LayerId::new(egui::Order::Foreground, egui::Id::new("tooltip_markers")),
+                *frame,
+            );
             for h in &hits {
-                painter.circle_filled(h.screen_pos, options.marker_radius, h.color);
-                painter.circle_stroke(
+                marker_painter.circle_filled(h.screen_pos, options.marker_radius, h.color);
+                marker_painter.circle_stroke(
                     h.screen_pos,
                     options.marker_radius,
-                    Stroke::new(5.0, visuals.window_stroke().color),
+                    Stroke::new(1.0, visuals.window_stroke().color),
                 );
             }
         }
