@@ -1,5 +1,4 @@
-use default_tooltip::DefaultTooltipExample;
+use default_tooltip::TooltipExample;
 use examples_utils::make_main;
 
-make_main!(DefaultTooltipExample);
-
+make_main!(TooltipExample);

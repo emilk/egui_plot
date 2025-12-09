@@ -26,6 +26,8 @@ borrow_points = { version = "0.1.0", path = "examples/borrow_points" }
 box_plot = { version = "0.1.0", path = "examples/box_plot" }
 custom_axes = { version = "0.1.0", path = "examples/custom_axes" }
 custom_plot_manipulation = { version = "0.1.0", path = "examples/custom_plot_manipulation" }
+custom_tooltip = { version = "0.1.0", path = "examples/custom_tooltip" }
+default_tooltip = { version = "0.1.0", path = "examples/default_tooltip" }
 filled_area = { version = "0.1.0", path = "examples/filled_area" }
 heatmap = { version = "0.1.0", path = "examples/heatmap" }
 histogram = { version = "0.1.0", path = "examples/histogram" }
@@ -37,6 +39,8 @@ lines = { version = "0.1.0", path = "examples/lines" }
 linked_axes = { version = "0.1.0", path = "examples/linked_axes" }
 markers = { version = "0.1.0", path = "examples/markers" }
 performance = { version = "0.1.0", path = "examples/performance" }
+pins = { version = "0.1.0", path = "examples/pins" }
+pins_with_tooltip = { version = "0.1.0", path = "examples/pins_with_tooltip" }
 plot_span = { version = "0.1.0", path = "examples/plot_span" }
 save_plot = { version = "0.1.0", path = "examples/save_plot" }
 stacked_bar = { version = "0.1.0", path = "examples/stacked_bar" }

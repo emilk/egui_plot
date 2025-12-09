@@ -6,7 +6,6 @@ use egui::Response;
 use egui::RichText;
 use egui_plot::HitPoint;
 use egui_plot::Line;
-use egui_plot::PinnedPoints;
 use egui_plot::Plot;
 use egui_plot::TooltipOptions;
 
@@ -33,8 +32,7 @@ impl CustomTooltipExample {
             ui.label("Series 2 points:");
             ui.add(egui::DragValue::new(&mut self.n_series2).speed(5).range(10..=500));
         });
-        ui.label("This demo shows mismatched x-sampling across series.");
-        ui.label("Press P to pin, U to unpin last, Delete to clear all pins.")
+        ui.label("This demo shows a custom tooltip UI with mismatched x-sampling across series.")
     }
 
     pub fn show_plot(&self, ui: &mut egui::Ui) -> Response {
@@ -71,45 +69,37 @@ impl CustomTooltipExample {
                         .width(2.0),
                 );
 
-                plot_ui.show_tooltip_across_series_with(
-                    &TooltipOptions::default(),
-                    |ui, _hits: &[HitPoint], pins: &[PinnedPoints]| {
-                        ui.strong("Pinned snapshots");
-                        if pins.is_empty() {
-                            ui.weak("No pins yet. Hover and press P to pin, U to unpin last, Delete to clear.");
-                            return;
-                        }
+                // Custom tooltip UI
+                plot_ui.show_tooltip_custom(&TooltipOptions::default(), |ui, hits: &[HitPoint]| {
+                    ui.strong("Custom Tooltip");
+                    ui.separator();
 
-                        for (k, snap) in pins.iter().enumerate() {
-                            egui::CollapsingHeader::new(format!("Pin #{k}"))
-                                .default_open(false)
-                                .show(ui, |ui| {
-                                    egui::Grid::new(format!("pin_grid_{k}"))
-                                        .num_columns(4)
-                                        .spacing([8.0, 2.0])
-                                        .striped(true)
-                                        .show(ui, |ui| {
-                                            ui.weak("");
-                                            ui.weak("series");
-                                            ui.weak("x");
-                                            ui.weak("y");
-                                            ui.end_row();
+                    if hits.is_empty() {
+                        ui.weak("No data points nearby");
+                        return;
+                    }
 
-                                            for h in &snap.hits {
-                                                ui.label(RichText::new("●").color(h.color));
-                                                ui.monospace(&h.series_name);
-                                                ui.monospace(format!("{:.6}", h.value.x));
-                                                ui.monospace(format!("{:.6}", h.value.y));
-                                                ui.end_row();
-                                            }
-                                        });
-                                });
-                        }
+                    egui::Grid::new("custom_tooltip_grid")
+                        .num_columns(3)
+                        .spacing([12.0, 4.0])
+                        .striped(true)
+                        .show(ui, |ui| {
+                            ui.strong("Series");
+                            ui.strong("X");
+                            ui.strong("Y");
+                            ui.end_row();
 
-                        ui.add_space(6.0);
-                        ui.weak("Hotkeys: P = pin current, U = unpin last, Delete = clear all");
-                    },
-                );
+                            for h in hits {
+                                ui.label(RichText::new(&h.series_name).color(h.color));
+                                ui.monospace(format!("{:.4}", h.value.x));
+                                ui.monospace(format!("{:.4}", h.value.y));
+                                ui.end_row();
+                            }
+                        });
+
+                    ui.add_space(4.0);
+                    ui.weak(format!("Showing {} series", hits.len()));
+                });
             })
             .response
     }

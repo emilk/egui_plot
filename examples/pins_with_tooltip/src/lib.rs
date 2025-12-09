@@ -4,23 +4,23 @@ use eframe::egui;
 use examples_utils::PlotExample;
 
 mod app;
-pub use app::CustomTooltipExample;
+pub use app::PinsWithTooltipExample;
 
-impl PlotExample for CustomTooltipExample {
+impl PlotExample for PinsWithTooltipExample {
     fn name(&self) -> &'static str {
-        "custom_tooltip"
+        "pins_with_tooltip"
     }
 
     fn title(&self) -> &'static str {
-        "Custom Tooltip Demo"
+        "Pins + Tooltip Combined"
     }
 
     fn description(&self) -> &'static str {
-        "Custom tooltip UI example showing how to build your own tooltip content."
+        "This example shows both pins and tooltip used together. Hover to see the tooltip, press P to pin. Both components share the same hit collection for efficiency."
     }
 
     fn tags(&self) -> &'static [&'static str] {
-        &["tooltip", "custom", "series"]
+        &["pins", "tooltip", "combined", "comparison"]
     }
 
     fn thumbnail_bytes(&self) -> &'static [u8] {
@@ -39,3 +39,4 @@ impl PlotExample for CustomTooltipExample {
         self.show_controls(ui)
     }
 }
+

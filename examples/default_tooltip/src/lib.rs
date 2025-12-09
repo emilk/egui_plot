@@ -4,9 +4,9 @@ use eframe::egui;
 use examples_utils::PlotExample;
 
 mod app;
-pub use app::DefaultTooltipExample;
+pub use app::TooltipExample;
 
-impl PlotExample for DefaultTooltipExample {
+impl PlotExample for TooltipExample {
     fn name(&self) -> &'static str {
         "default_tooltip"
     }
@@ -16,7 +16,7 @@ impl PlotExample for DefaultTooltipExample {
     }
 
     fn description(&self) -> &'static str {
-        "This example demonstrates the default tooltip feature for comparing values across multiple series. Hover over the plot to see nearest points per series. Press P to pin, U to unpin, Delete to clear pins."
+        "Tooltip-only example for comparing values across multiple series. Hover to see nearest points."
     }
 
     fn tags(&self) -> &'static [&'static str] {
@@ -39,4 +39,3 @@ impl PlotExample for DefaultTooltipExample {
         self.show_controls(ui)
     }
 }
-

@@ -40,9 +40,6 @@ pub use crate::items::polygon::Polygon;
 pub use crate::items::series::Line;
 pub use crate::items::span::Span;
 pub use crate::items::text::Text;
-pub use crate::items::tooltip::HitPoint;
-pub use crate::items::tooltip::PinnedPoints;
-pub use crate::items::tooltip::TooltipOptions;
 use crate::label::LabelFormatter;
 use crate::rect_elem::RectElement;
 
@@ -58,7 +55,6 @@ mod polygon;
 mod series;
 mod span;
 mod text;
-mod tooltip;
 
 /// Base data shared by all plot items.
 #[derive(Clone, Debug, PartialEq, Eq)]

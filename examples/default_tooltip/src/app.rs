@@ -6,24 +6,23 @@ use egui_plot::Plot;
 use egui_plot::TooltipOptions;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub struct DefaultTooltipExample {
+pub struct TooltipExample {
     n_points: usize,
 }
 
-impl Default for DefaultTooltipExample {
+impl Default for TooltipExample {
     fn default() -> Self {
-        Self { n_points: 10 }
+        Self { n_points: 20 }
     }
 }
 
-impl DefaultTooltipExample {
+impl TooltipExample {
     pub fn show_controls(&mut self, ui: &mut egui::Ui) -> Response {
         ui.horizontal(|ui| {
             ui.label("Number of points:");
-            ui.add(egui::DragValue::new(&mut self.n_points).speed(10).range(10..=2000));
+            ui.add(egui::DragValue::new(&mut self.n_points).speed(1).range(10..=200));
         });
-        ui.label("Hover the plot to see nearest points per series.");
-        ui.label("Press P to pin, U to unpin last, Delete to clear all pins.")
+        ui.label("Hover the plot to see nearest points per series.")
     }
 
     pub fn show_plot(&self, ui: &mut egui::Ui) -> Response {
@@ -32,7 +31,7 @@ impl DefaultTooltipExample {
         let f1: Vec<f64> = x1.iter().map(|&t| t.sin()).collect();
         let f2: Vec<f64> = x2.iter().map(|&t| (t * 0.6 + 0.8).sin() * 0.8 + 0.2).collect();
 
-        Plot::new("default_tooltip_demo")
+        Plot::new("tooltip_demo")
             .show(ui, |plot_ui| {
                 let s1: Vec<[f64; 2]> = x1.iter().zip(f1.iter()).map(|(&x, &y)| [x, y]).collect();
                 let s2: Vec<[f64; 2]> = x2.iter().zip(f2.iter()).map(|(&x, &y)| [x, y]).collect();
@@ -48,7 +47,8 @@ impl DefaultTooltipExample {
                         .width(2.0),
                 );
 
-                plot_ui.show_tooltip_with_options(&TooltipOptions::default());
+                // Tooltip only - no pins
+                plot_ui.show_tooltip(&TooltipOptions::default());
             })
             .response
     }
