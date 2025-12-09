@@ -24,7 +24,7 @@
 //! ```ignore
 //! Plot::new("my_plot").show(ui, |plot_ui| {
 //!     let opts = TooltipOptions::default()
-//!         .highlight_hovered_lines(true)
+//!         .highlight_lines_distance(Some(30.0))
 //!         .show_pins_panel(true);
 //!     plot_ui.show_tooltip_across_series_with(&opts, |ui, hits, pins| {
 //!         ui.strong("My custom tooltip");
@@ -329,15 +329,20 @@ impl PlotUi<'_> {
 
         if hits.is_empty() {
             if self.response.hovered() {
+                let mut pins_changed = false;
                 ctx.input(|i| {
                     if i.key_pressed(Key::U) {
                         pins.pop();
+                        pins_changed = true;
                     }
                     if i.key_pressed(Key::Delete) {
                         pins.clear();
+                        pins_changed = true;
                     }
                 });
-                save_pins(&ctx, self.response.id, pins);
+                if pins_changed {
+                    save_pins(&ctx, self.response.id, pins);
+                }
             }
             return;
         }
@@ -365,6 +370,7 @@ impl PlotUi<'_> {
         }
 
         if self.response.hovered() {
+            let mut pins_changed = false;
             ctx.input(|i| {
                 if i.key_pressed(Key::P) {
                     let pointer_plot = transform.value_from_position(pointer_screen);
@@ -372,15 +378,20 @@ impl PlotUi<'_> {
                         hits: hits.clone(),
                         plot_x: pointer_plot.x,
                     });
+                    pins_changed = true;
                 }
                 if i.key_pressed(Key::U) {
                     pins.pop();
+                    pins_changed = true;
                 }
                 if i.key_pressed(Key::Delete) {
                     pins.clear();
+                    pins_changed = true;
                 }
             });
-            save_pins(&ctx, self.response.id, pins.clone());
+            if pins_changed {
+                save_pins(&ctx, self.response.id, pins.clone());
+            }
         }
 
         {
@@ -561,7 +572,7 @@ fn default_tooltip_ui(ui: &mut egui::Ui, hits: &[HitPoint], pins: &[PinnedPoints
     let y_dec = 3usize;
 
     Grid::new(Id::new("egui_plot_band_tooltip_table"))
-        .num_columns(4)
+        .num_columns(3)
         .spacing([8.0, 2.0])
         .striped(true)
         .show(ui, |ui| {
