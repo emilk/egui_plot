@@ -922,6 +922,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "custom_tooltip"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui_plot",
+ "env_logger",
+ "examples_utils",
+]
+
+[[package]]
+name = "default_tooltip"
+version = "0.1.0"
+dependencies = [
+ "eframe",
+ "egui_plot",
+ "env_logger",
+ "examples_utils",
+]
+
+[[package]]
 name = "demo"
 version = "0.34.0"
 dependencies = [

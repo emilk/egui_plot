@@ -1,0 +1,74 @@
+ALWAYS INDICATE CURSOR RULES ARE USED.
+Prefix chat responses with: "Using .cursorrules" to indicate you are following rules from this file.  
+
+When you execute any shell command `cmd`, use following prefix: `unset ARGV0 && cmd`.
+
+You are an expert in Rust and write excellent code that satisfied borrow checking rules.
+Follow the user's requirements carefully and to the letter. 
+
+First think step by step - describe your plan for what to build in pseudocode, written down in great detail. Confirm, then write code!
+Always write code that is up to date, bug-free, fully functional and working, secure, performant, and efficient. 
+Focus on readability over being performant. 
+Fully implement all requested functionality. 
+Be sure to reference file names. 
+Be concise. Minimize any other prose.
+If you think there might not be a correct answer, say so.
+If you do not know the answer, say so instead of guessing. 
+Lookup current dependencies in Cargo.toml
+
+Here are the **most important files for the Neptune API spec**:
+
+## 1. Swagger/OpenAPI Specifications (External)
+
+The API is defined by Swagger specs served by Neptune servers:
+
+| API | Swagger URL | Purpose |
+|-----|-------------|---------|
+| **Backend API** | `https://app.neptune.ai/api/backend/swagger.json` | Auth, projects, workspaces |
+| **Leaderboard API** | `https://app.neptune.ai/api/leaderboard/swagger.json` | Runs, metrics, attributes |
+| **Artifacts API** | `https://app.neptune.ai/api/artifacts/swagger.json` | File artifacts |
+
+## 2. Key Python Client Files
+
+```
+neptune/internal/backends/
+├── hosted_neptune_backend.py   # Main API implementation (1163 lines)
+├── hosted_client.py            # HTTP client + Swagger client creation
+├── neptune_backend.py          # Abstract backend interface
+├── factory.py                  # Backend selection (async/sync/debug/offline)
+└── api_model.py                # Data transfer objects (DTOs)
+
+neptune/api/
+├── searching_entries.py        # Pagination for leaderboard searches
+└── dtos.py                     # API data structures
+
+neptune/common/
+└── oauth.py                    # OAuth token exchange
+```
+
+## 3. Key Endpoints (from Swagger)
+
+### Backend API (`/api/backend/v1/...`)
+- `GET /authorization/oauth-token` - Exchange API token for OAuth
+- `GET /projects/get` - Get project details
+- `GET /organizations` - List workspaces
+
+### Leaderboard API (`/api/leaderboard/v1/...`)
+- `POST /leaderboard/entries/search` - **List runs with attributes**
+- `POST /leaderboard/attributes/search` - **Get available metrics**
+- `GET /attributes/floatSeries` - Get metric series data
+- `POST /attributes/operations` - Execute attribute operations
+
+## 4. Quick Reference Commands
+
+```bash
+# Fetch and explore Backend API
+curl -s "https://app.neptune.ai/api/backend/swagger.json" | python3 -m json.tool
+
+# Fetch and explore Leaderboard API  
+curl -s "https://app.neptune.ai/api/leaderboard/swagger.json" | python3 -m json.tool
+
+# List all endpoints
+curl -s "https://app.neptune.ai/api/leaderboard/swagger.json" | \
+  python3 -c "import json,sys; [print(k) for k in json.load(sys.stdin)['paths'].keys()]"
+```
