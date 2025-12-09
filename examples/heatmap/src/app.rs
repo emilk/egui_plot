@@ -66,8 +66,10 @@ impl HeatmapDemo {
                             self.palette.pop();
                         }
                     });
-                    if ui.button("Push color").clicked() {
-                        self.palette.push(*self.palette.last().expect("Palette is empty"));
+                    if ui.button("Push color").clicked()
+                        && let Some(last) = self.palette.last()
+                    {
+                        self.palette.push(*last);
                     }
                 });
                 ui.horizontal(|ui| {
@@ -80,7 +82,7 @@ impl HeatmapDemo {
         .response
     }
 
-    #[expect(clippy::needless_pass_by_ref_mut)]
+    #[expect(clippy::needless_pass_by_ref_mut, reason = "to allow mutation of self")]
     pub fn show_plot(&mut self, ui: &mut egui::Ui) -> Response {
         let mut values = Vec::new();
         for y in 0..self.rows {

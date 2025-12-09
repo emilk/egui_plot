@@ -66,7 +66,7 @@ impl SavePlotExample {
         inner.response
     }
 
-    #[expect(clippy::unused_self)]
+    #[expect(clippy::unused_self, reason = "required by the example template")]
     pub fn show_controls(&self, ui: &mut egui::Ui) -> Response {
         let response = ui.button("Save Plot");
         if response.clicked() {

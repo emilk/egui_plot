@@ -104,7 +104,7 @@ impl BoxPlot {
     /// losing the item's state. You should make sure the name passed to
     /// [`Self::new`] is unique and stable for each item, or set unique and
     /// stable ids explicitly via [`Self::id`].
-    #[expect(clippy::needless_pass_by_value)]
+    #[expect(clippy::needless_pass_by_value, reason = "to allow various string types")]
     #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
         self.base_mut().name = name.to_string();
@@ -279,7 +279,7 @@ impl BoxElem {
     }
 
     /// Name of this box element.
-    #[expect(clippy::needless_pass_by_value)]
+    #[expect(clippy::needless_pass_by_value, reason = "to allow various string types")]
     #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
         self.name = name.to_string();

@@ -1,5 +1,8 @@
 //! Contains items that can be added to a plot at some plot coordinates.
-#![expect(clippy::type_complexity)] // TODO(#163): simplify some of the callback types with type aliases
+#![expect(
+    clippy::type_complexity,
+    reason = "TODO(#163): simplify some of the callback types with type aliases"
+)]
 
 use std::ops::RangeInclusive;
 
@@ -234,7 +237,7 @@ fn add_rulers_and_text(
     }
 
     // Text
-    let text = text.unwrap_or({
+    let text = text.unwrap_or_else(|| {
         let mut text = elem.name().to_owned(); // could be empty
 
         if show_values {
