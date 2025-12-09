@@ -275,6 +275,11 @@ impl PlotUi<'_> {
             return Vec::new();
         };
 
+        // Only show hits if pointer is within the plot frame
+        if !frame.contains(pointer_screen) {
+            return Vec::new();
+        }
+
         let band_min_x = (pointer_screen.x - radius_px).max(frame.left());
         let band_max_x = (pointer_screen.x + radius_px).min(frame.right());
         if band_max_x <= band_min_x {
