@@ -70,7 +70,7 @@ impl CustomTooltipExample {
                 );
 
                 // Custom tooltip UI
-                plot_ui.show_tooltip_custom(&TooltipOptions::default(), |ui, hits: &[HitPoint]| {
+                plot_ui.tooltip_custom(&TooltipOptions::default(), |ui, hits: &[HitPoint]| {
                     ui.strong("Custom Tooltip");
                     ui.separator();
 

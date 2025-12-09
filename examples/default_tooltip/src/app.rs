@@ -48,7 +48,7 @@ impl TooltipExample {
                 );
 
                 // Tooltip only - no pins
-                plot_ui.show_tooltip(&TooltipOptions::default());
+                plot_ui.tooltip(&TooltipOptions::default());
             })
             .response
     }

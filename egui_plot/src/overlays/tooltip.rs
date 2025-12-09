@@ -26,7 +26,7 @@
 //! });
 //! ```
 
-use egui::{Color32, Grid, Id, Pos2, Rect, RichText, Stroke};
+use egui::{Grid, Id, Pos2, RichText, Stroke, Vec2};
 
 use crate::overlays::pin::HitPoint;
 use crate::plot::PlotUi;
@@ -34,18 +34,6 @@ use crate::plot::PlotUi;
 /// Visual/behavioral settings for the tooltip.
 #[derive(Clone)]
 pub struct TooltipOptions {
-    /// Fill the vertical band region for visual feedback.
-    pub draw_band_fill: bool,
-
-    /// Draw a vertical guide line at the current pointer X.
-    pub draw_vertical_guide: bool,
-
-    /// Color for the band fill (typically a faint translucent color).
-    pub band_fill: Color32,
-
-    /// Stroke for the vertical guide line.
-    pub guide_stroke: Stroke,
-
     /// Show markers at hit points on each series.
     pub show_markers: bool,
 
@@ -59,26 +47,18 @@ pub struct TooltipOptions {
     /// Half-width of the vertical selection band, in screen pixels.
     pub radius_px: f32,
 
-    /// Horizontal gap between the vertical ruler and the tooltip.
-    pub tooltip_horizontal_gap: f32,
-
-    /// Vertical gap between the anchor point and the tooltip.
-    pub tooltip_vertical_gap: f32,
+    /// Gap between the pointer and the tooltip (x = horizontal, y = vertical).
+    pub tooltip_gap: Vec2,
 }
 
 impl Default for TooltipOptions {
     fn default() -> Self {
         Self {
-            draw_band_fill: true,
-            draw_vertical_guide: true,
-            band_fill: Color32::from_rgba_unmultiplied(120, 160, 255, 24),
-            guide_stroke: Stroke::new(1.0, Color32::WHITE),
             show_markers: true,
             marker_radius: 5.0,
             highlight_lines_distance: Some(50.0),
             radius_px: 50.0,
-            tooltip_horizontal_gap: 10.0,
-            tooltip_vertical_gap: 10.0,
+            tooltip_gap: Vec2::splat(10.0),
         }
     }
 }
@@ -98,25 +78,10 @@ impl TooltipOptions {
         self
     }
 
-    /// Set the horizontal gap between ruler and tooltip.
+    /// Set the gap between pointer and tooltip (x = horizontal, y = vertical).
     #[inline]
-    pub fn tooltip_horizontal_gap(mut self, gap: f32) -> Self {
-        self.tooltip_horizontal_gap = gap;
-        self
-    }
-
-    /// Set the vertical gap between anchor and tooltip.
-    #[inline]
-    pub fn tooltip_vertical_gap(mut self, gap: f32) -> Self {
-        self.tooltip_vertical_gap = gap;
-        self
-    }
-
-    /// Set both horizontal and vertical tooltip gaps.
-    #[inline]
-    pub fn tooltip_gap(mut self, horizontal: f32, vertical: f32) -> Self {
-        self.tooltip_horizontal_gap = horizontal;
-        self.tooltip_vertical_gap = vertical;
+    pub fn tooltip_gap(mut self, gap: Vec2) -> Self {
+        self.tooltip_gap = gap;
         self
     }
 
@@ -124,20 +89,6 @@ impl TooltipOptions {
     #[inline]
     pub fn radius_px(mut self, radius: f32) -> Self {
         self.radius_px = radius;
-        self
-    }
-
-    /// Toggle band fill drawing.
-    #[inline]
-    pub fn draw_band_fill(mut self, on: bool) -> Self {
-        self.draw_band_fill = on;
-        self
-    }
-
-    /// Toggle vertical guide drawing.
-    #[inline]
-    pub fn draw_vertical_guide(mut self, on: bool) -> Self {
-        self.draw_vertical_guide = on;
         self
     }
 }
@@ -192,32 +143,6 @@ impl PlotUi<'_> {
             }
         }
 
-        // Draw band fill and vertical guide
-        let r = options.radius_px;
-        let band_min_x = (pointer_screen.x - r).max(frame.left());
-        let band_max_x = (pointer_screen.x + r).min(frame.right());
-
-        {
-            let painter = egui::Painter::new(ctx.clone(), self.response.layer_id, *frame);
-
-            if options.draw_band_fill && band_max_x > band_min_x {
-                let band_rect = Rect::from_min_max(
-                    Pos2::new(band_min_x, frame.top()),
-                    Pos2::new(band_max_x, frame.bottom()),
-                );
-                painter.rect_filled(band_rect, 0.0, options.band_fill);
-            }
-            if options.draw_vertical_guide {
-                painter.line_segment(
-                    [
-                        Pos2::new(pointer_screen.x, frame.top()),
-                        Pos2::new(pointer_screen.x, frame.bottom()),
-                    ],
-                    options.guide_stroke,
-                );
-            }
-        }
-
         // Draw markers on foreground layer
         if options.show_markers {
             let marker_painter = egui::Painter::new(
@@ -238,9 +163,9 @@ impl PlotUi<'_> {
         // Calculate tooltip position
         let frame_center_x = frame.center().x;
         let horizontal_offset = if pointer_screen.x < frame_center_x {
-            options.tooltip_horizontal_gap
+            options.tooltip_gap.x
         } else {
-            -options.tooltip_horizontal_gap
+            -options.tooltip_gap.x
         };
         let tooltip_anchor = Pos2::new(pointer_screen.x + horizontal_offset, pointer_screen.y);
 
@@ -253,7 +178,7 @@ impl PlotUi<'_> {
         let tooltip_width = ctx.style().spacing.tooltip_width;
         tooltip.popup = tooltip.popup.width(tooltip_width);
 
-        tooltip.gap(options.tooltip_vertical_gap).show(|ui| {
+        tooltip.gap(options.tooltip_gap.y).show(|ui| {
             ui.set_max_width(tooltip_width);
             ui_builder(ui, &hits_with_highlight);
         });
@@ -262,17 +187,13 @@ impl PlotUi<'_> {
     /// Show tooltip with default hit collection.
     ///
     /// Convenience method that collects hits and shows tooltip in one call.
-    pub fn show_tooltip(&mut self, options: &TooltipOptions) {
+    pub fn tooltip(&mut self, options: &TooltipOptions) {
         let hits = self.collect_hits(options.radius_px);
         self.show_tooltip_with_hits(options, &hits);
     }
 
     /// Show tooltip with custom UI builder.
-    pub fn show_tooltip_custom(
-        &mut self,
-        options: &TooltipOptions,
-        ui_builder: impl FnOnce(&mut egui::Ui, &[HitPoint]),
-    ) {
+    pub fn tooltip_custom(&mut self, options: &TooltipOptions, ui_builder: impl FnOnce(&mut egui::Ui, &[HitPoint])) {
         let hits = self.collect_hits(options.radius_px);
         self.show_tooltip_with_hits_custom(options, &hits, ui_builder);
     }
