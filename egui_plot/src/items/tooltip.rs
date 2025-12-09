@@ -55,7 +55,7 @@ use crate::plot::PlotUi;
 /// - **display color** (used for markers),
 /// - the picked **plot value** `(x,y)`,
 /// - its **screen position** (for drawing),
-/// - and `screen_dx` = horizontal pixel distance to the pointer (for sorting).
+/// - screen distances to the pointer for sorting and highlighting.
 #[derive(Clone, Debug)]
 pub struct HitPoint {
     /// Series display name (should be unique/stable; used for highlight matching).
@@ -66,9 +66,20 @@ pub struct HitPoint {
     pub value: PlotPoint,
     /// Screen-space position where the marker is drawn.
     pub screen_pos: Pos2,
-    /// Horizontal distance in pixels from (current frame's) `pointer.x`.
-    /// Used for sorting.
-    pub screen_dx: f32, // |screen_x - pointer_x|
+    /// Horizontal distance in pixels from the pointer. Used for sorting.
+    pub screen_dx: f32,
+    /// Vertical distance in pixels from the pointer.
+    pub screen_dy: f32,
+    /// Whether this hit point is within the highlight distance threshold.
+    pub is_highlighted: bool,
+}
+
+impl HitPoint {
+    /// Manhattan distance from the pointer (|dx| + |dy|).
+    #[inline]
+    pub fn manhattan_distance(&self) -> f32 {
+        self.screen_dx + self.screen_dy
+    }
 }
 
 /// A pinned selection: the full set of `HitPoint`s plus the exact plot-space X.
@@ -99,8 +110,10 @@ pub struct TooltipOptions {
     pub guide_stroke: Stroke,
     /// Radius of the on-canvas hit markers (in pixels).
     pub marker_radius: f32,
-    /// Highlight hovered lines this frame (matched by series name).
-    pub highlight_hovered_lines: bool,
+    /// If `Some(distance)`, highlight lines whose nearest point is within
+    /// `distance` pixels (Manhattan distance: |dx| + |dy|) from the crosshair.
+    /// If `None`, no lines are highlighted.
+    pub highlight_lines_distance: Option<f32>,
     /// Show a small panel listing the current pins at the top-right.
     pub show_pins_panel: bool,
 
@@ -123,7 +136,7 @@ impl Default for TooltipOptions {
             band_fill: Color32::from_rgba_unmultiplied(120, 160, 255, 24),
             guide_stroke: Stroke::new(1.0, Color32::WHITE),
             marker_radius: 3.5,
-            highlight_hovered_lines: true,
+            highlight_lines_distance: Some(50.0),
             show_pins_panel: true,
             radius_px: 50.0,
             tooltip_horizontal_gap: 10.0,
@@ -133,10 +146,14 @@ impl Default for TooltipOptions {
 }
 
 impl TooltipOptions {
-    /// Toggle whether hovered series should be visually emphasized for this frame.
+    /// Set the maximum Manhattan distance (|dx| + |dy|, in pixels) from the crosshair
+    /// at which lines will be highlighted. Pass `None` to disable highlighting.
+    ///
+    /// Only lines whose nearest point is within this distance from the
+    /// crosshair will be visually emphasized.
     #[inline]
-    pub fn highlight_hovered_lines(mut self, on: bool) -> Self {
-        self.highlight_hovered_lines = on;
+    pub fn highlight_lines_distance(mut self, distance: Option<f32>) -> Self {
+        self.highlight_lines_distance = distance;
         self
     }
 
@@ -254,7 +271,7 @@ impl PlotUi<'_> {
                 }
             };
 
-            let (mut best_ix, mut best_dx, mut best_pos) = (None, f32::INFINITY, Pos2::ZERO);
+            let (mut best_ix, mut best_dx, mut best_dy, mut best_pos) = (None, f32::INFINITY, 0.0f32, Pos2::ZERO);
 
             match item.geometry() {
                 PlotGeometry::Points(points) => {
@@ -267,6 +284,7 @@ impl PlotUi<'_> {
                         if dx < best_dx {
                             best_ix = Some(ix);
                             best_dx = dx;
+                            best_dy = (p.y - pointer_screen.y).abs();
                             best_pos = p;
                         }
                     }
@@ -285,6 +303,8 @@ impl PlotUi<'_> {
                     value,
                     screen_pos: best_pos,
                     screen_dx: best_dx,
+                    screen_dy: best_dy,
+                    is_highlighted: false, // Will be set below based on distance
                 });
             }
         }
@@ -311,10 +331,20 @@ impl PlotUi<'_> {
                 .then_with(|| a.series_name.cmp(&b.series_name))
         });
 
-        if options.highlight_hovered_lines {
-            let names: ahash::AHashSet<&str> = hits.iter().map(|h| h.series_name.as_str()).collect();
+        if let Some(highlight_distance) = options.highlight_lines_distance {
+            // Mark hits within the highlight distance and highlight their corresponding lines
+            for hit in &mut hits {
+                if hit.manhattan_distance() <= highlight_distance {
+                    hit.is_highlighted = true;
+                }
+            }
+            let names_within_distance: ahash::AHashSet<&str> = hits
+                .iter()
+                .filter(|h| h.is_highlighted)
+                .map(|h| h.series_name.as_str())
+                .collect();
             for item in &mut self.items {
-                if names.contains(item.name()) {
+                if names_within_distance.contains(item.name()) {
                     item.highlight();
                 }
             }
@@ -364,7 +394,7 @@ impl PlotUi<'_> {
                 painter.circle_stroke(
                     h.screen_pos,
                     options.marker_radius,
-                    Stroke::new(1.0, visuals.window_stroke().color),
+                    Stroke::new(5.0, visuals.window_stroke().color),
                 );
             }
         }
@@ -523,9 +553,16 @@ fn default_tooltip_ui(ui: &mut egui::Ui, hits: &[HitPoint], pins: &[PinnedPoints
             ui.end_row();
             for h in hits {
                 ui.label(RichText::new("●").color(h.color));
-                ui.monospace(&h.series_name);
-                ui.monospace(format!("{:.x_dec$}", h.value.x));
-                ui.monospace(format!("{:.y_dec$}", h.value.y));
+                // Highlight the row if it's within the highlight distance
+                if h.is_highlighted {
+                    ui.strong(&h.series_name);
+                    ui.strong(format!("{:.x_dec$}", h.value.x));
+                    ui.strong(format!("{:.y_dec$}", h.value.y));
+                } else {
+                    ui.label(&h.series_name);
+                    ui.label(format!("{:.x_dec$}", h.value.x));
+                    ui.label(format!("{:.y_dec$}", h.value.y));
+                }
                 ui.end_row();
             }
         });
