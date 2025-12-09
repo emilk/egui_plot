@@ -9,7 +9,6 @@ use std::ops::RangeInclusive;
 use egui::Align2;
 use egui::Color32;
 use egui::Id;
-use egui::NumExt as _;
 use egui::PopupAnchor;
 use egui::Pos2;
 use egui::Shape;
@@ -96,6 +95,9 @@ pub struct PlotConfig<'a> {
 
     /// Whether to show the y-axis value.
     pub show_y: bool,
+
+    /// Whether to show the crosshair rulers.
+    pub show_crosshair: bool,
 }
 
 /// Trait shared by things that can be drawn in the plot.
@@ -279,41 +281,25 @@ pub(super) fn rulers_and_tooltip_at_value(
     cursors: &mut Vec<Cursor>,
     label_formatter: &LabelFormatter<'_>,
 ) {
-    if plot.show_x {
-        cursors.push(Cursor::Vertical { x: value.x });
-    }
-    if plot.show_y {
-        cursors.push(Cursor::Horizontal { y: value.y });
+    // Add crosshair rulers if enabled
+    if plot.show_crosshair {
+        if plot.show_x {
+            cursors.push(Cursor::Vertical { x: value.x });
+        }
+        if plot.show_y {
+            cursors.push(Cursor::Horizontal { y: value.y });
+        }
     }
 
-    let text = if let Some(custom_label) = label_formatter {
-        let label = custom_label(name, &value);
-        if label.is_empty() {
-            return;
-        }
-        label
-    } else {
-        let prefix = if name.is_empty() {
-            String::new()
-        } else {
-            format!("{name}\n")
-        };
-        let scale = plot.transform.dvalue_dpos();
-        let x_decimals = ((-scale[0].abs().log10()).ceil().at_least(0.0) as usize).clamp(1, 6);
-        let y_decimals = ((-scale[1].abs().log10()).ceil().at_least(0.0) as usize).clamp(1, 6);
-        if plot.show_x && plot.show_y {
-            format!(
-                "{}x = {:.*}\ny = {:.*}",
-                prefix, x_decimals, value.x, y_decimals, value.y
-            )
-        } else if plot.show_x {
-            format!("{}x = {:.*}", prefix, x_decimals, value.x)
-        } else if plot.show_y {
-            format!("{}y = {:.*}", prefix, y_decimals, value.y)
-        } else {
-            unreachable!()
-        }
+    // Only show tooltip if label_formatter is provided
+    let Some(custom_label) = label_formatter else {
+        return;
     };
+
+    let text = custom_label(name, &value);
+    if text.is_empty() {
+        return;
+    }
 
     // We show the tooltip as soon as we're hovering the plot area:
     let mut tooltip = egui::Tooltip::always_open(
