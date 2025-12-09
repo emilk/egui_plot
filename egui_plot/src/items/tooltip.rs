@@ -106,6 +106,13 @@ pub struct TooltipOptions {
 
     /// Half-width of the vertical selection, in screen pixels.
     pub radius_px: f32,
+
+    /// Horizontal gap between the vertical ruler and the tooltip (in pixels).
+    /// The tooltip is offset in the direction with more available space.
+    pub tooltip_horizontal_gap: f32,
+
+    /// Vertical gap between the anchor point and the tooltip (in pixels).
+    pub tooltip_vertical_gap: f32,
 }
 
 impl Default for TooltipOptions {
@@ -119,6 +126,8 @@ impl Default for TooltipOptions {
             highlight_hovered_lines: true,
             show_pins_panel: true,
             radius_px: 50.0,
+            tooltip_horizontal_gap: 10.0,
+            tooltip_vertical_gap: 10.0,
         }
     }
 }
@@ -130,10 +139,33 @@ impl TooltipOptions {
         self.highlight_hovered_lines = on;
         self
     }
+
     /// Toggle whether to display the floating pins panel in the plot corner.
     #[inline]
     pub fn show_pins_panel(mut self, on: bool) -> Self {
         self.show_pins_panel = on;
+        self
+    }
+
+    /// Set the horizontal gap between the vertical ruler and the tooltip.
+    #[inline]
+    pub fn tooltip_horizontal_gap(mut self, gap: f32) -> Self {
+        self.tooltip_horizontal_gap = gap;
+        self
+    }
+
+    /// Set the vertical gap between the anchor and the tooltip.
+    #[inline]
+    pub fn tooltip_vertical_gap(mut self, gap: f32) -> Self {
+        self.tooltip_vertical_gap = gap;
+        self
+    }
+
+    /// Set both horizontal and vertical tooltip gaps at once.
+    #[inline]
+    pub fn tooltip_gap(mut self, horizontal: f32, vertical: f32) -> Self {
+        self.tooltip_horizontal_gap = horizontal;
+        self.tooltip_vertical_gap = vertical;
         self
     }
 }
@@ -337,16 +369,28 @@ impl PlotUi<'_> {
             }
         }
 
+        // Calculate tooltip anchor position with configurable gaps.
+        // Offset horizontally away from the vertical ruler, in the direction with more space.
+        let frame_center_x = frame.center().x;
+        let horizontal_offset = if pointer_screen.x < frame_center_x {
+            // Pointer is on the left half → place tooltip to the right
+            options.tooltip_horizontal_gap
+        } else {
+            // Pointer is on the right half → place tooltip to the left
+            -options.tooltip_horizontal_gap
+        };
+        let tooltip_anchor = Pos2::new(pointer_screen.x + horizontal_offset, pointer_screen.y);
+
         let mut tooltip = egui::Tooltip::always_open(
             ctx.clone(),
             self.response.layer_id,
             self.response.id.with("band_tooltip"),
-            egui::PopupAnchor::Pointer,
+            egui::PopupAnchor::Position(tooltip_anchor),
         );
         let tooltip_width = ctx.style().spacing.tooltip_width;
         tooltip.popup = tooltip.popup.width(tooltip_width);
 
-        tooltip.gap(10.0).show(|ui| {
+        tooltip.gap(options.tooltip_vertical_gap).show(|ui| {
             ui.set_max_width(tooltip_width);
             ui_builder(ui, &hits, &pins);
         });
