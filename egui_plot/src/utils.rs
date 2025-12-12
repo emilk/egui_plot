@@ -56,3 +56,40 @@ pub(crate) fn find_name_candidate(name: &str, width: f32, painter: &Painter, fon
 
     best
 }
+
+/// Initialize logging so that the testing framework can capture log output.
+///
+/// Call this at the top of a test function to see log output from that test.
+/// The logging output will only be shown when the following conditions are met:
+/// - The test fails
+/// - The RUST_LOG environment variable is set to a level at or below the message level
+///
+/// When running a specific test:
+/// ```sh
+/// RUST_LOG=info cargo test auto_bounds_true
+/// ```
+///
+/// If the something causes the test to panic so hard that it nevers shows logging output,
+/// you can use `--nocapture` to see log output as it happens:
+/// ```sh
+/// RUST_LOG=info cargo test auto_bounds_true -- --nocapture
+/// ```
+#[allow(dead_code)] // It's ok if it's not currently being used. We just want it to be available.
+#[cfg(test)]
+pub(crate) fn init_test_logger() {
+    use std::io::Write as _;
+    let _ = env_logger::builder()
+        .is_test(true)
+        .format(|buf, record| {
+            let level_style = buf.default_level_style(record.level());
+            writeln!(
+                buf,
+                "[{level_style}{}{level_style:#} {}:{}]   {}",
+                record.level(),
+                record.file().unwrap_or("unknown"),
+                record.line().unwrap_or(0),
+                record.args()
+            )
+        })
+        .try_init();
+}
