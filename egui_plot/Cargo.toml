@@ -51,6 +51,3 @@ assertables.workspace = true
 egui_kittest.workspace = true
 env_logger.workspace = true
 log.workspace = true
-
-[package.metadata.cargo-shear]
-ignored = ["log"]

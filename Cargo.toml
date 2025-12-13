@@ -280,3 +280,7 @@ zero_sized_map_values = "warn"
 
 manual_range_contains = "allow" # this is better on 'allow'
 map_unwrap_or = "allow"         # this is better on 'allow'
+
+
+[workspace.metadata.cargo-shear]
+ignored = ["log", "assertables"]
