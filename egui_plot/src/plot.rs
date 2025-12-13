@@ -2131,10 +2131,9 @@ mod plot_tests {
     use super::*;
     use crate::{Plot, Points};
 
-    use assertables::assert_abs_diff_le_x;
     use egui_kittest::Harness;
 
-    /// Test that auto_bounds(true) fits the data exactly when the margin fraction is zero.
+    /// Test that `auto_bounds(true)` fits the data exactly when the margin fraction is zero.
     #[test]
     fn auto_bounds_true() {
         crate::utils::init_test_logger();
@@ -2161,9 +2160,9 @@ mod plot_tests {
         };
 
         let final_bounds = harness.state();
-        assert_abs_diff_le_x!(final_bounds.min[0], MIN[0], f64::EPSILON);
-        assert_abs_diff_le_x!(final_bounds.min[1], MIN[1], f64::EPSILON);
-        assert_abs_diff_le_x!(final_bounds.max[0], MAX[0], f64::EPSILON);
-        assert_abs_diff_le_x!(final_bounds.max[1], MAX[1], f64::EPSILON);
+        assert!((final_bounds.min[0] - MIN[0]).abs() <= f64::EPSILON);
+        assert!((final_bounds.min[1] - MIN[1]).abs() <= f64::EPSILON);
+        assert!((final_bounds.max[0] - MAX[0]).abs() <= f64::EPSILON);
+        assert!((final_bounds.max[1] - MAX[1]).abs() <= f64::EPSILON);
     }
 }
