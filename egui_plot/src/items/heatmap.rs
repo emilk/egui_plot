@@ -460,7 +460,7 @@ impl PlotItem for Heatmap {
         shapes: &mut Vec<Shape>,
         _cursors: &mut Vec<Cursor>,
         plot: &PlotConfig<'_>,
-        _: &LabelFormatter<'_>,
+        _: &Option<LabelFormatter<'_>>,
     ) {
         let (rect, color, text) = self.tile_view_info(plot.ui, plot.transform, elem.index);
         let mut mesh = Mesh::default();

@@ -115,7 +115,8 @@ pub struct Plot<'a> {
 
     show_x: bool,
     show_y: bool,
-    label_formatter: LabelFormatter<'a>,
+    show_crosshair: bool,
+    label_formatter: Option<LabelFormatter<'a>>,
     coordinates_formatter: Option<(Corner, CoordinatesFormatter<'a>)>,
     x_axes: Vec<AxisHints<'a>>, // default x axes
     y_axes: Vec<AxisHints<'a>>, // default y axes
@@ -166,6 +167,7 @@ impl<'a> Plot<'a> {
 
             show_x: true,
             show_y: true,
+            show_crosshair: true,
             label_formatter: None,
             coordinates_formatter: None,
             x_axes: vec![AxisHints::new(Axis::X)],
@@ -269,6 +271,13 @@ impl<'a> Plot<'a> {
     #[inline]
     pub fn show_y(mut self, show_y: bool) -> Self {
         self.show_y = show_y;
+        self
+    }
+
+    /// Show the crosshair when hovering. Default: `true`.
+    #[inline]
+    pub fn show_crosshair(mut self, show: bool) -> Self {
+        self.show_crosshair = show;
         self
     }
 
@@ -1544,6 +1553,7 @@ impl<'a> Plot<'a> {
             transform,
             show_x: show_xy.x,
             show_y: show_xy.y,
+            show_crosshair: self.show_crosshair,
         };
 
         let mut cursors = Vec::new();

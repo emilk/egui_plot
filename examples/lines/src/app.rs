@@ -15,6 +15,7 @@ use egui_plot::Line;
 use egui_plot::LineStyle;
 use egui_plot::Plot;
 use egui_plot::PlotPoints;
+use egui_plot::default_label_formatter;
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct LineExample {
@@ -27,6 +28,8 @@ pub struct LineExample {
     coordinates: bool,
     show_axes: bool,
     show_grid: bool,
+    show_crosshair: bool,
+    show_labels: bool,
     line_style: LineStyle,
     gradient: bool,
     gradient_fill: bool,
@@ -46,6 +49,8 @@ impl Default for LineExample {
             coordinates: true,
             show_axes: true,
             show_grid: true,
+            show_crosshair: true,
+            show_labels: true,
             line_style: LineStyle::Solid,
             gradient: false,
             gradient_fill: false,
@@ -76,8 +81,11 @@ impl LineExample {
             ui.vertical(|ui| {
                 ui.checkbox(&mut self.show_axes, "Show axes");
                 ui.checkbox(&mut self.show_grid, "Show grid");
+                ui.checkbox(&mut self.show_crosshair, "Show crosshair");
                 ui.checkbox(&mut self.coordinates, "Show coordinates on hover")
                     .on_hover_text("Can take a custom formatting function.");
+                ui.checkbox(&mut self.show_labels, "Show hover labels")
+                    .on_hover_text("Show labels when hovering over data points.");
             });
             ui.vertical(|ui| {
                 ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
@@ -171,6 +179,7 @@ impl LineExample {
             .legend(Legend::default().title("Lines"))
             .show_axes(self.show_axes)
             .show_grid(self.show_grid)
+            .show_crosshair(self.show_crosshair)
             .invert_x(self.invert_x)
             .invert_y(self.invert_y);
         if self.square {
@@ -181,6 +190,9 @@ impl LineExample {
         }
         if self.coordinates {
             plot = plot.coordinates_formatter(Corner::LeftBottom, CoordinatesFormatter::default());
+        }
+        if self.show_labels {
+            plot = plot.label_formatter(default_label_formatter);
         }
         plot.show(ui, |plot_ui| {
             plot_ui.line(self.circle());

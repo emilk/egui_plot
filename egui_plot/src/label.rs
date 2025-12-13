@@ -19,4 +19,15 @@ pub fn format_number(number: f64, num_decimals: usize) -> String {
 type LabelFormatterFn<'a> = dyn Fn(&str, &PlotPoint) -> String + 'a;
 
 /// Optional label formatter function for customizing hover labels.
-pub type LabelFormatter<'a> = Option<Box<LabelFormatterFn<'a>>>;
+pub type LabelFormatter<'a> = Box<LabelFormatterFn<'a>>;
+
+/// Default label formatter that shows the x and y coordinates with 3 decimal
+/// places.
+pub fn default_label_formatter(name: &str, value: &PlotPoint) -> String {
+    let prefix = if name.is_empty() {
+        String::new()
+    } else {
+        format!("{name}\n")
+    };
+    format!("{}x = {:.3}\ny = {:.3}", prefix, value.x, value.y)
+}
