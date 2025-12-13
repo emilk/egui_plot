@@ -977,7 +977,6 @@ impl<'a> Plot<'a> {
             mem.auto_bounds = true.into();
         }
 
-        let any_dynamic_modifications = !plot_ui.bounds_modifications.is_empty();
         // Apply bounds modifications.
         for modification in &plot_ui.bounds_modifications {
             match modification {
@@ -1006,11 +1005,11 @@ impl<'a> Plot<'a> {
             }
         }
 
-        // Reset bounds to initial bounds if they haven't been modified.
-        if (!self.default_auto_bounds.x && !any_dynamic_modifications) || mem.auto_bounds.x {
+        // Reset bounds to initial bounds if current auto_bounds are active.
+        if mem.auto_bounds.x {
             bounds.set_x(&self.min_auto_bounds);
         }
-        if (!self.default_auto_bounds.y && !any_dynamic_modifications) || mem.auto_bounds.y {
+        if mem.auto_bounds.y {
             bounds.set_y(&self.min_auto_bounds);
         }
 
