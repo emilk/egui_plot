@@ -45,3 +45,9 @@ ahash.workspace = true
 document-features = { workspace = true, optional = true }
 
 serde = { workspace = true, optional = true }
+
+[dev-dependencies]
+assertables.workspace = true
+egui_kittest.workspace = true
+env_logger.workspace = true
+log.workspace = true
