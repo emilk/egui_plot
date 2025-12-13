@@ -15,6 +15,7 @@ use egui_plot::Line;
 use egui_plot::LineStyle;
 use egui_plot::Plot;
 use egui_plot::PlotPoints;
+use egui_plot::default_label_formatter;
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct LineExample {
@@ -27,6 +28,8 @@ pub struct LineExample {
     coordinates: bool,
     show_axes: bool,
     show_grid: bool,
+    show_crosshair: bool,
+    show_labels: bool,
     line_style: LineStyle,
     gradient: bool,
     gradient_fill: bool,
@@ -46,6 +49,8 @@ impl Default for LineExample {
             coordinates: true,
             show_axes: true,
             show_grid: true,
+            show_crosshair: true,
+            show_labels: true,
             line_style: LineStyle::Solid,
             gradient: false,
             gradient_fill: false,
@@ -61,31 +66,25 @@ impl LineExample {
             ui.group(|ui| {
                 ui.vertical(|ui| {
                     ui.label("Circle:");
-                    ui.add(
-                        egui::DragValue::new(&mut self.circle_radius)
-                            .speed(0.1)
-                            .range(0.0..=f64::INFINITY)
-                            .prefix("r: "),
-                    );
+                    ui.add(egui::DragValue::new(&mut self.circle_radius).speed(0.1).prefix("r: "));
                     ui.horizontal(|ui| {
                         ui.add(egui::DragValue::new(&mut self.circle_center.x).speed(0.1).prefix("x: "));
                         ui.add(egui::DragValue::new(&mut self.circle_center.y).speed(1.0).prefix("y: "));
                     });
-                })
+                });
             });
             ui.vertical(|ui| {
                 ui.checkbox(&mut self.show_axes, "Show axes");
                 ui.checkbox(&mut self.show_grid, "Show grid");
-                ui.checkbox(&mut self.coordinates, "Show coordinates on hover")
-                    .on_hover_text("Can take a custom formatting function.");
+                ui.checkbox(&mut self.show_crosshair, "Show crosshair");
+                ui.checkbox(&mut self.coordinates, "Show coordinates");
+                ui.checkbox(&mut self.show_labels, "Show hover labels");
             });
             ui.vertical(|ui| {
                 ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
                 ui.checkbox(&mut self.animate, "Animate");
-                ui.checkbox(&mut self.square, "Square view")
-                    .on_hover_text("Always keep the viewport square.");
-                ui.checkbox(&mut self.proportional, "Proportional data axes")
-                    .on_hover_text("Tick are the same size on both axes.");
+                ui.checkbox(&mut self.square, "Square view");
+                ui.checkbox(&mut self.proportional, "Proportional data axes");
                 ComboBox::from_label("Line style")
                     .selected_text(self.line_style.to_string())
                     .show_ui(ui, |ui| {
@@ -103,8 +102,6 @@ impl LineExample {
             ui.vertical(|ui| {
                 ui.checkbox(&mut self.gradient, "Gradient line");
                 ui.add_enabled(self.gradient, Checkbox::new(&mut self.gradient_fill, "Gradient fill"));
-            });
-            ui.vertical(|ui| {
                 ui.checkbox(&mut self.invert_x, "Invert X axis");
                 ui.checkbox(&mut self.invert_y, "Invert Y axis");
             });
@@ -113,10 +110,9 @@ impl LineExample {
     }
 
     fn circle(&self) -> Line<'_> {
-        let n = 512;
-        let points: PlotPoints<'_> = (0..=n)
+        let points: PlotPoints<'_> = (0..=512)
             .map(|i| {
-                let t = egui::remap(i as f64, 0.0..=(n as f64), 0.0..=TAU);
+                let t = egui::remap(i as f64, 0.0..=512.0, 0.0..=TAU);
                 [
                     self.circle_radius * t.cos() + self.circle_center.x as f64,
                     self.circle_radius * t.sin() + self.circle_center.y as f64,
@@ -166,11 +162,11 @@ impl LineExample {
             ui.ctx().request_repaint();
             self.time += ui.input(|i| i.unstable_dt).at_most(1.0 / 30.0) as f64;
         }
-
         let mut plot = Plot::new("lines_demo")
             .legend(Legend::default().title("Lines"))
             .show_axes(self.show_axes)
             .show_grid(self.show_grid)
+            .show_crosshair(self.show_crosshair)
             .invert_x(self.invert_x)
             .invert_y(self.invert_y);
         if self.square {
@@ -181,6 +177,9 @@ impl LineExample {
         }
         if self.coordinates {
             plot = plot.coordinates_formatter(Corner::LeftBottom, CoordinatesFormatter::default());
+        }
+        if self.show_labels {
+            plot = plot.label_formatter(default_label_formatter);
         }
         plot.show(ui, |plot_ui| {
             plot_ui.line(self.circle());

@@ -62,6 +62,7 @@ pub use crate::items::Span;
 pub use crate::items::Text;
 pub use crate::items::VLine;
 pub use crate::label::LabelFormatter;
+pub use crate::label::default_label_formatter;
 pub use crate::label::format_number;
 pub use crate::memory::PlotMemory;
 pub use crate::overlays::ColorConflictHandling;

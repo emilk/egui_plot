@@ -176,7 +176,7 @@ impl PlotItem for BoxPlot {
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
         plot: &PlotConfig<'_>,
-        _: &LabelFormatter<'_>,
+        _: &Option<LabelFormatter<'_>>,
     ) {
         let box_plot = &self.boxes[elem.index];
 

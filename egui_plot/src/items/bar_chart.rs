@@ -210,7 +210,7 @@ impl PlotItem for BarChart {
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
         plot: &PlotConfig<'_>,
-        _: &LabelFormatter<'_>,
+        _: &Option<LabelFormatter<'_>>,
     ) {
         let bar = &self.bars[elem.index];
 
