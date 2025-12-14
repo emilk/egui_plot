@@ -198,7 +198,15 @@ pub trait PlotItem {
         let pointer = plot.transform.position_from_point(&value);
         shapes.push(Shape::circle_filled(pointer, 3.0, line_color));
 
-        rulers_and_tooltip_at_value(plot_area_response, value, self.name(), plot, cursors, label_formatter);
+        rulers_and_tooltip_at_value(
+            plot_area_response,
+            value,
+            id.map(|id| (id, elem.index)),
+            self.name(),
+            plot,
+            cursors,
+            label_formatter,
+        );
     }
 }
 
@@ -293,7 +301,7 @@ pub(super) fn rulers_and_tooltip_at_value(
         return;
     };
 
-    let text = custom_label(name, &value, None);
+    let text = custom_label(name, &value, item);
     if text.is_empty() {
         return;
     }
@@ -323,7 +331,7 @@ pub enum PlotGeometry<'a> {
     None,
 
     /// Point values (X-Y graphs)
-    Points(&'a [PlotPoint]),
+    Points(&'a [PlotPoint], Option<Id>),
 
     /// Rectangles (examples: boxes or bars)
     // Has currently no data, as it would require copying rects or iterating a list of pointers.

@@ -256,7 +256,7 @@ impl PlotItem for Line<'_> {
     }
 
     fn geometry(&self) -> PlotGeometry<'_> {
-        PlotGeometry::Points(self.series.points())
+        PlotGeometry::Points(self.series.points(), Some(self.id()))
     }
 
     fn bounds(&self) -> PlotBounds {
