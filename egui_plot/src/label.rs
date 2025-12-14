@@ -1,3 +1,4 @@
+use egui::Id;
 use emath::NumExt as _;
 
 use crate::bounds::PlotPoint;
@@ -16,14 +17,14 @@ pub fn format_number(number: f64, num_decimals: usize) -> String {
     }
 }
 
-type LabelFormatterFn<'a> = dyn Fn(&str, &PlotPoint) -> String + 'a;
+type LabelFormatterFn<'a> = dyn Fn(&str, &PlotPoint, Option<(Id, usize)>) -> String + 'a;
 
 /// Optional label formatter function for customizing hover labels.
 pub type LabelFormatter<'a> = Box<LabelFormatterFn<'a>>;
 
 /// Default label formatter that shows the x and y coordinates with 3 decimal
 /// places.
-pub fn default_label_formatter(name: &str, value: &PlotPoint) -> String {
+pub fn default_label_formatter(name: &str, value: &PlotPoint, _id: Option<(Id, usize)>) -> String {
     let prefix = if name.is_empty() {
         String::new()
     } else {

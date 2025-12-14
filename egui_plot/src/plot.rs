@@ -404,9 +404,13 @@ impl<'a> Plot<'a> {
     /// let line = Line::new("sin", sin);
     /// Plot::new("my_plot")
     ///     .view_aspect(2.0)
-    ///     .label_formatter(|name, value| {
+    ///     .label_formatter(|name, value, id_index| {
     ///         if !name.is_empty() {
-    ///             format!("{}: {:.*}%", name, 1, value.y)
+    ///            if let Some((_id, index)) = id_index {
+    ///                 format!("{}_{}: {:.*}%", name, index, 1, value.y)
+    ///            } else {
+    ///                 format!("{}: {:.*}%", name, 1, value.y)
+    ///             }
     ///         } else {
     ///             "".to_owned()
     ///         }
@@ -415,7 +419,10 @@ impl<'a> Plot<'a> {
     /// # });
     /// ```
     #[inline]
-    pub fn label_formatter(mut self, label_formatter: impl Fn(&str, &PlotPoint) -> String + 'a) -> Self {
+    pub fn label_formatter(
+        mut self,
+        label_formatter: impl Fn(&str, &PlotPoint, Option<(Id, usize)>) -> String + 'a,
+    ) -> Self {
         self.label_formatter = Some(Box::new(label_formatter));
         self
     }
@@ -1572,6 +1579,7 @@ impl<'a> Plot<'a> {
             items::rulers_and_tooltip_at_value(
                 &plot_ui.response,
                 value,
+                None,
                 "",
                 &plot,
                 &mut cursors,

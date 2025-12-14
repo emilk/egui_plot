@@ -40,6 +40,7 @@ performance = { version = "0.1.0", path = "examples/performance" }
 plot_span = { version = "0.1.0", path = "examples/plot_span" }
 save_plot = { version = "0.1.0", path = "examples/save_plot" }
 stacked_bar = { version = "0.1.0", path = "examples/stacked_bar" }
+userdata_points = { version = "0.1.0", path = "examples/userdata_points" }
 
 ahash = { version = "0.8.12", default-features = false, features = [
     "no-rng", # we don't need DOS-protection, so we let users opt-in to it instead

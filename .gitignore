@@ -18,6 +18,9 @@ target_wasm
 **/tests/snapshots/**/*.new.png
 **/tests/snapshots/**/*.old.png
 
+**/*.diff.png
+**/*.new.png
+**/*.old.png
 # trunk output folder
 dist
 
