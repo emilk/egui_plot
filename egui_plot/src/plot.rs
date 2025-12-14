@@ -404,9 +404,13 @@ impl<'a> Plot<'a> {
     /// let line = Line::new("sin", sin);
     /// Plot::new("my_plot")
     ///     .view_aspect(2.0)
-    ///     .label_formatter(|name, value| {
+    ///     .label_formatter(|name, value, id_index| {
     ///         if !name.is_empty() {
-    ///             format!("{}: {:.*}%", name, 1, value.y)
+    ///            if let Some((_id, index)) = id_index {
+    ///                 format!("{}_{}: {:.*}%", name, index, 1, value.y)
+    ///            } else {
+    ///                 format!("{}: {:.*}%", name, 1, value.y)
+    ///             }
     ///         } else {
     ///             "".to_owned()
     ///         }

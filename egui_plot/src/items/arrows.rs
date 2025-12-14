@@ -144,7 +144,7 @@ impl PlotItem for Arrows<'_> {
     }
 
     fn geometry(&self) -> PlotGeometry<'_> {
-        PlotGeometry::Points(self.origins.points(), Some(self.id()))
+        PlotGeometry::Points(self.origins.points(), self.id())
     }
 
     fn bounds(&self) -> PlotBounds {

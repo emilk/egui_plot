@@ -201,7 +201,7 @@ pub trait PlotItem {
         rulers_and_tooltip_at_value(
             plot_area_response,
             value,
-            id.map(|id| (id, elem.index)),
+            Some((id, elem.index)),
             self.name(),
             plot,
             cursors,
@@ -331,7 +331,7 @@ pub enum PlotGeometry<'a> {
     None,
 
     /// Point values (X-Y graphs)
-    Points(&'a [PlotPoint], Option<Id>),
+    Points(&'a [PlotPoint], Id),
 
     /// Rectangles (examples: boxes or bars)
     // Has currently no data, as it would require copying rects or iterating a list of pointers.

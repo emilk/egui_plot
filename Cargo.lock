@@ -956,6 +956,7 @@ dependencies = [
  "plot_span",
  "save_plot",
  "stacked_bar",
+ "userdata_points",
  "wasm-bindgen-futures",
  "web-sys",
 ]
