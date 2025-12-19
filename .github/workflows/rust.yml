@@ -137,14 +137,14 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Run tests
-        run: cargo test --all-features
+        run: RUST_BACKTRACE=1 cargo test --all-features
 
       - name: Run doc-tests
-        run: cargo test --all-features --doc
+        run: RUST_BACKTRACE=1 cargo test --all-features --doc
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
-        if: always()
+        if: failure()
         with:
           name: test-results
-          path: "**/tests/snapshots"
+          path: "**/*.png"

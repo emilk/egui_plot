@@ -2,6 +2,7 @@ use std::ops::RangeInclusive;
 use std::sync::Arc;
 
 use egui::Color32;
+use egui::Id;
 use egui::Mesh;
 use egui::Rgba;
 use egui::Shape;
@@ -13,17 +14,16 @@ use emath::Pos2;
 use emath::Rect;
 use emath::pos2;
 
-use super::DEFAULT_FILL_ALPHA;
-use super::y_intersection;
-use crate::Id;
-use crate::LineStyle;
-use crate::PlotBounds;
-use crate::PlotGeometry;
-use crate::PlotItem;
-use crate::PlotItemBase;
-use crate::PlotPoint;
-use crate::PlotPoints;
-use crate::PlotTransform;
+use crate::aesthetics::LineStyle;
+use crate::axis::PlotTransform;
+use crate::bounds::PlotBounds;
+use crate::bounds::PlotPoint;
+use crate::colors::DEFAULT_FILL_ALPHA;
+use crate::data::PlotPoints;
+use crate::items::PlotGeometry;
+use crate::items::PlotItem;
+use crate::items::PlotItemBase;
+use crate::math::y_intersection;
 
 /// A series of values forming a path.
 pub struct Line<'a> {
@@ -122,7 +122,7 @@ impl<'a> Line<'a> {
     /// losing the item's state. You should make sure the name passed to
     /// [`Self::new`] is unique and stable for each item, or set unique and
     /// stable ids explicitly via [`Self::id`].
-    #[expect(clippy::needless_pass_by_value)]
+    #[expect(clippy::needless_pass_by_value, reason = "to allow various string types")]
     #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
         self.base_mut().name = name.to_string();
@@ -201,16 +201,11 @@ impl PlotItem for Line<'_> {
             let default_fill_color = Rgba::from(stroke.color).to_opaque().multiply(fill_alpha).into();
 
             let fill_color_for_point = |pos| {
-                if *gradient_fill && self.gradient_color.is_some() {
-                    Rgba::from(self
-                        .gradient_color
-                        .clone()
-                        .expect("Could not find gradient color callback")(
-                        transform.value_from_position(pos),
-                    ))
-                    .to_opaque()
-                    .multiply(fill_alpha)
-                    .into()
+                if *gradient_fill && let Some(gradient_fallback) = &self.gradient_color {
+                    Rgba::from(gradient_fallback(transform.value_from_position(pos)))
+                        .to_opaque()
+                        .multiply(fill_alpha)
+                        .into()
                 } else {
                     default_fill_color
                 }

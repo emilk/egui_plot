@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["egui_plot", "demo", "examples/*"]
+members = ["egui_plot", "demo", "examples/*", "examples_utils"]
 
 
 [workspace.package]
@@ -20,17 +20,38 @@ opt-level = 2
 
 [workspace.dependencies]
 egui_plot = { version = "0.34.0", path = "egui_plot", default-features = false }
+examples_utils = { version = "0.1.0", path = "examples_utils" }
 
-ahash = { version = "0.8.11", default-features = false, features = [
+borrow_points = { version = "0.1.0", path = "examples/borrow_points" }
+box_plot = { version = "0.1.0", path = "examples/box_plot" }
+custom_axes = { version = "0.1.0", path = "examples/custom_axes" }
+custom_plot_manipulation = { version = "0.1.0", path = "examples/custom_plot_manipulation" }
+filled_area = { version = "0.1.0", path = "examples/filled_area" }
+heatmap = { version = "0.1.0", path = "examples/heatmap" }
+histogram = { version = "0.1.0", path = "examples/histogram" }
+interaction = { version = "0.1.0", path = "examples/interaction" }
+items = { version = "0.1.0", path = "examples/items" }
+legend = { version = "0.1.0", path = "examples/legend" }
+legend_sort = { version = "0.1.0", path = "examples/legend_sort" }
+lines = { version = "0.1.0", path = "examples/lines" }
+linked_axes = { version = "0.1.0", path = "examples/linked_axes" }
+markers = { version = "0.1.0", path = "examples/markers" }
+performance = { version = "0.1.0", path = "examples/performance" }
+plot_span = { version = "0.1.0", path = "examples/plot_span" }
+save_plot = { version = "0.1.0", path = "examples/save_plot" }
+stacked_bar = { version = "0.1.0", path = "examples/stacked_bar" }
+
+ahash = { version = "0.8.12", default-features = false, features = [
     "no-rng", # we don't need DOS-protection, so we let users opt-in to it instead
     "std",
 ] }
-document-features = "0.2.10"
-eframe = { version = "0.33.0", default-features = false }
-egui = { version = "0.33.0", default-features = false }
-egui_kittest = { version = "0.33.0", default-features = false }
-emath = { version = "0.33.0", default-features = false }
-env_logger = { version = "0.11.6", default-features = false, features = [
+assertables = "9.8.2"
+document-features = "0.2.12"
+eframe = { version = "0.33", default-features = false }
+egui = { version = "0.33", default-features = false }
+egui_kittest = { version = "0.33", default-features = false }
+emath = { version = "0.33", default-features = false }
+env_logger = { version = "0.11.8", default-features = false, features = [
     "auto-color",
     "humantime",
 ] }
@@ -38,7 +59,7 @@ image = { version = "0.25", default-features = false }
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
 wasm-bindgen-futures = "0.4"
-web-sys = "0.3.70"
+web-sys = "0.3.83"
 
 
 [patch.crates-io]
@@ -82,6 +103,7 @@ missing_crate_level_docs = "warn"
 # See also clippy.toml
 [workspace.lints.clippy]
 allow_attributes = "warn"
+allow_attributes_without_reason = "warn"
 as_ptr_cast_mut = "warn"
 await_holding_lock = "warn"
 bool_to_int_with_if = "warn"
@@ -113,6 +135,7 @@ expl_impl_clone_on_copy = "warn"
 explicit_deref_methods = "warn"
 explicit_into_iter_loop = "warn"
 explicit_iter_loop = "warn"
+expect_used = "warn"
 fallible_impl_from = "warn"
 filter_map_next = "warn"
 flat_map_option = "warn"
@@ -186,6 +209,7 @@ non_zero_suggestions = "warn"
 nonstandard_macro_braces = "warn"
 option_as_ref_cloned = "warn"
 option_option = "warn"
+or_fun_call = "warn"
 path_buf_push_overwrite = "warn"
 pathbuf_init_then_push = "warn"
 precedence_bits = "warn"
@@ -256,3 +280,7 @@ zero_sized_map_values = "warn"
 
 manual_range_contains = "allow" # this is better on 'allow'
 map_unwrap_or = "allow"         # this is better on 'allow'
+
+
+[workspace.metadata.cargo-shear]
+ignored = ["log", "assertables"]

@@ -1,0 +1,242 @@
+use std::collections::Bound;
+use std::iter::FromIterator;
+use std::ops::RangeBounds;
+use std::ops::RangeInclusive;
+
+use emath::lerp;
+
+use crate::bounds::PlotBounds;
+use crate::bounds::PlotPoint;
+
+/// Represents many [`PlotPoint`]s.
+///
+/// These can be an owned `Vec`
+/// or generated on-the-fly by a function
+/// or borrowed from a slice.
+pub enum PlotPoints<'a> {
+    Owned(Vec<PlotPoint>),
+    Generator(ExplicitGenerator<'a>),
+    Borrowed(&'a [PlotPoint]),
+}
+
+impl Default for PlotPoints<'_> {
+    fn default() -> Self {
+        Self::Owned(Vec::new())
+    }
+}
+
+impl From<[f64; 2]> for PlotPoints<'_> {
+    fn from(coordinate: [f64; 2]) -> Self {
+        Self::new(vec![coordinate])
+    }
+}
+
+impl From<Vec<[f64; 2]>> for PlotPoints<'_> {
+    #[inline]
+    fn from(coordinates: Vec<[f64; 2]>) -> Self {
+        Self::new(coordinates)
+    }
+}
+
+impl<'a> From<&'a [PlotPoint]> for PlotPoints<'a> {
+    #[inline]
+    fn from(points: &'a [PlotPoint]) -> Self {
+        Self::Borrowed(points)
+    }
+}
+
+impl FromIterator<[f64; 2]> for PlotPoints<'_> {
+    fn from_iter<T: IntoIterator<Item = [f64; 2]>>(iter: T) -> Self {
+        Self::Owned(iter.into_iter().map(|point| point.into()).collect())
+    }
+}
+
+impl<'a> PlotPoints<'a> {
+    pub fn new(points: Vec<[f64; 2]>) -> Self {
+        Self::from_iter(points)
+    }
+
+    pub fn points(&self) -> &[PlotPoint] {
+        match self {
+            Self::Owned(points) => points.as_slice(),
+            Self::Generator(_) => &[],
+            Self::Borrowed(points) => points,
+        }
+    }
+
+    /// Draw a line based on a function `y=f(x)`, a range (which can be
+    /// infinite) for x and the number of points.
+    pub fn from_explicit_callback(
+        function: impl Fn(f64) -> f64 + 'a,
+        x_range: impl RangeBounds<f64>,
+        points: usize,
+    ) -> Self {
+        let start = match x_range.start_bound() {
+            Bound::Included(x) | Bound::Excluded(x) => *x,
+            Bound::Unbounded => f64::NEG_INFINITY,
+        };
+        let end = match x_range.end_bound() {
+            Bound::Included(x) | Bound::Excluded(x) => *x,
+            Bound::Unbounded => f64::INFINITY,
+        };
+        let x_range = start..=end;
+
+        let generator = ExplicitGenerator {
+            function: Box::new(function),
+            x_range,
+            points,
+        };
+
+        Self::Generator(generator)
+    }
+
+    /// Draw a line based on a function `(x,y)=f(t)`, a range for t and the
+    /// number of points. The range may be specified as start..end or as
+    /// start..=end.
+    pub fn from_parametric_callback(
+        function: impl Fn(f64) -> (f64, f64),
+        t_range: impl RangeBounds<f64>,
+        points: usize,
+    ) -> Self {
+        let start = match t_range.start_bound() {
+            Bound::Included(x) => x,
+            Bound::Excluded(_) => unreachable!(),
+            Bound::Unbounded => panic!("The range for parametric functions must be bounded!"),
+        };
+        let end = match t_range.end_bound() {
+            Bound::Included(x) | Bound::Excluded(x) => x,
+            Bound::Unbounded => panic!("The range for parametric functions must be bounded!"),
+        };
+        let last_point_included = matches!(t_range.end_bound(), Bound::Included(_));
+        let increment = if last_point_included {
+            (end - start) / (points - 1) as f64
+        } else {
+            (end - start) / points as f64
+        };
+        (0..points)
+            .map(|i| {
+                let t = start + i as f64 * increment;
+                function(t).into()
+            })
+            .collect()
+    }
+
+    /// From a series of y-values.
+    /// The x-values will be the indices of these values
+    pub fn from_ys_f32(ys: &[f32]) -> Self {
+        ys.iter().enumerate().map(|(i, &y)| [i as f64, y as f64]).collect()
+    }
+
+    /// From a series of y-values.
+    /// The x-values will be the indices of these values
+    pub fn from_ys_f64(ys: &[f64]) -> Self {
+        ys.iter().enumerate().map(|(i, &y)| [i as f64, y]).collect()
+    }
+
+    /// Returns true if there are no data points available and there is no
+    /// function to generate any.
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Self::Owned(points) => points.is_empty(),
+            Self::Generator(_) => false,
+            Self::Borrowed(points) => points.is_empty(),
+        }
+    }
+
+    /// If initialized with a generator function, this will generate `n` evenly
+    /// spaced points in the given range.
+    pub fn generate_points(&mut self, x_range: RangeInclusive<f64>) {
+        if let Self::Generator(generator) = self {
+            *self = Self::range_intersection(&x_range, &generator.x_range)
+                .map(|intersection| {
+                    let increment = (intersection.end() - intersection.start()) / (generator.points - 1) as f64;
+                    (0..generator.points)
+                        .map(|i| {
+                            let x = intersection.start() + i as f64 * increment;
+                            let y = (generator.function)(x);
+                            [x, y]
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+        }
+    }
+
+    /// Returns the intersection of two ranges if they intersect.
+    fn range_intersection(range1: &RangeInclusive<f64>, range2: &RangeInclusive<f64>) -> Option<RangeInclusive<f64>> {
+        let start = range1.start().max(*range2.start());
+        let end = range1.end().min(*range2.end());
+        (start < end).then_some(start..=end)
+    }
+
+    pub fn bounds(&self) -> PlotBounds {
+        match self {
+            Self::Owned(points) => {
+                let mut bounds = PlotBounds::NOTHING;
+                for point in points {
+                    bounds.extend_with(point);
+                }
+                bounds
+            }
+            Self::Generator(generator) => generator.estimate_bounds(),
+            Self::Borrowed(points) => {
+                let mut bounds = PlotBounds::NOTHING;
+                for point in *points {
+                    bounds.extend_with(point);
+                }
+                bounds
+            }
+        }
+    }
+}
+
+/// Describes a function y = f(x) with an optional range for x and a number of
+/// points.
+pub struct ExplicitGenerator<'a> {
+    function: Box<dyn Fn(f64) -> f64 + 'a>,
+    x_range: RangeInclusive<f64>,
+    points: usize,
+}
+
+impl ExplicitGenerator<'_> {
+    fn estimate_bounds(&self) -> PlotBounds {
+        let mut bounds = PlotBounds::NOTHING;
+
+        let mut add_x = |x: f64| {
+            // avoid infinities, as we cannot auto-bound on them!
+            if x.is_finite() {
+                bounds.extend_with_x(x);
+            }
+            let y = (self.function)(x);
+            if y.is_finite() {
+                bounds.extend_with_y(y);
+            }
+        };
+
+        let min_x = *self.x_range.start();
+        let max_x = *self.x_range.end();
+
+        add_x(min_x);
+        add_x(max_x);
+
+        if min_x.is_finite() && max_x.is_finite() {
+            // Sample some points in the interval:
+            const N: u32 = 8;
+            for i in 1..N {
+                let t = i as f64 / (N - 1) as f64;
+                let x = lerp(min_x..=max_x, t);
+                add_x(x);
+            }
+        } else {
+            // Try adding some points anyway:
+            for x in [-1, 0, 1] {
+                let x = x as f64;
+                if min_x <= x && x <= max_x {
+                    add_x(x);
+                }
+            }
+        }
+
+        bounds
+    }
+}

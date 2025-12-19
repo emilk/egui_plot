@@ -2,6 +2,7 @@ use std::ops::RangeInclusive;
 
 use egui::Color32;
 use egui::CornerRadius;
+use egui::Id;
 use egui::Shape;
 use egui::Stroke;
 use egui::Ui;
@@ -10,22 +11,21 @@ use emath::Float as _;
 use emath::NumExt as _;
 use emath::Pos2;
 
-use super::add_rulers_and_text;
-use super::find_closest_rect;
-use super::rect_elem::RectElement;
-use super::rect_elem::highlighted_color;
-use crate::ClosestElem;
-use crate::Cursor;
-use crate::Id;
-use crate::LabelFormatter;
-use crate::Orientation;
-use crate::PlotBounds;
-use crate::PlotConfig;
-use crate::PlotGeometry;
-use crate::PlotItem;
-use crate::PlotItemBase;
-use crate::PlotPoint;
-use crate::PlotTransform;
+use crate::aesthetics::Orientation;
+use crate::axis::PlotTransform;
+use crate::bounds::PlotBounds;
+use crate::bounds::PlotPoint;
+use crate::colors::highlighted_color;
+use crate::cursor::Cursor;
+use crate::items::ClosestElem;
+use crate::items::PlotConfig;
+use crate::items::PlotGeometry;
+use crate::items::PlotItem;
+use crate::items::PlotItemBase;
+use crate::items::add_rulers_and_text;
+use crate::label::LabelFormatter;
+use crate::math::find_closest_rect;
+use crate::rect_elem::RectElement;
 
 /// A bar chart.
 pub struct BarChart {
@@ -138,7 +138,7 @@ impl BarChart {
     /// losing the item's state. You should make sure the name passed to
     /// [`Self::new`] is unique and stable for each item, or set unique and
     /// stable ids explicitly via [`Self::id`].
-    #[expect(clippy::needless_pass_by_value)]
+    #[expect(clippy::needless_pass_by_value, reason = "to allow various string types")]
     #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
         self.base_mut().name = name.to_string();
@@ -210,7 +210,7 @@ impl PlotItem for BarChart {
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
         plot: &PlotConfig<'_>,
-        _: &LabelFormatter<'_>,
+        _: &Option<LabelFormatter<'_>>,
     ) {
         let bar = &self.bars[elem.index];
 
@@ -278,7 +278,7 @@ impl Bar {
     }
 
     /// Name of this bar chart element.
-    #[expect(clippy::needless_pass_by_value)]
+    #[expect(clippy::needless_pass_by_value, reason = "to allow various string types")]
     #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
         self.name = name.to_string();
@@ -414,6 +414,6 @@ impl RectElement for Bar {
             Orientation::Vertical => scale[1],
         };
         let decimals = ((-scale.abs().log10()).ceil().at_least(0.0) as usize).at_most(6);
-        crate::format_number(self.value, decimals)
+        crate::label::format_number(self.value, decimals)
     }
 }

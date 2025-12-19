@@ -1,60 +1,60 @@
-//! Contains items that can be added to a plot.
-#![expect(clippy::type_complexity)] // TODO #163: simplify some of the callback types with type aliases
+//! Contains items that can be added to a plot at some plot coordinates.
+#![expect(
+    clippy::type_complexity,
+    reason = "TODO(#163): simplify some of the callback types with type aliases"
+)]
 
 use std::ops::RangeInclusive;
 
-pub use arrows::Arrows;
-pub use bar_chart::Bar;
-pub use bar_chart::BarChart;
-pub use box_plot::BoxElem;
-pub use box_plot::BoxPlot;
-pub use box_plot::BoxSpread;
 use egui::Align2;
 use egui::Color32;
 use egui::Id;
-use egui::NumExt as _;
 use egui::PopupAnchor;
 use egui::Pos2;
 use egui::Shape;
 use egui::TextStyle;
 use egui::Ui;
-use egui::pos2;
 use egui::vec2;
 use emath::Float as _;
-pub use line::HLine;
-pub use line::VLine;
-pub use plot_image::PlotImage;
-pub use points::Points;
-pub use polygon::Polygon;
-use rect_elem::RectElement;
-pub use series::Line;
-pub use text::Text;
-pub use values::ClosestElem;
-pub use values::LineStyle;
-pub use values::MarkerShape;
-pub use values::Orientation;
-pub use values::PlotGeometry;
-pub use values::PlotPoint;
-pub use values::PlotPoints;
 
-use super::Cursor;
-use super::LabelFormatter;
-use super::PlotBounds;
-use super::PlotTransform;
+use crate::aesthetics::Orientation;
+use crate::axis::PlotTransform;
+use crate::bounds::PlotBounds;
+use crate::bounds::PlotPoint;
+use crate::cursor::Cursor;
+pub use crate::items::arrows::Arrows;
+pub use crate::items::bar_chart::Bar;
+pub use crate::items::bar_chart::BarChart;
+pub use crate::items::box_plot::BoxElem;
+pub use crate::items::box_plot::BoxPlot;
+pub use crate::items::box_plot::BoxSpread;
+pub use crate::items::filled_area::FilledArea;
+pub use crate::items::heatmap::Heatmap;
+pub use crate::items::line::HLine;
+pub use crate::items::line::VLine;
+pub use crate::items::line::horizontal_line;
+pub use crate::items::line::vertical_line;
+pub use crate::items::plot_image::PlotImage;
+pub use crate::items::points::Points;
+pub use crate::items::polygon::Polygon;
+pub use crate::items::series::Line;
+pub use crate::items::span::Span;
+pub use crate::items::text::Text;
+use crate::label::LabelFormatter;
+use crate::rect_elem::RectElement;
 
 mod arrows;
 mod bar_chart;
 mod box_plot;
+mod filled_area;
+mod heatmap;
 mod line;
 mod plot_image;
 mod points;
 mod polygon;
-mod rect_elem;
 mod series;
+mod span;
 mod text;
-mod values;
-
-const DEFAULT_FILL_ALPHA: f32 = 0.05;
 
 /// Base data shared by all plot items.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -91,6 +91,9 @@ pub struct PlotConfig<'a> {
 
     /// Whether to show the y-axis value.
     pub show_y: bool,
+
+    /// Whether to show the crosshair rulers.
+    pub show_crosshair: bool,
 }
 
 /// Trait shared by things that can be drawn in the plot.
@@ -171,7 +174,7 @@ pub trait PlotItem {
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
         plot: &PlotConfig<'_>,
-        label_formatter: &LabelFormatter<'_>,
+        label_formatter: &Option<LabelFormatter<'_>>,
     ) {
         let points = match self.geometry() {
             PlotGeometry::Points(points) => points,
@@ -200,40 +203,7 @@ pub trait PlotItem {
 }
 
 // ----------------------------------------------------------------------------
-
-/// Returns the x-coordinate of a possible intersection between a line segment
-/// from `p1` to `p2` and a horizontal line at the given y-coordinate.
-fn y_intersection(p1: &Pos2, p2: &Pos2, y: f32) -> Option<f32> {
-    ((p1.y > y && p2.y < y) || (p1.y < y && p2.y > y))
-        .then_some(((y * (p1.x - p2.x)) - (p1.x * p2.y - p1.y * p2.x)) / (p1.y - p2.y))
-}
-
-// ----------------------------------------------------------------------------
 // Helper functions
-
-pub(crate) fn rulers_color(ui: &Ui) -> Color32 {
-    if ui.visuals().dark_mode {
-        Color32::from_gray(100).additive()
-    } else {
-        Color32::from_black_alpha(180)
-    }
-}
-
-pub(crate) fn vertical_line(pointer: Pos2, transform: &PlotTransform, line_color: Color32) -> Shape {
-    let frame = transform.frame();
-    Shape::line_segment(
-        [pos2(pointer.x, frame.top()), pos2(pointer.x, frame.bottom())],
-        (1.0, line_color),
-    )
-}
-
-pub(crate) fn horizontal_line(pointer: Pos2, transform: &PlotTransform, line_color: Color32) -> Shape {
-    let frame = transform.frame();
-    Shape::line_segment(
-        [pos2(frame.left(), pointer.y), pos2(frame.right(), pointer.y)],
-        (1.0, line_color),
-    )
-}
 
 fn add_rulers_and_text(
     elem: &dyn RectElement,
@@ -269,7 +239,7 @@ fn add_rulers_and_text(
     }
 
     // Text
-    let text = text.unwrap_or({
+    let text = text.unwrap_or_else(|| {
         let mut text = elem.name().to_owned(); // could be empty
 
         if show_values {
@@ -305,43 +275,27 @@ pub(super) fn rulers_and_tooltip_at_value(
     name: &str,
     plot: &PlotConfig<'_>,
     cursors: &mut Vec<Cursor>,
-    label_formatter: &LabelFormatter<'_>,
+    label_formatter: &Option<LabelFormatter<'_>>,
 ) {
-    if plot.show_x {
-        cursors.push(Cursor::Vertical { x: value.x });
-    }
-    if plot.show_y {
-        cursors.push(Cursor::Horizontal { y: value.y });
+    // Add crosshair rulers if enabled
+    if plot.show_crosshair {
+        if plot.show_x {
+            cursors.push(Cursor::Vertical { x: value.x });
+        }
+        if plot.show_y {
+            cursors.push(Cursor::Horizontal { y: value.y });
+        }
     }
 
-    let text = if let Some(custom_label) = label_formatter {
-        let label = custom_label(name, &value);
-        if label.is_empty() {
-            return;
-        }
-        label
-    } else {
-        let prefix = if name.is_empty() {
-            String::new()
-        } else {
-            format!("{name}\n")
-        };
-        let scale = plot.transform.dvalue_dpos();
-        let x_decimals = ((-scale[0].abs().log10()).ceil().at_least(0.0) as usize).clamp(1, 6);
-        let y_decimals = ((-scale[1].abs().log10()).ceil().at_least(0.0) as usize).clamp(1, 6);
-        if plot.show_x && plot.show_y {
-            format!(
-                "{}x = {:.*}\ny = {:.*}",
-                prefix, x_decimals, value.x, y_decimals, value.y
-            )
-        } else if plot.show_x {
-            format!("{}x = {:.*}", prefix, x_decimals, value.x)
-        } else if plot.show_y {
-            format!("{}y = {:.*}", prefix, y_decimals, value.y)
-        } else {
-            unreachable!()
-        }
+    // Only show tooltip if label_formatter is provided
+    let Some(custom_label) = label_formatter else {
+        return;
     };
+
+    let text = custom_label(name, &value);
+    if text.is_empty() {
+        return;
+    }
 
     // We show the tooltip as soon as we're hovering the plot area:
     let mut tooltip = egui::Tooltip::always_open(
@@ -361,22 +315,28 @@ pub(super) fn rulers_and_tooltip_at_value(
     });
 }
 
-fn find_closest_rect<'a, T>(
-    rects: impl IntoIterator<Item = &'a T>,
-    point: Pos2,
-    transform: &PlotTransform,
-) -> Option<ClosestElem>
-where
-    T: 'a + RectElement,
-{
-    rects
-        .into_iter()
-        .enumerate()
-        .map(|(index, bar)| {
-            let bar_rect = transform.rect_from_values(&bar.bounds_min(), &bar.bounds_max());
-            let dist_sq = bar_rect.distance_sq_to_pos(point);
+/// Query the points of the plot, for geometric relations like closest checks
+pub enum PlotGeometry<'a> {
+    /// No geometry based on single elements (examples: text, image,
+    /// horizontal/vertical line)
+    None,
 
-            ClosestElem { index, dist_sq }
-        })
-        .min_by_key(|e| e.dist_sq.ord())
+    /// Point values (X-Y graphs)
+    Points(&'a [PlotPoint]),
+
+    /// Rectangles (examples: boxes or bars)
+    // Has currently no data, as it would require copying rects or iterating a list of pointers.
+    // Instead, geometry-based functions are directly implemented in the respective PlotItem impl.
+    Rects,
+}
+
+/// Result of [`PlotItem::find_closest()`] search, identifies an element
+/// inside the item for immediate use
+pub struct ClosestElem {
+    /// Position of hovered-over value (or bar/box-plot/…) in `PlotItem`
+    pub index: usize,
+
+    /// Squared distance from the mouse cursor (needed to compare against other
+    /// `PlotItems`, which might be nearer)
+    pub dist_sq: f32,
 }

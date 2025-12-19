@@ -1,18 +1,18 @@
 use std::ops::RangeInclusive;
 
 use egui::Color32;
+use egui::Id;
 use egui::Shape;
 use egui::Stroke;
 use egui::Ui;
 use emath::Rot2;
 
-use crate::Id;
-use crate::PlotBounds;
-use crate::PlotGeometry;
-use crate::PlotItem;
-use crate::PlotItemBase;
-use crate::PlotPoints;
-use crate::PlotTransform;
+use crate::axis::PlotTransform;
+use crate::bounds::PlotBounds;
+use crate::data::PlotPoints;
+use crate::items::PlotGeometry;
+use crate::items::PlotItem;
+use crate::items::PlotItemBase;
 
 impl<'a> Arrows<'a> {
     pub fn new(name: impl Into<String>, origins: impl Into<PlotPoints<'a>>, tips: impl Into<PlotPoints<'a>>) -> Self {
@@ -48,7 +48,7 @@ impl<'a> Arrows<'a> {
     /// losing the item's state. You should make sure the name passed to
     /// [`Self::new`] is unique and stable for each item, or set unique and
     /// stable ids explicitly via [`Self::id`].
-    #[expect(clippy::needless_pass_by_value)]
+    #[expect(clippy::needless_pass_by_value, reason = "to allow various string types")]
     #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
         self.base_mut().name = name.to_string();

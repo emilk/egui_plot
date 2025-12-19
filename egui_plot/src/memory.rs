@@ -5,8 +5,8 @@ use egui::Id;
 use egui::Pos2;
 use egui::Vec2b;
 
-use crate::PlotBounds;
-use crate::PlotTransform;
+use crate::axis::PlotTransform;
+use crate::bounds::PlotBounds;
 
 /// Information about the plot that has to persist between frames.
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]

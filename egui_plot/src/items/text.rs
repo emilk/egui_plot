@@ -1,6 +1,7 @@
 use std::ops::RangeInclusive;
 
 use egui::Color32;
+use egui::Id;
 use egui::Shape;
 use egui::Stroke;
 use egui::TextStyle;
@@ -9,13 +10,12 @@ use egui::WidgetText;
 use egui::epaint::TextShape;
 use emath::Align2;
 
-use crate::Id;
-use crate::PlotBounds;
-use crate::PlotGeometry;
-use crate::PlotItem;
-use crate::PlotItemBase;
-use crate::PlotPoint;
-use crate::PlotTransform;
+use crate::axis::PlotTransform;
+use crate::bounds::PlotBounds;
+use crate::bounds::PlotPoint;
+use crate::items::PlotGeometry;
+use crate::items::PlotItem;
+use crate::items::PlotItemBase;
 
 impl Text {
     pub fn new(name: impl Into<String>, position: PlotPoint, text: impl Into<WidgetText>) -> Self {
@@ -51,7 +51,7 @@ impl Text {
     /// losing the item's state. You should make sure the name passed to
     /// [`Self::new`] is unique and stable for each item, or set unique and
     /// stable ids explicitly via [`Self::id`].
-    #[expect(clippy::needless_pass_by_value)]
+    #[expect(clippy::needless_pass_by_value, reason = "to allow various string types")]
     #[inline]
     pub fn name(mut self, name: impl ToString) -> Self {
         self.base_mut().name = name.to_string();

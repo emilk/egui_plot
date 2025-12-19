@@ -8,16 +8,24 @@
 ![Apache](https://img.shields.io/badge/license-Apache-blue.svg)
 [![Discord](https://img.shields.io/discord/900275882684477440?label=egui%20discord)](https://discord.gg/JFcEma9bJq)
 
-Immediate mode plotting for [`egui`](https://github.com/emilk/egui).
+Immediate mode 2D plotting library for [`egui`](https://crates.io/crates/https://github.com/emilk/egui).
 
-![egui_plot_white](https://github.com/user-attachments/assets/b29acf5e-ccbf-4cb7-b03b-7e258fa5db16)
+[![egui_plot_white](https://github.com/user-attachments/assets/b29acf5e-ccbf-4cb7-b03b-7e258fa5db16)](https://emilk.github.io/egui_plot/)
 
-[Try the web demo](https://emilk.github.io/egui_plot/)
+[Try the web demo gallery](https://emilk.github.io/egui_plot/).
 
 ## Testing
 
 - Locally: `cargo run -p demo`
 - Web: `(cd demo && trunk serve)`
+
+## Plotting libraries in Rust
+
+To view a list of plotting libraries in Rust, see [notes on Rust plotting ecosystem](ECOSYSTEM.md).
+
+## Contributing
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) and [WELCOME_CONTRIBUTIONS.md](WELCOME_CONTRIBUTIONS.md)
 
 ## History
 

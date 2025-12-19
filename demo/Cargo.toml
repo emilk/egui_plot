@@ -13,29 +13,48 @@ default-run = "demo"
 workspace = true
 
 [dependencies]
-egui_plot = { workspace = true, features = ["serde"] }
 
 egui.workspace = true
 eframe = { workspace = true, default-features = false, features = [
     "default_fonts", # Embed the default egui fonts.
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
     "persistence",   # Enable restoring app state when restarting the app.
-    "x11"
+    "x11",
 ] }
+image.workspace = true
 log.workspace = true
-serde = { workspace = true, features = ["derive"] }
+
+egui_chip = "0.3.1"
+examples_utils.workspace = true
+
+# Example dependencies
+borrow_points.workspace = true
+box_plot.workspace = true
+custom_axes.workspace = true
+custom_plot_manipulation.workspace = true
+filled_area.workspace = true
+heatmap.workspace = true
+histogram.workspace = true
+interaction.workspace = true
+items.workspace = true
+legend.workspace = true
+legend_sort.workspace = true
+lines.workspace = true
+linked_axes.workspace = true
+markers.workspace = true
+performance.workspace = true
+plot_span.workspace = true
+save_plot.workspace = true
+stacked_bar.workspace = true
 
 # native:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-env_logger.workspace = true
+env_logger = { version = "0.11.8", default-features = false, features = [
+    "auto-color",
+    "humantime",
+] }
 
 # web:
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen-futures.workspace = true
-web-sys.workspace = true # to access the DOM (to hide the loading text)
-
-[dev-dependencies]
-egui_kittest = { workspace = true, features = ["snapshot", "eframe"] }
-
-[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
-egui_kittest = { workspace = true, features = ["wgpu"] }
+web-sys.workspace = true              # to access the DOM (to hide the loading text)
