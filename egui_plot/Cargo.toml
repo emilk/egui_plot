@@ -39,6 +39,7 @@ egui = { workspace = true, default-features = false }
 emath = { workspace = true, default-features = false }
 
 ahash.workspace = true
+log.workspace = true
 
 #! ### Optional dependencies
 ## Enable this when generating docs.
@@ -50,4 +51,3 @@ serde = { workspace = true, optional = true }
 assertables.workspace = true
 egui_kittest.workspace = true
 env_logger.workspace = true
-log.workspace = true

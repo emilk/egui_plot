@@ -11,6 +11,7 @@
 mod aesthetics;
 mod axis;
 mod bounds;
+mod colormap;
 mod colors;
 mod cursor;
 mod data;
