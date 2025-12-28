@@ -18,6 +18,9 @@ pub struct Colormap {
 impl Colormap {
     /// Create a new colormap from a list of colors, uniformly distributed from 0.0 to 1.0.
     ///
+    /// Uniform colormaps are simpler to define and evaluate in constant time, but are less
+    /// flexible than non-uniform colormaps.
+    ///
     /// If no colors are provided, defaults to Color32::TRANSPARENT.
     /// If a single color is provided, places the color at positions 0.0 and 1.0.
     pub fn new_uniform(colors: Vec<Color32>) -> Self {
@@ -27,6 +30,10 @@ impl Colormap {
     }
 
     /// Create a new colormap from keypoints.
+    ///
+    /// While being able to define positions gives maximum flexibility, note that evaluating
+    /// this colormap is currently O(n) in the number of keypoints, as opposed to O(1) for
+    /// uniform colormaps.
     ///
     /// If no keypoints are provided, defaults to Color32::TRANSPARENT.
     /// If a single keypoint is provided, places the color at positions 0.0 and 1.0.
@@ -195,7 +202,7 @@ impl NonuniformKeypoints {
 /// For those uninitiated in color interpolation, see
 /// [this blog post](https://raphlinus.github.io/color/2021/01/18/oklab-critique.html)
 /// for a great visual review of the behavior of different interpolation methods.
-pub struct ColorInterpolation;
+struct ColorInterpolation;
 
 impl ColorInterpolation {
     /// Simple linear interpolation in sRGB space.
