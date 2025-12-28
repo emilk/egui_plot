@@ -1,4 +1,4 @@
-#![allow(dead_code)] // While in development, keep colormap private.
+#![allow(dead_code, reason = "While in development, keep colormap private.")]
 use egui::Color32;
 
 /// Colormap is used to map some parameter (usually in the range [0.0, 1.0]) to [`egui::Color32`].
@@ -8,7 +8,7 @@ use egui::Color32;
 /// or have explicit positions ([`Colormap::new_with_positions`]).
 ///
 /// If building your own Colormap with explicit positions, it is strongly recommended that
-/// keypoints cover the full range from 0.0 to 1.0. This is because PlotItem consumers
+/// keypoints cover the full range from 0.0 to 1.0. This is because `PlotItem` consumers
 /// make this assumption and will only sample the colormap in this range.
 /// However, this is not enforced, so feel free to go against this for your own special use-cases.
 pub struct Colormap {
@@ -21,7 +21,7 @@ impl Colormap {
     /// Uniform colormaps are simpler to define and evaluate in constant time, but are less
     /// flexible than non-uniform colormaps.
     ///
-    /// If no colors are provided, defaults to Color32::TRANSPARENT.
+    /// If no colors are provided, defaults to `Color32::TRANSPARENT`.
     /// If a single color is provided, places the color at positions 0.0 and 1.0.
     pub fn new_uniform(colors: Vec<Color32>) -> Self {
         Self {
@@ -35,12 +35,12 @@ impl Colormap {
     /// this colormap is currently O(n) in the number of keypoints, as opposed to O(1) for
     /// uniform colormaps.
     ///
-    /// If no keypoints are provided, defaults to Color32::TRANSPARENT.
+    /// If no keypoints are provided, defaults to `Color32::TRANSPARENT`.
     /// If a single keypoint is provided, places the color at positions 0.0 and 1.0.
     ///
-    /// PlotItem consumers will expect that keypoints cover the full range from 0.0 to 1.0,
+    /// `PlotItem` consumers will expect that keypoints cover the full range from 0.0 to 1.0,
     /// but this is not enforced. Feel free to go against this for your own special use-cases,
-    /// but be aware that PlotItems will only consider the [0.0, 1.0] range.
+    /// but be aware that plot items will only consider the [0.0, 1.0] range.
     pub fn new_with_positions(keypoints: Vec<(f32, Color32)>) -> Self {
         Self {
             data: ColormapData::new_nonuniform(keypoints),
@@ -117,20 +117,20 @@ impl ColormapData {
         if let Some(&(first_pos, _)) = keypoints.first()
             && first_pos != 0.0
         {
-            log::warn!("Colormap keypoints start at {}, instead of 0.0", first_pos);
+            log::warn!("Colormap keypoints start at {first_pos}, instead of 0.0");
         }
         if let Some(&(last_pos, _)) = keypoints.last()
             && last_pos != 1.0
         {
-            log::warn!("Colormap keypoints end at {}, instead of 1.0", last_pos);
+            log::warn!("Colormap keypoints end at {last_pos}, instead of 1.0");
         }
         Self::Nonuniform(NonuniformKeypoints { keypoints })
     }
 
     fn get(&self, t: f32, interpolate: impl Fn(&Color32, &Color32, f32) -> Color32) -> Color32 {
         match self {
-            ColormapData::Uniform(uniform) => uniform.get(t, interpolate),
-            ColormapData::Nonuniform(nonuniform) => nonuniform.get(t, interpolate),
+            Self::Uniform(uniform) => uniform.get(t, interpolate),
+            Self::Nonuniform(nonuniform) => nonuniform.get(t, interpolate),
         }
     }
 }
