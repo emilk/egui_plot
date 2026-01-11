@@ -388,7 +388,11 @@ impl<'a> Plot<'a> {
         self
     }
 
-    /// Provide a function to customize the on-hover label for the x and y axis
+    /// Provide a function to customize the on-hover label for the x and y axis.
+    ///
+    /// The third argument is `Some((Id, index))` when hovering a plot item,
+    /// where `Id` is the item's id and `index` is the point index within that
+    /// item. It is `None` when the cursor isn't hovering a concrete plot item.
     ///
     /// ```
     /// # egui::__run_test_ui(|ui| {

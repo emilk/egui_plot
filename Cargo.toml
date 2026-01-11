@@ -284,4 +284,4 @@ map_unwrap_or = "allow"         # this is better on 'allow'
 
 
 [workspace.metadata.cargo-shear]
-ignored = ["log", "assertables"]
+ignored = ["assertables"]

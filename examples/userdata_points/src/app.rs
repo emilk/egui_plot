@@ -1,14 +1,5 @@
-use eframe::egui;
-use eframe::egui::Response;
-use egui_plot::Legend;
-use egui_plot::Line;
-use egui_plot::Plot;
-
-use egui::mutex::Mutex;
-use egui::{Color32, Id};
-use egui_plot::{Corner, MarkerShape, Points};
-use std::collections::HashMap;
-use std::sync::Arc;
+use eframe::egui::{self, Color32, Id, IdMap, Response};
+use egui_plot::{Corner, Legend, Line, MarkerShape, Plot, Points};
 
 pub struct UserdataPointsExample {
     sine_points: Vec<DemoPoint>,
@@ -71,15 +62,20 @@ impl Default for UserdataPointsExample {
 
 impl UserdataPointsExample {
     pub fn show_plot(&self, ui: &mut egui::Ui) -> Response {
-        let custom_data = Arc::new(Mutex::new(HashMap::<Id, Vec<DemoPoint>>::new()));
+        let sine_id = Id::new("sine_wave");
+        let cosine_id = Id::new("cosine_wave");
+        let damped_id = Id::new("damped_wave");
 
-        let custom_data_ = custom_data.clone();
+        let mut points_by_id: IdMap<&[DemoPoint]> = IdMap::default();
+        points_by_id.insert(sine_id, &self.sine_points);
+        points_by_id.insert(cosine_id, &self.cosine_points);
+        points_by_id.insert(damped_id, &self.damped_points);
+
         Plot::new("Userdata Plot Demo")
             .legend(Legend::default().position(Corner::LeftTop))
             .label_formatter(move |name, value, item| {
                 if let Some((id, index)) = item {
-                    let lock = custom_data_.lock();
-                    if let Some(points) = lock.get(&id) {
+                    if let Some(points) = points_by_id.get(&id) {
                         if let Some(point) = points.get(index) {
                             return format!(
                                 "{}\nPosition: ({:.3}, {:.3})\nLabel: {}\nImportance: {:.1}%",
@@ -95,11 +91,7 @@ impl UserdataPointsExample {
                 format!("{}\n({:.3}, {:.3})", name, value.x, value.y)
             })
             .show(ui, |plot_ui| {
-                let mut lock = custom_data.lock();
-
                 // Sine wave with custom data
-                let sine_id = Id::new("sine_wave");
-                lock.insert(sine_id, self.sine_points.clone());
                 plot_ui.line(
                     Line::new(
                         "sin(x)",
@@ -110,8 +102,6 @@ impl UserdataPointsExample {
                 );
 
                 // Cosine wave with custom data
-                let cosine_id = Id::new("cosine_wave");
-                lock.insert(cosine_id, self.cosine_points.clone());
                 plot_ui.line(
                     Line::new(
                         "cos(x)",
@@ -122,8 +112,6 @@ impl UserdataPointsExample {
                 );
 
                 // Damped sine wave with custom data
-                let damped_id = Id::new("damped_wave");
-                lock.insert(damped_id, self.damped_points.clone());
                 plot_ui.line(
                     Line::new(
                         "e^(-0.5x) · sin(2x)",
