@@ -7,4 +7,5 @@ mod legend;
 pub use coordinates::CoordinatesFormatter;
 pub use legend::ColorConflictHandling;
 pub use legend::Legend;
+pub use legend::LegendGrouping;
 pub use legend::LegendWidget;
