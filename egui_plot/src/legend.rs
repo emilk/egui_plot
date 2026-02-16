@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, string::String};
+use std::string::String;
 
 use egui::{
     Align, Color32, Direction, Frame, Id, Layout, PointerButton, Rect, Response, Sense, Shadow,
@@ -39,6 +39,18 @@ pub enum ColorConflictHandling {
     RemoveColor,
 }
 
+/// How to group legend entries.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+pub enum LegendGrouping {
+    /// Items with the same name share a single legend entry (default).
+    #[default]
+    ByName,
+
+    /// Each item gets its own legend entry, keyed by its unique [`Id`].
+    ById,
+}
+
 /// The configuration for a plot legend.
 #[derive(Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
@@ -49,6 +61,7 @@ pub struct Legend {
     pub title: Option<String>,
 
     follow_insertion_order: bool,
+    grouping: LegendGrouping,
     color_conflict_handling: ColorConflictHandling,
 
     /// Used for overriding the `hidden_items` set in [`LegendWidget`].
@@ -63,6 +76,7 @@ impl Default for Legend {
             position: Corner::RightTop,
             title: None,
             follow_insertion_order: false,
+            grouping: LegendGrouping::default(),
             color_conflict_handling: ColorConflictHandling::RemoveColor,
             hidden_items: None,
         }
@@ -126,6 +140,17 @@ impl Legend {
         color_conflict_handling: ColorConflictHandling,
     ) -> Self {
         self.color_conflict_handling = color_conflict_handling;
+        self
+    }
+
+    /// Specifies how legend entries are grouped. Default: [`LegendGrouping::ByName`].
+    ///
+    /// With [`LegendGrouping::ByName`], items sharing the same name are
+    /// merged into a single legend entry. With [`LegendGrouping::ById`],
+    /// each item gets its own entry keyed by its unique [`Id`].
+    #[inline]
+    pub fn grouping(mut self, grouping: LegendGrouping) -> Self {
+        self.grouping = grouping;
         self
     }
 }
@@ -245,45 +270,50 @@ impl LegendWidget {
         // If `config.hidden_items` is not `None`, it is used.
         let hidden_items = config.hidden_items.as_ref().unwrap_or(hidden_items);
 
-        // Collect the legend entries. If multiple items have the same name, they share a
-        // checkbox. If their colors don't match, we pick a neutral color for the checkbox.
-        let mut keys: BTreeMap<String, usize> = BTreeMap::new();
-        let mut entries: BTreeMap<(usize, &str), LegendEntry> = BTreeMap::new();
-        items
-            .iter()
-            .filter(|item| !item.name().is_empty())
-            .for_each(|item| {
-                let next_entry = entries.len();
-                let key = if config.follow_insertion_order {
-                    *keys.entry(item.name().to_owned()).or_insert(next_entry)
-                } else {
-                    // Use the same key if we don't want insertion order
-                    0
-                };
+        // Collect the legend entries. With `ByName` grouping, items sharing the
+        // same name are merged into a single checkbox. With `ById` grouping,
+        // items sharing the same `Id` are merged instead. When colors conflict
+        // within a merged entry, `color_conflict_handling` decides which color
+        // to show.
+        let mut entries: Vec<LegendEntry> = Vec::new();
+        let mut seen: ahash::HashMap<Id, usize> = ahash::HashMap::default();
+        for item in items.iter().filter(|item| !item.name().is_empty()) {
+            let dedup_key = match config.grouping {
+                LegendGrouping::ByName => Id::new(item.name()),
+                LegendGrouping::ById => item.id(),
+            };
 
-                entries
-                    .entry((key, item.name()))
-                    .and_modify(|entry| {
-                        if entry.color != item.color() {
-                            match config.color_conflict_handling {
-                                ColorConflictHandling::PickFirst => (),
-                                ColorConflictHandling::PickLast => entry.color = item.color(),
-                                ColorConflictHandling::RemoveColor => {
-                                    // Multiple items with different colors
-                                    entry.color = Color32::TRANSPARENT;
-                                }
-                            }
+            if let Some(&idx) = seen.get(&dedup_key) {
+                let entry = &mut entries[idx];
+                if entry.color != item.color() {
+                    match config.color_conflict_handling {
+                        ColorConflictHandling::PickFirst => (),
+                        ColorConflictHandling::PickLast => entry.color = item.color(),
+                        ColorConflictHandling::RemoveColor => {
+                            entry.color = Color32::TRANSPARENT;
                         }
-                    })
-                    .or_insert_with(|| {
-                        let color = item.color();
-                        let checked = !hidden_items.contains(&item.id());
-                        LegendEntry::new(item.id(), item.name().to_owned(), color, checked)
-                    });
-            });
+                    }
+                }
+            } else {
+                seen.insert(dedup_key, entries.len());
+                let color = item.color();
+                let checked = !hidden_items.contains(&item.id());
+                entries.push(LegendEntry::new(
+                    item.id(),
+                    item.name().to_owned(),
+                    color,
+                    checked,
+                ));
+            }
+        }
+
+        if !config.follow_insertion_order {
+            entries.sort_by(|a, b| a.name.cmp(&b.name));
+        }
+
         (!entries.is_empty()).then_some(Self {
             rect,
-            entries: entries.into_values().collect(),
+            entries,
             config,
         })
     }
