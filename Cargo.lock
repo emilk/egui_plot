@@ -929,7 +929,7 @@ dependencies = [
 
 [[package]]
 name = "demo"
-version = "0.34.0"
+version = "0.34.1"
 dependencies = [
  "borrow_points",
  "box_plot",
@@ -1195,7 +1195,7 @@ dependencies = [
 
 [[package]]
 name = "egui_plot"
-version = "0.34.0"
+version = "0.34.1"
 dependencies = [
  "ahash",
  "assertables",
