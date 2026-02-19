@@ -150,7 +150,7 @@ pub trait PlotItem {
         match self.geometry() {
             PlotGeometry::None => None,
 
-            PlotGeometry::Points(points) => points
+            PlotGeometry::Points(points, _) => points
                 .iter()
                 .enumerate()
                 .map(|(index, value)| {
@@ -176,8 +176,8 @@ pub trait PlotItem {
         plot: &PlotConfig<'_>,
         label_formatter: &Option<LabelFormatter<'_>>,
     ) {
-        let points = match self.geometry() {
-            PlotGeometry::Points(points) => points,
+        let (points, id) = match self.geometry() {
+            PlotGeometry::Points(points, id) => (points, id),
             PlotGeometry::None => {
                 panic!("If the PlotItem has no geometry, on_hover() must not be called")
             }
@@ -198,7 +198,15 @@ pub trait PlotItem {
         let pointer = plot.transform.position_from_point(&value);
         shapes.push(Shape::circle_filled(pointer, 3.0, line_color));
 
-        rulers_and_tooltip_at_value(plot_area_response, value, self.name(), plot, cursors, label_formatter);
+        rulers_and_tooltip_at_value(
+            plot_area_response,
+            value,
+            Some((id, elem.index)),
+            self.name(),
+            plot,
+            cursors,
+            label_formatter,
+        );
     }
 }
 
@@ -272,6 +280,7 @@ fn add_rulers_and_text(
 pub(super) fn rulers_and_tooltip_at_value(
     plot_area_response: &egui::Response,
     value: PlotPoint,
+    item: Option<(Id, usize)>,
     name: &str,
     plot: &PlotConfig<'_>,
     cursors: &mut Vec<Cursor>,
@@ -292,7 +301,7 @@ pub(super) fn rulers_and_tooltip_at_value(
         return;
     };
 
-    let text = custom_label(name, &value);
+    let text = custom_label(name, &value, item);
     if text.is_empty() {
         return;
     }
@@ -322,7 +331,7 @@ pub enum PlotGeometry<'a> {
     None,
 
     /// Point values (X-Y graphs)
-    Points(&'a [PlotPoint]),
+    Points(&'a [PlotPoint], Id),
 
     /// Rectangles (examples: boxes or bars)
     // Has currently no data, as it would require copying rects or iterating a list of pointers.
