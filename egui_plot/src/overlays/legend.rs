@@ -2,7 +2,6 @@ use std::string::String;
 
 use egui::Align;
 use egui::Color32;
-use egui::Direction;
 use egui::Frame;
 use egui::Id;
 use egui::Layout;
@@ -53,6 +52,7 @@ pub struct Legend {
     pub background_alpha: f32,
     pub position: Corner,
     pub title: Option<String>,
+    pub max_height: Option<f32>,
 
     follow_insertion_order: bool,
     grouping: LegendGrouping,
@@ -69,6 +69,7 @@ impl Default for Legend {
             background_alpha: 0.75,
             position: Corner::RightTop,
             title: None,
+            max_height: None,
             follow_insertion_order: false,
             grouping: LegendGrouping::default(),
             color_conflict_handling: ColorConflictHandling::RemoveColor,
@@ -103,6 +104,13 @@ impl Legend {
     #[inline]
     pub fn title(mut self, title: &str) -> Self {
         self.title = Some(title.to_owned());
+        self
+    }
+
+    /// Set the max height of the legend (scroll on overflow). Default: `None`.
+    #[inline]
+    pub fn max_height(mut self, max_height: f32) -> Self {
+        self.max_height = Some(max_height);
         self
     }
 
@@ -309,20 +317,28 @@ impl Widget for &mut LegendWidget {
     fn ui(self, ui: &mut Ui) -> Response {
         let LegendWidget { rect, entries, config } = self;
 
-        let main_dir = match config.position {
-            Corner::LeftTop | Corner::RightTop => Direction::TopDown,
-            Corner::LeftBottom | Corner::RightBottom => Direction::BottomUp,
-        };
-        let cross_align = match config.position {
-            Corner::LeftTop | Corner::LeftBottom => Align::LEFT,
-            Corner::RightTop | Corner::RightBottom => Align::RIGHT,
-        };
-        let layout = Layout::from_main_dir_and_cross_align(main_dir, cross_align);
         let legend_pad = 4.0;
         let legend_rect = rect.shrink(legend_pad);
-        let mut legend_ui = ui.new_child(egui::UiBuilder::new().max_rect(legend_rect).layout(layout));
-        legend_ui
-            .scope(|ui| {
+
+        let outer_panel = match config.position {
+            Corner::LeftTop | Corner::RightTop => egui::TopBottomPanel::top,
+            Corner::LeftBottom | Corner::RightBottom => egui::TopBottomPanel::bottom,
+        }(ui.id().with("outer_panel"));
+
+        let inner_panel = match config.position {
+            Corner::LeftTop | Corner::LeftBottom => egui::SidePanel::left,
+            Corner::RightTop | Corner::RightBottom => egui::SidePanel::right,
+        }(ui.id().with("inner_panel"));
+
+        let mut legend_ui = ui.new_child(egui::UiBuilder::new().max_rect(legend_rect));
+        outer_panel
+            .resizable(false)
+            .frame(Frame::NONE)
+            .show_separator_line(false)
+            .min_height(0.0)
+            .max_height(legend_rect.height())
+            .show_inside(&mut legend_ui, |ui| {
+                ui.take_available_height();
                 let background_frame = Frame {
                     inner_margin: vec2(8.0, 4.0).into(),
                     corner_radius: ui.style().visuals.window_corner_radius,
@@ -332,48 +348,80 @@ impl Widget for &mut LegendWidget {
                     ..Default::default()
                 }
                 .multiply_with_opacity(config.background_alpha);
-                background_frame
-                    .show(ui, |ui| {
-                        // always show on top of the legend - so we need to use a new scope
-                        if main_dir == Direction::TopDown {
+                inner_panel
+                    .resizable(false)
+                    .frame(background_frame)
+                    .show_separator_line(false)
+                    .min_width(0.0)
+                    .max_width(legend_rect.width())
+                    .show_inside(ui, |ui| {
+                        ui.take_available_height();
+                        let layout = match config.position {
+                            Corner::LeftTop | Corner::LeftBottom => Layout::top_down(Align::Min),
+                            Corner::RightTop | Corner::RightBottom => Layout::top_down(Align::Max),
+                        };
+
+                        ui.with_layout(layout, |ui| {
+                            ui.take_available_space();
+                            let last_height_id = ui.id().with("last_height");
+                            // always show on top of the legend - so we need to use a new scope
                             if let Some(title) = &config.title {
                                 ui.heading(title);
                             }
-                        }
-                        let mut focus_on_item = None;
 
-                        #[expect(
-                            clippy::expect_used,
-                            reason = "we checked that entries is not empty when creating the legend"
-                        )]
-                        let response_union = entries
-                            .iter_mut()
-                            .map(|entry| {
-                                let response = entry.ui(ui, &config.text_style);
+                            let mut scroll_rect = legend_rect.with_min_y(ui.next_widget_position().y);
+                            scroll_rect.set_height(scroll_rect.height() - ui.style().spacing.menu_margin.bottom as f32);
 
-                                // Handle interactions. Alt-clicking must be deferred to end of loop
-                                // since it may affect all entries.
-                                handle_interaction_on_legend_item(&response, entry);
-                                if response.clicked() && ui.input(|r| r.modifiers.alt) {
-                                    focus_on_item = Some(entry.id);
-                                }
+                            let mut focus_on_item = None;
 
-                                response
-                            })
-                            .reduce(|r1, r2| r1.union(r2))
-                            .expect("No entries in the legend");
+                            let last_height = ui.memory(|mem| mem.data.get_temp::<f32>(last_height_id)).unwrap_or(0.0);
 
-                        if main_dir == Direction::BottomUp {
-                            if let Some(title) = &config.title {
-                                ui.heading(title);
+                            let mut scroll_area = egui::ScrollArea::vertical()
+                                .min_scrolled_height(scroll_rect.height().min(last_height))
+                                .max_height(scroll_rect.height());
+                            if let Some(max_height) = config.max_height {
+                                scroll_area = scroll_area
+                                    .max_height(max_height)
+                                    .min_scrolled_height(max_height.min(last_height));
                             }
-                        }
 
-                        if let Some(focus_on_item) = focus_on_item {
-                            handle_focus_on_legend_item(&focus_on_item, entries);
-                        }
+                            scroll_area
+                                .show(ui, |ui| {
+                                    ui.take_available_width();
+                                    #[expect(
+                                        clippy::expect_used,
+                                        reason = "we checked that entries is not empty when creating the legend"
+                                    )]
+                                    let response_union = entries
+                                        .iter_mut()
+                                        .map(|entry| {
+                                            let response = entry.ui(ui, &config.text_style);
 
-                        response_union
+                                            // Handle interactions. Alt-clicking must be deferred to end of loop
+                                            // since it may affect all entries.
+                                            handle_interaction_on_legend_item(&response, entry);
+                                            if response.clicked() && ui.input(|r| r.modifiers.alt) {
+                                                focus_on_item = Some(entry.id);
+                                            }
+
+                                            response
+                                        })
+                                        .reduce(|r1, r2| r1.union(r2))
+                                        .expect("No entries in the legend");
+
+                                    if let Some(focus_on_item) = focus_on_item {
+                                        handle_focus_on_legend_item(&focus_on_item, entries);
+                                    }
+
+                                    ui.memory_mut(|mem| {
+                                        mem.data.insert_temp(last_height_id, response_union.rect.height());
+                                    });
+
+                                    response_union
+                                })
+                                .inner
+                        })
+                        .inner
                     })
                     .inner
             })
