@@ -242,8 +242,23 @@ impl PlotItem for Line<'_> {
     }
 
     fn find_closest(&self, point: Pos2, transform: &PlotTransform) -> Option<ClosestElem> {
-        self.series
-            .points()
+        let points = self.series.points();
+
+        // Fallback for 0 or 1 point: behave like PlotGeometry::Points and
+        // pick the closest point (if any), so single-point lines remain hoverable.
+        if points.len() <= 1 {
+            return points
+                .iter()
+                .enumerate()
+                .map(|(index, value)| {
+                    let pos = transform.position_from_point(value);
+                    let dist_sq = point.distance_sq(pos);
+                    ClosestElem { index, dist_sq }
+                })
+                .min_by_key(|e| e.dist_sq.ord());
+        }
+
+        points
             .windows(2)
             .enumerate()
             .map(|(i, w)| {
