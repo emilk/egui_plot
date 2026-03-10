@@ -9,6 +9,7 @@ use egui::Shape;
 use egui::Stroke;
 use egui::Ui;
 use egui::epaint::PathStroke;
+use emath::Float as _;
 use emath::NumExt as _;
 use emath::Pos2;
 use emath::Rect;
@@ -20,10 +21,11 @@ use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
 use crate::colors::DEFAULT_FILL_ALPHA;
 use crate::data::PlotPoints;
+use crate::items::ClosestElem;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
-use crate::math::y_intersection;
+use crate::math::{dist_sq_to_segment, y_intersection};
 
 /// A series of values forming a path.
 pub struct Line<'a> {
@@ -237,6 +239,26 @@ impl PlotItem for Line<'_> {
             shapes.push(Shape::Mesh(std::sync::Arc::new(mesh)));
         }
         style.style_line(values_tf, final_stroke, base.highlight, shapes);
+    }
+
+    fn find_closest(&self, point: Pos2, transform: &PlotTransform) -> Option<ClosestElem> {
+        self.series
+            .points()
+            .windows(2)
+            .enumerate()
+            .map(|(i, w)| {
+                let p0 = transform.position_from_point(&w[0]);
+                let p1 = transform.position_from_point(&w[1]);
+                let dist_sq = dist_sq_to_segment(point, p0, p1);
+                // Pick the closer endpoint so the tooltip shows a real data point
+                let index = if point.distance_sq(p0) <= point.distance_sq(p1) {
+                    i
+                } else {
+                    i + 1
+                };
+                ClosestElem { index, dist_sq }
+            })
+            .min_by_key(|e| e.dist_sq.ord())
     }
 
     fn initialize(&mut self, x_range: RangeInclusive<f64>) {
