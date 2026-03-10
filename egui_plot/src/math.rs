@@ -15,8 +15,15 @@ pub fn y_intersection(p1: &Pos2, p2: &Pos2, y: f32) -> Option<f32> {
 /// Squared distance from point `p` to the line segment `a`–`b`.
 pub fn dist_sq_to_segment(p: Pos2, a: Pos2, b: Pos2) -> f32 {
     let ab = b - a;
+    let ab_len_sq = ab.length_sq();
+
+    if ab_len_sq == 0.0 {
+        // Degenerate segment: treat as a single point.
+        return p.distance_sq(a);
+    }
+
     let ap = p - a;
-    let t = ab.dot(ap) / ab.length_sq();
+    let t = ab.dot(ap) / ab_len_sq;
     let t = t.clamp(0.0, 1.0);
     let closest = a + t * ab;
     p.distance_sq(closest)
