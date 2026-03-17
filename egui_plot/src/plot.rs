@@ -128,6 +128,8 @@ pub struct Plot<'a> {
     show_grid: Vec2b,
     grid_spacing: Rangef,
     grid_spacers: [GridSpacer<'a>; 2],
+    grid_color: Option<Color32>,
+    grid_strength_exponent: f32,
     clamp_grid: bool,
 
     sense: Sense,
@@ -180,6 +182,8 @@ impl<'a> Plot<'a> {
             show_grid: true.into(),
             grid_spacing: Rangef::new(8.0, 300.0),
             grid_spacers: [crate::grid::log_grid_spacer(10), crate::grid::log_grid_spacer(10)],
+            grid_color: None,
+            grid_strength_exponent: 0.5,
             clamp_grid: false,
 
             sense: egui::Sense::click_and_drag(),
@@ -625,6 +629,33 @@ impl<'a> Plot<'a> {
     #[inline]
     pub fn show_grid(mut self, show: impl Into<Vec2b>) -> Self {
         self.show_grid = show.into();
+        self
+    }
+
+    /// Set the base color for grid lines.
+    ///
+    /// By default, grid lines derive their color from [`egui::Visuals::text_color`].
+    /// This override lets you control the grid color independently of text styling.
+    /// The color is still modulated by line strength (fading for denser grid lines).
+    #[inline]
+    pub fn grid_color(mut self, color: Color32) -> Self {
+        self.grid_color = Some(color);
+        self
+    }
+
+    /// Controls the contrast between dense and sparse grid lines.
+    ///
+    /// - `0.0`: all visible grid lines have the same opacity (uniform).
+    /// - `0.5`: default — moderate fade for denser lines.
+    /// - `1.0`: maximum fade — dense lines are much fainter than sparse ones.
+    ///
+    /// The zoom-based density logic is always preserved; this only controls
+    /// how much the opacity varies between grid levels.
+    ///
+    /// Default: `0.5`.
+    #[inline]
+    pub fn grid_fade(mut self, fade: f32) -> Self {
+        self.grid_strength_exponent = fade;
         self
     }
 
@@ -1487,7 +1518,8 @@ impl<'a> Plot<'a> {
 
             let line_strength = remap_clamp(spacing_in_points, self.grid_spacing, 0.0..=1.0);
 
-            let line_color = crate::colors::color_from_strength(ui, line_strength);
+            let base_color = self.grid_color.unwrap_or_else(|| ui.visuals().text_color());
+            let line_color = base_color.gamma_multiply(line_strength.powf(self.grid_strength_exponent));
 
             let mut p0 = pos_in_gui;
             let mut p1 = pos_in_gui;
