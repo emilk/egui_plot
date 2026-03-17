@@ -1518,12 +1518,8 @@ impl<'a> Plot<'a> {
 
             let line_strength = remap_clamp(spacing_in_points, self.grid_spacing, 0.0..=1.0);
 
-            let line_color = if let Some(base) = self.grid_color {
-                base.gamma_multiply(line_strength.powf(self.grid_strength_exponent))
-            } else {
-                let base_color = ui.visuals().text_color();
-                base_color.gamma_multiply(line_strength.powf(self.grid_strength_exponent))
-            };
+            let base_color = self.grid_color.unwrap_or_else(|| ui.visuals().text_color());
+            let line_color = base_color.gamma_multiply(line_strength.powf(self.grid_strength_exponent));
 
             let mut p0 = pos_in_gui;
             let mut p1 = pos_in_gui;
