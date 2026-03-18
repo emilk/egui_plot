@@ -101,7 +101,7 @@ impl CustomAxesExample {
             }
         };
 
-        let label_fmt = |_s: &str, val: &PlotPoint| {
+        let label_fmt = |_s: &str, val: &PlotPoint, _id: Option<(egui::Id, usize)>| {
             format!(
                 "Day {d}, {h}:{m:02}\n{p:.2}%",
                 d = day(val.x),

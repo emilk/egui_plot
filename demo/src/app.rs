@@ -52,6 +52,7 @@ impl DemoGallery {
             Box::new(plot_span::PlotSpanDemo::default()),
             Box::new(save_plot::SavePlotExample::default()),
             Box::new(stacked_bar::StackedBarExample::default()),
+            Box::new(userdata_points::UserdataPointsExample::default()),
         ];
         let thumbnail_textures = Self::load_thumbnails(ctx, &examples);
 
