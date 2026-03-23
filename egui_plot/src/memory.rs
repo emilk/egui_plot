@@ -10,7 +10,7 @@ use crate::bounds::PlotBounds;
 
 /// Information about the plot that has to persist between frames.
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PlotMemory {
     /// Indicates if the plot uses automatic bounds.
     ///

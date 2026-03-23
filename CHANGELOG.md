@@ -4,6 +4,9 @@ All notable changes to the `egui_plot` integration will be noted in this file.
 This file is updated upon each release.
 Changes since the last release can be found at <https://github.com/emilk/egui_plot/compare/latest...HEAD> or by running the `scripts/generate_changelog.py` script.
 
+## 0.34.1 - 2026-02-16
+* Allow grouping legend entries by id rather than name [#231](https://github.com/emilk/egui_plot/pull/231) by [@Wumpf](https://github.com/Wumpf)
+
 
 ## 0.34.0 - 2025-10-10
 * Update to egui 0.33.0 [#140](https://github.com/emilk/egui_plot/pull/140) by [@lucasmerlin](https://github.com/lucasmerlin)

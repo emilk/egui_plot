@@ -7,7 +7,7 @@ members = ["egui_plot", "demo", "examples/*", "examples_utils"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.88"
-version = "0.34.0"
+version = "0.34.1"
 
 
 [profile.release]
@@ -19,7 +19,7 @@ opt-level = 2
 
 
 [workspace.dependencies]
-egui_plot = { version = "0.34.0", path = "egui_plot", default-features = false }
+egui_plot = { version = "0.34.1", path = "egui_plot", default-features = false }
 examples_utils = { version = "0.1.0", path = "examples_utils" }
 
 borrow_points = { version = "0.1.0", path = "examples/borrow_points" }
