@@ -1,4 +1,5 @@
 use std::ops::RangeInclusive;
+use std::sync::Arc;
 
 use egui::Color32;
 use egui::Mesh;
@@ -117,7 +118,7 @@ impl Heatmap {
     /// `values.len()` is not divisible by `cols`), an empty heatmap is created.
     pub fn new(values: Vec<f64>, cols: usize) -> Self {
         // Handle invalid parameters by creating an empty heatmap
-        if cols == 0 || values.is_empty() || (values.len() % cols) != 0 {
+        if cols == 0 || values.is_empty() || !values.len().is_multiple_of(cols) {
             return Self::empty();
         }
 
@@ -329,10 +330,8 @@ impl Heatmap {
     fn tile_view_info(&self, ui: &Ui, transform: &PlotTransform, index: usize) -> (Rect, Color32, Shape) {
         let v = self.values[index];
 
-        // calculate color value
-        let mut fill_color: Color32;
-        if let Some(mapping) = &self.custom_mapping {
-            fill_color = mapping(v);
+        let mut fill_color = if let Some(mapping) = &self.custom_mapping {
+            mapping(v)
         } else {
             // convert to value in [0.0, 1.0]
             let v_rel = (v - self.min) / (self.max - self.min);
@@ -340,8 +339,8 @@ impl Heatmap {
             // convert to color palette index
             let palette_index = (v_rel * (self.palette.len() - 1) as f64).round() as usize;
 
-            fill_color = self.palette[palette_index];
-        }
+            self.palette[palette_index]
+        };
 
         if self.highlight {
             let fill = Rgba::from(fill_color);
@@ -385,7 +384,7 @@ impl Heatmap {
         );
         let text_pos = tile_rect.center() - galley.size() / 2.0;
 
-        let text = Shape::galley(text_pos, galley.clone(), Color32::WHITE);
+        let text = Shape::galley(text_pos, Arc::clone(&galley), Color32::WHITE);
         (tile_rect, fill_color, text)
     }
 }

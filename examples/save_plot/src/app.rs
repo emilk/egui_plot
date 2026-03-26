@@ -29,32 +29,32 @@ impl SavePlotExample {
             let screenshot = ctx.input(|i| {
                 for event in &i.raw.events {
                     if let egui::Event::Screenshot { image, .. } = event {
-                        return Some(image.clone());
+                        return Some(std::sync::Arc::clone(image));
                     }
                 }
                 None
             });
-            if let (Some(screenshot), Some(plot_location)) = (screenshot, self.plot_rect) {
-                if let Some(mut path) = rfd::FileDialog::new().save_file() {
-                    path.set_extension("png");
+            if let (Some(screenshot), Some(plot_location)) = (screenshot, self.plot_rect)
+                && let Some(mut path) = rfd::FileDialog::new().save_file()
+            {
+                path.set_extension("png");
 
-                    // for a full size application, we should put this in a different thread,
-                    // so that the GUI doesn't lag during saving
+                // for a full size application, we should put this in a different thread,
+                // so that the GUI doesn't lag during saving
 
-                    let pixels_per_point = ctx.pixels_per_point();
-                    let plot = screenshot.region(&plot_location, Some(pixels_per_point));
-                    // save the plot to png
-                    let result = image::save_buffer(
-                        &path,
-                        plot.as_raw(),
-                        plot.width() as u32,
-                        plot.height() as u32,
-                        image::ColorType::Rgba8,
-                    );
-                    match result {
-                        Ok(()) => eprintln!("Image saved to {}", path.display()),
-                        Err(err) => eprintln!("Failed to save image to {}: {err}", path.display()),
-                    }
+                let pixels_per_point = ctx.pixels_per_point();
+                let plot = screenshot.region(&plot_location, Some(pixels_per_point));
+                // save the plot to png
+                let result = image::save_buffer(
+                    &path,
+                    plot.as_raw(),
+                    plot.width() as u32,
+                    plot.height() as u32,
+                    image::ColorType::Rgba8,
+                );
+                match result {
+                    Ok(()) => eprintln!("Image saved to {}", path.display()),
+                    Err(err) => eprintln!("Failed to save image to {}: {err}", path.display()),
                 }
             }
         }
