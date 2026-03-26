@@ -1265,7 +1265,7 @@ impl<'a> Plot<'a> {
         for widget in &mut axis_widgets[0] {
             widget.range = x_axis_range.clone();
             widget.transform = Some(mem.transform);
-            widget.steps = x_steps.clone();
+            widget.steps = Arc::clone(&x_steps);
         }
         let x_axis_widgets = std::mem::take(&mut axis_widgets[0]);
         for (i, widget) in x_axis_widgets.into_iter().enumerate() {
@@ -1277,7 +1277,7 @@ impl<'a> Plot<'a> {
         for widget in &mut axis_widgets[1] {
             widget.range = y_axis_range.clone();
             widget.transform = Some(mem.transform);
-            widget.steps = y_steps.clone();
+            widget.steps = Arc::clone(&y_steps);
         }
         let y_axis_widgets = std::mem::take(&mut axis_widgets[1]);
         for (i, widget) in y_axis_widgets.into_iter().enumerate() {
@@ -1560,7 +1560,7 @@ impl<'a> Plot<'a> {
 
         let interact_radius_sq = ui.style().interaction.interact_radius.powi(2);
 
-        let candidates = plot_ui
+        let mut candidates = plot_ui
             .items
             .iter()
             .filter(|entry| entry.allow_hover())
@@ -1574,9 +1574,7 @@ impl<'a> Plot<'a> {
         // Since many items can have same distance,
         // and dist_sq can be zero for some items (e.g. rectangle)
         // we pick topmost item within interact radius
-        let topmost = candidates
-            .filter(|(_, elem)| elem.dist_sq <= interact_radius_sq)
-            .next_back();
+        let topmost = candidates.rfind(|(_, elem)| elem.dist_sq <= interact_radius_sq);
 
         let plot = crate::PlotConfig {
             ui,

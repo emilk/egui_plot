@@ -29,7 +29,7 @@ impl SavePlotExample {
             let screenshot = ctx.input(|i| {
                 for event in &i.raw.events {
                     if let egui::Event::Screenshot { image, .. } = event {
-                        return Some(image.clone());
+                        return Some(std::sync::Arc::clone(image));
                     }
                 }
                 None

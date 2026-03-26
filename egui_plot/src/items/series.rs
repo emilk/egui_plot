@@ -169,17 +169,18 @@ impl PlotItem for Line<'_> {
         } = self;
         let mut fill = *fill;
 
-        let mut final_stroke: PathStroke = (*stroke).into();
-        // if we have a gradient color, we need to wrap the stroke callback to transpose
-        // the position to a value the caller can reason about
-        if let Some(gradient_callback) = self.gradient_color.clone() {
+        let final_stroke: PathStroke = if let Some(gradient_callback) = self.gradient_color.clone() {
+            // if we have a gradient color, we need to wrap the stroke callback to transpose
+            // the position to a value the caller can reason about
             let local_transform = *transform;
             let wrapped_callback = move |_rec: Rect, pos: Pos2| -> Color32 {
                 let point = local_transform.value_from_position(pos);
                 gradient_callback(point)
             };
-            final_stroke = PathStroke::new_uv(stroke.width, wrapped_callback.clone());
-        }
+            PathStroke::new_uv(stroke.width, wrapped_callback.clone())
+        } else {
+            (*stroke).into()
+        };
 
         let values_tf: Vec<_> = series
             .points()
