@@ -119,14 +119,14 @@ fn generate_marks(step_sizes: [f64; 3], bounds: (f64, f64)) -> Vec<GridMark> {
 
     let mut deduplicated: Vec<GridMark> = Vec::with_capacity(steps.len());
     for step in steps {
-        if let Some(last) = deduplicated.last_mut() {
-            if (last.value - step.value).abs() < eps {
-                // Keep the one with the largest step size
-                if last.step_size < step.step_size {
-                    *last = step;
-                }
-                continue;
+        if let Some(last) = deduplicated.last_mut()
+            && (last.value - step.value).abs() < eps
+        {
+            // Keep the one with the largest step size
+            if last.step_size < step.step_size {
+                *last = step;
             }
+            continue;
         }
         deduplicated.push(step);
     }

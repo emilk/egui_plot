@@ -117,7 +117,7 @@ impl Heatmap {
     /// `values.len()` is not divisible by `cols`), an empty heatmap is created.
     pub fn new(values: Vec<f64>, cols: usize) -> Self {
         // Handle invalid parameters by creating an empty heatmap
-        if cols == 0 || values.is_empty() || (values.len() % cols) != 0 {
+        if cols == 0 || values.is_empty() || !values.len().is_multiple_of(cols) {
             return Self::empty();
         }
 
