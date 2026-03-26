@@ -31,12 +31,12 @@ impl Default for CustomPlotManipulationExample {
 
 impl CustomPlotManipulationExample {
     pub fn show_plot(&self, ui: &mut egui::Ui) -> Response {
-        let (scroll, pointer_down, modifiers) = ui.ctx().input(|i| {
+        let (scroll, pointer_down, modifiers) = ui.input(|i| {
             let scroll = i.events.iter().find_map(|e| match e {
                 Event::MouseWheel {
-                    unit: _,
+                    unit: _, // TODO(anyone): we should respect this
                     delta,
-                    modifiers: _,
+                    ..
                 } => Some(*delta),
                 _ => None,
             });

@@ -305,7 +305,7 @@ pub(super) fn rulers_and_tooltip_at_value(
         PopupAnchor::Pointer,
     );
 
-    let tooltip_width = plot_area_response.ctx.style().spacing.tooltip_width;
+    let tooltip_width = plot_area_response.ctx.global_style().spacing.tooltip_width;
 
     tooltip.popup = tooltip.popup.width(tooltip_width);
 

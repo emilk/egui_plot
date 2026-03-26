@@ -1,6 +1,11 @@
 [workspace]
 resolver = "2"
-members = ["egui_plot", "demo", "examples/*", "examples_utils"]
+members = [
+    "egui_plot",
+    "demo",
+    "examples_utils",
+    "examples/*",
+]
 
 
 [workspace.package]
@@ -47,10 +52,10 @@ ahash = { version = "0.8.12", default-features = false, features = [
 ] }
 assertables = "9.8.2"
 document-features = "0.2.12"
-eframe = { version = "0.33", default-features = false }
-egui = { version = "0.33", default-features = false }
-egui_kittest = { version = "0.33", default-features = false }
-emath = { version = "0.33", default-features = false }
+eframe = { version = "0.34.0", default-features = false }
+egui = { version = "0.34.0", default-features = false }
+egui_kittest = { version = "0.34.0", default-features = false }
+emath = { version = "0.34.0", default-features = false }
 env_logger = { version = "0.11.8", default-features = false, features = [
     "auto-color",
     "humantime",

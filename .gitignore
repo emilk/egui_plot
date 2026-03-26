@@ -38,3 +38,6 @@ TODO
 .cursor
 .idea
 
+# kittest snapshots:
+**/*.diff.png
+**/*.old.png
