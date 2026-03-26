@@ -4,6 +4,25 @@ All notable changes to the `egui_plot` integration will be noted in this file.
 This file is updated upon each release.
 Changes since the last release can be found at <https://github.com/emilk/egui_plot/compare/latest...HEAD> or by running the `scripts/generate_changelog.py` script.
 
+
+
+## 0.35.0 - 2026-03-26
+* Update to egui 0.34 [#239](https://github.com/emilk/egui_plot/pull/239) by [@emilk](https://github.com/emilk)
+* Update MSRV to 1.92 [#238](https://github.com/emilk/egui_plot/pull/238) by [@emilk](https://github.com/emilk)
+* Hide coordinate's tooltip if label is empty [#145](https://github.com/emilk/egui_plot/pull/145) by [@TihonovNV](https://github.com/TihonovNV)
+* Change `PreparedPlot::hover` to use last suitable `PlotItem` [#147](https://github.com/emilk/egui_plot/pull/147) by [@TihonovNV](https://github.com/TihonovNV)
+* Add `Plot::pan_pointer_button` to configure how to pan [#149](https://github.com/emilk/egui_plot/pull/149) by [@emilk](https://github.com/emilk)
+* Heatmap support [#195](https://github.com/emilk/egui_plot/pull/195) by [@michalsustr](https://github.com/michalsustr)
+* Add spans for plots [#196](https://github.com/emilk/egui_plot/pull/196) by [@michalsustr](https://github.com/michalsustr)
+* Add `FilledArea` plot item [#202](https://github.com/emilk/egui_plot/pull/202) by [@michalsustr](https://github.com/michalsustr)
+* Fix no `auto_bounds` preventing pan/zoom/scroll [#218](https://github.com/emilk/egui_plot/pull/218) by [@kitizz](https://github.com/kitizz)
+* Spit crosshair and labels API [#221](https://github.com/emilk/egui_plot/pull/221) by [@michalsustr](https://github.com/michalsustr)
+* Allow grouping legend entries by id rather than name [#231](https://github.com/emilk/egui_plot/pull/231) by [@Wumpf](https://github.com/Wumpf)
+* Add `grid_color` and `grid_fade` API [#235](https://github.com/emilk/egui_plot/pull/235) by [@gavrelina](https://github.com/gavrelina)
+* Find closest line segment for `Line` plots [#234](https://github.com/emilk/egui_plot/pull/234) by [@lucasmerlin](https://github.com/lucasmerlin)
+* Add ability to specify color and font of axis tick labels for each axis [#155](https://github.com/emilk/egui_plot/pull/155) by [@TommiKabelitz](https://github.com/TommiKabelitz)
+
+
 ## 0.34.1 - 2026-02-16
 * Allow grouping legend entries by id rather than name [#231](https://github.com/emilk/egui_plot/pull/231) by [@Wumpf](https://github.com/Wumpf)
 
