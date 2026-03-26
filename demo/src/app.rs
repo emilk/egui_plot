@@ -67,10 +67,8 @@ impl DemoGallery {
         let is_small_screen = screen_rect.width() < 1024.0;
 
         Self::top_bar(ctx);
-        if !is_small_screen {
-            if let Some(index) = self.current_example {
-                self.info_panel(ctx, index);
-            }
+        if !is_small_screen && let Some(index) = self.current_example {
+            self.info_panel(ctx, index);
         }
         self.thumbnails_panel(ctx, screen_rect.width() / 3.0);
         self.demo_panel(ctx);

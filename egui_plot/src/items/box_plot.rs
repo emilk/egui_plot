@@ -34,7 +34,7 @@ pub struct BoxPlot {
     default_color: Color32,
 
     /// A custom element formatter
-    pub(crate) element_formatter: Option<Box<dyn Fn(&BoxElem, &BoxPlot) -> String>>,
+    pub(crate) element_formatter: Option<Box<dyn Fn(&BoxElem, &Self) -> String>>,
 }
 
 impl BoxPlot {

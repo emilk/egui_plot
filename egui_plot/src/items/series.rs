@@ -9,6 +9,7 @@ use egui::Shape;
 use egui::Stroke;
 use egui::Ui;
 use egui::epaint::PathStroke;
+use emath::Float as _;
 use emath::NumExt as _;
 use emath::Pos2;
 use emath::Rect;
@@ -20,10 +21,11 @@ use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
 use crate::colors::DEFAULT_FILL_ALPHA;
 use crate::data::PlotPoints;
+use crate::items::ClosestElem;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
-use crate::math::y_intersection;
+use crate::math::{dist_sq_to_segment, y_intersection};
 
 /// A series of values forming a path.
 pub struct Line<'a> {
@@ -169,17 +171,18 @@ impl PlotItem for Line<'_> {
         } = self;
         let mut fill = *fill;
 
-        let mut final_stroke: PathStroke = (*stroke).into();
-        // if we have a gradient color, we need to wrap the stroke callback to transpose
-        // the position to a value the caller can reason about
-        if let Some(gradient_callback) = self.gradient_color.clone() {
+        let final_stroke: PathStroke = if let Some(gradient_callback) = self.gradient_color.clone() {
+            // if we have a gradient color, we need to wrap the stroke callback to transpose
+            // the position to a value the caller can reason about
             let local_transform = *transform;
             let wrapped_callback = move |_rec: Rect, pos: Pos2| -> Color32 {
                 let point = local_transform.value_from_position(pos);
                 gradient_callback(point)
             };
-            final_stroke = PathStroke::new_uv(stroke.width, wrapped_callback.clone());
-        }
+            PathStroke::new_uv(stroke.width, wrapped_callback.clone())
+        } else {
+            (*stroke).into()
+        };
 
         let values_tf: Vec<_> = series
             .points()
@@ -237,6 +240,41 @@ impl PlotItem for Line<'_> {
             shapes.push(Shape::Mesh(std::sync::Arc::new(mesh)));
         }
         style.style_line(values_tf, final_stroke, base.highlight, shapes);
+    }
+
+    fn find_closest(&self, point: Pos2, transform: &PlotTransform) -> Option<ClosestElem> {
+        let points = self.series.points();
+
+        // Fallback for 0 or 1 point: behave like PlotGeometry::Points and
+        // pick the closest point (if any), so single-point lines remain hoverable.
+        if points.len() <= 1 {
+            return points
+                .iter()
+                .enumerate()
+                .map(|(index, value)| {
+                    let pos = transform.position_from_point(value);
+                    let dist_sq = point.distance_sq(pos);
+                    ClosestElem { index, dist_sq }
+                })
+                .min_by_key(|e| e.dist_sq.ord());
+        }
+
+        points
+            .windows(2)
+            .enumerate()
+            .map(|(i, w)| {
+                let p0 = transform.position_from_point(&w[0]);
+                let p1 = transform.position_from_point(&w[1]);
+                let dist_sq = dist_sq_to_segment(point, [p0, p1]);
+                // Pick the closer endpoint so the tooltip shows a real data point
+                let index = if point.distance_sq(p0) <= point.distance_sq(p1) {
+                    i
+                } else {
+                    i + 1
+                };
+                ClosestElem { index, dist_sq }
+            })
+            .min_by_key(|e| e.dist_sq.ord())
     }
 
     fn initialize(&mut self, x_range: RangeInclusive<f64>) {

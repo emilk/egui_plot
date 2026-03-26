@@ -35,7 +35,7 @@ pub struct BarChart {
     default_color: Color32,
 
     /// A custom element formatter
-    pub(crate) element_formatter: Option<Box<dyn Fn(&Bar, &BarChart) -> String>>,
+    pub(crate) element_formatter: Option<Box<dyn Fn(&Bar, &Self) -> String>>,
 }
 
 impl BarChart {

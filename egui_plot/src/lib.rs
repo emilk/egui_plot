@@ -68,6 +68,7 @@ pub use crate::memory::PlotMemory;
 pub use crate::overlays::ColorConflictHandling;
 pub use crate::overlays::CoordinatesFormatter;
 pub use crate::overlays::Legend;
+pub use crate::overlays::LegendGrouping;
 pub use crate::placement::Corner;
 pub use crate::placement::HPlacement;
 pub use crate::placement::Placement;

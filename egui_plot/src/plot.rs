@@ -128,6 +128,8 @@ pub struct Plot<'a> {
     show_grid: Vec2b,
     grid_spacing: Rangef,
     grid_spacers: [GridSpacer<'a>; 2],
+    grid_color: Option<Color32>,
+    grid_strength_exponent: f32,
     clamp_grid: bool,
 
     sense: Sense,
@@ -180,6 +182,8 @@ impl<'a> Plot<'a> {
             show_grid: true.into(),
             grid_spacing: Rangef::new(8.0, 300.0),
             grid_spacers: [crate::grid::log_grid_spacer(10), crate::grid::log_grid_spacer(10)],
+            grid_color: None,
+            grid_strength_exponent: 0.5,
             clamp_grid: false,
 
             sense: egui::Sense::click_and_drag(),
@@ -625,6 +629,33 @@ impl<'a> Plot<'a> {
     #[inline]
     pub fn show_grid(mut self, show: impl Into<Vec2b>) -> Self {
         self.show_grid = show.into();
+        self
+    }
+
+    /// Set the base color for grid lines.
+    ///
+    /// By default, grid lines derive their color from [`egui::Visuals::text_color`].
+    /// This override lets you control the grid color independently of text styling.
+    /// The color is still modulated by line strength (fading for denser grid lines).
+    #[inline]
+    pub fn grid_color(mut self, color: Color32) -> Self {
+        self.grid_color = Some(color);
+        self
+    }
+
+    /// Controls the contrast between dense and sparse grid lines.
+    ///
+    /// - `0.0`: all visible grid lines have the same opacity (uniform).
+    /// - `0.5`: default — moderate fade for denser lines.
+    /// - `1.0`: maximum fade — dense lines are much fainter than sparse ones.
+    ///
+    /// The zoom-based density logic is always preserved; this only controls
+    /// how much the opacity varies between grid levels.
+    ///
+    /// Default: `0.5`.
+    #[inline]
+    pub fn grid_fade(mut self, fade: f32) -> Self {
+        self.grid_strength_exponent = fade;
         self
     }
 
@@ -1096,29 +1127,28 @@ impl<'a> Plot<'a> {
 
         // Drag axes to zoom:
         for d in 0..2 {
-            if self.allow_axis_zoom_drag[d] {
-                if let Some(axis_response) = axis_responses[d].iter().find(|r| r.dragged_by(PointerButton::Primary)) {
-                    if let Some(drag_start_pos) = ui.input(|i| i.pointer.press_origin()) {
-                        let delta = axis_response.drag_delta();
+            if self.allow_axis_zoom_drag[d]
+                && let Some(axis_response) = axis_responses[d].iter().find(|r| r.dragged_by(PointerButton::Primary))
+                && let Some(drag_start_pos) = ui.input(|i| i.pointer.press_origin())
+            {
+                let delta = axis_response.drag_delta();
 
-                        let axis_zoom = 1.0 + (0.02 * delta[d]).clamp(-1.0, 1.0);
+                let axis_zoom = 1.0 + (0.02 * delta[d]).clamp(-1.0, 1.0);
 
-                        let zoom = if self.data_aspect.is_some() {
-                            // Zoom both axes equally to maintain aspect ratio:
-                            Vec2::splat(axis_zoom)
-                        } else {
-                            let mut zoom = Vec2::splat(1.0);
-                            zoom[d] = axis_zoom;
-                            zoom
-                        };
+                let zoom = if self.data_aspect.is_some() {
+                    // Zoom both axes equally to maintain aspect ratio:
+                    Vec2::splat(axis_zoom)
+                } else {
+                    let mut zoom = Vec2::splat(1.0);
+                    zoom[d] = axis_zoom;
+                    zoom
+                };
 
-                        if zoom != Vec2::splat(1.0) {
-                            let mut zoom_center = plot_rect.center();
-                            zoom_center[d] = drag_start_pos[d];
-                            mem.transform.zoom(zoom, zoom_center);
-                            mem.auto_bounds = false.into();
-                        }
-                    }
+                if zoom != Vec2::splat(1.0) {
+                    let mut zoom_center = plot_rect.center();
+                    zoom_center[d] = drag_start_pos[d];
+                    mem.transform.zoom(zoom, zoom_center);
+                    mem.auto_bounds = false.into();
                 }
             }
         }
@@ -1235,7 +1265,7 @@ impl<'a> Plot<'a> {
         for widget in &mut axis_widgets[0] {
             widget.range = x_axis_range.clone();
             widget.transform = Some(mem.transform);
-            widget.steps = x_steps.clone();
+            widget.steps = Arc::clone(&x_steps);
         }
         let x_axis_widgets = std::mem::take(&mut axis_widgets[0]);
         for (i, widget) in x_axis_widgets.into_iter().enumerate() {
@@ -1247,7 +1277,7 @@ impl<'a> Plot<'a> {
         for widget in &mut axis_widgets[1] {
             widget.range = y_axis_range.clone();
             widget.transform = Some(mem.transform);
-            widget.steps = y_steps.clone();
+            widget.steps = Arc::clone(&y_steps);
         }
         let y_axis_widgets = std::mem::take(&mut axis_widgets[1]);
         for (i, widget) in y_axis_widgets.into_iter().enumerate() {
@@ -1487,7 +1517,8 @@ impl<'a> Plot<'a> {
 
             let line_strength = remap_clamp(spacing_in_points, self.grid_spacing, 0.0..=1.0);
 
-            let line_color = crate::colors::color_from_strength(ui, line_strength);
+            let base_color = self.grid_color.unwrap_or_else(|| ui.visuals().text_color());
+            let line_color = base_color.gamma_multiply(line_strength.powf(self.grid_strength_exponent));
 
             let mut p0 = pos_in_gui;
             let mut p1 = pos_in_gui;
@@ -1529,7 +1560,7 @@ impl<'a> Plot<'a> {
 
         let interact_radius_sq = ui.style().interaction.interact_radius.powi(2);
 
-        let candidates = plot_ui
+        let mut candidates = plot_ui
             .items
             .iter()
             .filter(|entry| entry.allow_hover())
@@ -1543,9 +1574,7 @@ impl<'a> Plot<'a> {
         // Since many items can have same distance,
         // and dist_sq can be zero for some items (e.g. rectangle)
         // we pick topmost item within interact radius
-        let topmost = candidates
-            .filter(|(_, elem)| elem.dist_sq <= interact_radius_sq)
-            .next_back();
+        let topmost = candidates.rfind(|(_, elem)| elem.dist_sq <= interact_radius_sq);
 
         let plot = crate::PlotConfig {
             ui,
