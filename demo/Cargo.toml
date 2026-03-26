@@ -24,7 +24,7 @@ eframe = { workspace = true, default-features = false, features = [
 image.workspace = true
 log.workspace = true
 
-egui_chip = "0.3.1"
+# Avoid depending on 3rd party egui crates here, as it complicates doing a release of egui_plot.
 examples_utils.workspace = true
 
 # Example dependencies

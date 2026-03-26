@@ -2,7 +2,7 @@
 resolver = "2"
 members = [
     "egui_plot",
-    # "demo", # Disabled waiting for egui_chip to update to egui 0.34
+    "demo",
     "examples_utils",
     "examples/*",
 ]

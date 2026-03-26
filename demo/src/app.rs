@@ -1,5 +1,4 @@
 use eframe::egui;
-use egui::Color32;
 use egui::RichText;
 use egui::ScrollArea;
 use egui::TextEdit;
@@ -22,7 +21,15 @@ pub struct DemoGallery {
 
 impl eframe::App for DemoGallery {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        self.ui(ctx);
+        let screen_rect = ui.max_rect();
+        let is_small_screen = screen_rect.width() < 1024.0;
+
+        Self::top_bar(ui);
+        if !is_small_screen && let Some(index) = self.current_example {
+            self.info_panel(ui, index);
+        }
+        self.thumbnails_panel(ui, screen_rect.width() / 3.0);
+        self.demo_panel(ui);
     }
 }
 
@@ -62,20 +69,8 @@ impl DemoGallery {
         }
     }
 
-    fn ui(&mut self, ctx: &egui::Context) {
-        let screen_rect = ctx.available_rect();
-        let is_small_screen = screen_rect.width() < 1024.0;
-
-        Self::top_bar(ctx);
-        if !is_small_screen && let Some(index) = self.current_example {
-            self.info_panel(ctx, index);
-        }
-        self.thumbnails_panel(ctx, screen_rect.width() / 3.0);
-        self.demo_panel(ctx);
-    }
-
-    fn top_bar(ctx: &egui::Context) {
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+    fn top_bar(ui: &mut egui::Ui) {
+        egui::Panel::top("top_panel").show_inside(ui, |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
                 egui::widgets::global_theme_preference_buttons(ui);
 
@@ -85,16 +80,16 @@ impl DemoGallery {
         });
     }
 
-    fn thumbnails_panel(&mut self, ctx: &egui::Context, default_width: f32) {
-        egui::SidePanel::left("examples_panel")
-            .default_width(default_width)
-            // Set min_width so the heading is well rendered.
-            .min_width(100.0)
+    fn thumbnails_panel(&mut self, ui: &mut egui::Ui, default_width: f32) {
+        egui::Panel::left("examples_panel")
+            .default_size(default_width)
+            // Set min_size so the heading is well rendered.
+            .min_size(100.0)
             // 3 columns + some space extra for buttons.
             // TODO(#193): get rid of "extra space" calc.
-            .max_width(Self::COL_WIDTH * 3. + 30.)
+            .max_size(Self::COL_WIDTH * 3. + 30.)
             .resizable(true)
-            .show(ctx, |ui| {
+            .show_inside(ui, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
                     let available_width = ui.available_width();
                     let num_columns = 1.max((available_width / Self::COL_WIDTH).floor() as usize);
@@ -116,28 +111,26 @@ impl DemoGallery {
             });
     }
 
-    fn info_panel(&mut self, ctx: &egui::Context, index: usize) {
-        egui::SidePanel::right("info_panel")
+    fn info_panel(&mut self, ui: &mut egui::Ui, index: usize) {
+        egui::Panel::right("info_panel")
             .resizable(true)
-            .default_width(600.0)
-            .show(ctx, |ui| {
+            .default_size(600.0)
+            .show_inside(ui, |ui| {
                 let example = &mut self.examples[index];
                 ui.label(RichText::new(example.title()).heading());
                 ui.separator();
 
                 ui.label(RichText::new(example.description()).line_height(Some(20.0)));
 
-                ui.horizontal(|ui| {
+                ui.horizontal_wrapped(|ui| {
                     ui.label("Tags:");
-                    #[expect(clippy::expect_used, reason = "tags are non-empty strings")]
-                    egui_chip::ChipEditBuilder::new(",")
-                        .expect("failed to create ChipEditBuilder")
-                        .texts(example.tags())
-                        .chip_size(Some([80.0, 20.0]))
-                        .chip_colors(Color32::WHITE, Color32::BLACK)
-                        .widget_colors(Color32::TRANSPARENT, Color32::TRANSPARENT)
-                        .build()
-                        .show(ui);
+                    for &tag in example.tags() {
+                        ui.label(
+                            RichText::new(tag)
+                                .background_color(ui.visuals().widgets.inactive.bg_fill)
+                                .small(),
+                        );
+                    }
                 });
                 ui.separator();
 
@@ -156,8 +149,8 @@ impl DemoGallery {
             });
     }
 
-    fn demo_panel(&mut self, ctx: &egui::Context) {
-        egui::CentralPanel::default().show(ctx, |ui| {
+    fn demo_panel(&mut self, ui: &mut egui::Ui) {
+        egui::CentralPanel::default().show_inside(ui, |ui| {
             if let Some(index) = self.current_example {
                 ui.vertical(|ui| {
                     self.examples[index].show_controls(ui);
