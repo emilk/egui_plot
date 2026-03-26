@@ -264,7 +264,7 @@ impl PlotItem for Line<'_> {
             .map(|(i, w)| {
                 let p0 = transform.position_from_point(&w[0]);
                 let p1 = transform.position_from_point(&w[1]);
-                let dist_sq = dist_sq_to_segment(point, p0, p1);
+                let dist_sq = dist_sq_to_segment(point, [p0, p1]);
                 // Pick the closer endpoint so the tooltip shows a real data point
                 let index = if point.distance_sq(p0) <= point.distance_sq(p1) {
                     i
