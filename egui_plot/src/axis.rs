@@ -304,7 +304,7 @@ impl<'a> AxisWidget<'a> {
                     .hints
                     .tick_label_font
                     .clone()
-                    .unwrap_or(font_id.clone());
+                    .unwrap_or_else(|| font_id.clone());
 
                 let galley = painter.layout_no_wrap(text, label_font_id, text_color);
                 let galley_size = match axis {
