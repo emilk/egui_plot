@@ -23,7 +23,6 @@ use emath::remap;
 
 use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
-use crate::colors;
 use crate::grid::GridMark;
 use crate::placement::HPlacement;
 use crate::placement::Placement;
@@ -300,11 +299,7 @@ impl<'a> AxisWidget<'a> {
                     super::color_from_strength(ui, strength)
                 };
 
-                let label_font_id = self
-                    .hints
-                    .tick_label_font
-                    .clone()
-                    .unwrap_or_else(|| font_id.clone());
+                let label_font_id = self.hints.tick_label_font.clone().unwrap_or_else(|| font_id.clone());
 
                 let galley = painter.layout_no_wrap(text, label_font_id, text_color);
                 let galley_size = match axis {
