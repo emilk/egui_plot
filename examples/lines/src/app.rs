@@ -159,7 +159,7 @@ impl LineExample {
 
     pub fn show_plot(&mut self, ui: &mut egui::Ui) -> Response {
         if self.animate {
-            ui.ctx().request_repaint();
+            ui.request_repaint();
             self.time += ui.input(|i| i.unstable_dt).at_most(1.0 / 30.0) as f64;
         }
         let mut plot = Plot::new("lines_demo")

@@ -21,7 +21,7 @@ pub struct DemoGallery {
 }
 
 impl eframe::App for DemoGallery {
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.ui(ctx);
     }
 }

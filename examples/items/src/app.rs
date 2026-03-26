@@ -50,10 +50,9 @@ impl ItemsExample {
             Arrows::new("arrows", arrow_origins, arrow_tips)
         };
 
-        let texture: &egui::TextureHandle = self.texture.get_or_insert_with(|| {
-            ui.ctx()
-                .load_texture("plot_demo", egui::ColorImage::example(), Default::default())
-        });
+        let texture: &egui::TextureHandle = self
+            .texture
+            .get_or_insert_with(|| ui.load_texture("plot_demo", egui::ColorImage::example(), Default::default()));
         let image = PlotImage::new(
             "image",
             texture,

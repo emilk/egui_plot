@@ -53,8 +53,8 @@ impl PerformanceDemo {
     }
 
     pub fn show_controls(&mut self, ui: &mut egui::Ui) -> Response {
-        ui.ctx().request_repaint(); // Continuous repaint for FPS counter
-        let fps = (1.0 / ui.ctx().input(|i| i.stable_dt)).round();
+        ui.request_repaint(); // Continuous repaint for FPS counter
+        let fps = (1.0 / ui.input(|i| i.stable_dt)).round();
 
         ui.horizontal(|ui| {
             ui.label("Markers:");

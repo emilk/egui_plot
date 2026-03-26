@@ -70,8 +70,7 @@ impl SavePlotExample {
     pub fn show_controls(&self, ui: &mut egui::Ui) -> Response {
         let response = ui.button("Save Plot");
         if response.clicked() {
-            ui.ctx()
-                .send_viewport_cmd(egui::ViewportCommand::Screenshot(Default::default()));
+            ui.send_viewport_cmd(egui::ViewportCommand::Screenshot(Default::default()));
         }
         response
     }

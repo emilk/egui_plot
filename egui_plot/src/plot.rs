@@ -884,11 +884,11 @@ impl<'a> Plot<'a> {
 
     fn load_or_init_memory(&self, ui: &Ui, plot_id: Id, plot_rect: Rect) -> PlotMemory {
         // Load or initialize the memory.
-        ui.ctx().check_for_id_clash(plot_id, plot_rect, "Plot");
+        ui.check_for_id_clash(plot_id, plot_rect, "Plot");
 
         if self.reset {
             if let Some((name, _)) = self.linked_axes.as_ref() {
-                ui.ctx().data_mut(|data| {
+                ui.data_mut(|data| {
                     let link_groups: &mut BoundsLinkGroups = data.get_temp_mut_or_default(Id::NULL);
                     link_groups.0.remove(name);
                 });
@@ -997,7 +997,7 @@ impl<'a> Plot<'a> {
 
         // Transfer the bounds from a link group.
         if let Some((id, axes)) = self.linked_axes.as_ref() {
-            ui.ctx().data_mut(|data| {
+            ui.data_mut(|data| {
                 let link_groups: &mut BoundsLinkGroups = data.get_temp_mut_or_default(Id::NULL);
                 if let Some(linked_bounds) = link_groups.0.get(id) {
                     if axes.x {
@@ -1288,7 +1288,7 @@ impl<'a> Plot<'a> {
 
     fn collect_cursors(&self, ui: &Ui, plot_id: Id) -> Vec<Cursor> {
         if let Some((id, _)) = self.linked_cursors.as_ref() {
-            ui.ctx().data_mut(|data| {
+            ui.data_mut(|data| {
                 let frames: &mut CursorLinkGroups = data.get_temp_mut_or_default(Id::NULL);
                 let cursors = frames.0.entry(*id).or_default();
 
@@ -1633,7 +1633,7 @@ impl<'a> Plot<'a> {
 
         // Call the plot build function.
         let mut plot_ui = PlotUi {
-            ctx: ui.ctx().clone(),
+            ctx: ui.clone(),
             items: Vec::new(),
             next_auto_color_idx: 0,
             last_plot_transform,

@@ -47,7 +47,7 @@ impl HeatmapDemo {
                 ui.vertical(|ui| {
                     ui.checkbox(&mut self.animate, "Animate");
                     if self.animate {
-                        ui.ctx().request_repaint();
+                        ui.request_repaint();
                         self.tick += 1.0;
                     }
                     ui.checkbox(&mut self.show_labels, "Show labels");
