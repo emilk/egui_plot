@@ -2,6 +2,8 @@ use std::fmt::Debug;
 use std::ops::RangeInclusive;
 use std::sync::Arc;
 
+use egui::Color32;
+use egui::FontId;
 use egui::Pos2;
 use egui::Rangef;
 use egui::Rect;
@@ -21,7 +23,6 @@ use emath::remap;
 
 use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
-use crate::colors;
 use crate::grid::GridMark;
 use crate::placement::HPlacement;
 use crate::placement::Placement;
@@ -62,6 +63,8 @@ pub struct AxisHints<'a> {
     pub(super) min_thickness: f32,
     pub(super) placement: Placement,
     pub(super) label_spacing: Rangef,
+    pub(super) tick_label_color: Option<Color32>,
+    pub(super) tick_label_font: Option<FontId>,
 }
 
 impl<'a> AxisHints<'a> {
@@ -89,6 +92,8 @@ impl<'a> AxisHints<'a> {
                 Axis::X => Rangef::new(60.0, 80.0), // labels can get pretty wide
                 Axis::Y => Rangef::new(20.0, 30.0), // text isn't very high
             },
+            tick_label_color: None,
+            tick_label_font: None,
         }
     }
 
@@ -155,6 +160,20 @@ impl<'a> AxisHints<'a> {
     #[inline]
     pub fn label_spacing(mut self, range: impl Into<Rangef>) -> Self {
         self.label_spacing = range.into();
+        self
+    }
+
+    /// Set the color of the axis tick labels.
+    #[inline]
+    pub fn tick_label_color(mut self, color: impl Into<Color32>) -> Self {
+        self.tick_label_color = Some(color.into());
+        self
+    }
+
+    /// Set the font of the axis tick labels.
+    #[inline]
+    pub fn tick_label_font(mut self, font: FontId) -> Self {
+        self.tick_label_font = Some(font);
         self
     }
 }
@@ -274,8 +293,15 @@ impl<'a> AxisWidget<'a> {
                 // Fade in labels as they get further apart:
                 let strength = remap_clamp(spacing_in_points, label_spacing, 0.0..=1.0);
 
-                let text_color = colors::color_from_strength(ui, strength);
-                let galley = painter.layout_no_wrap(text, font_id.clone(), text_color);
+                let text_color = if let Some(color) = self.hints.tick_label_color {
+                    color.gamma_multiply(strength.sqrt())
+                } else {
+                    super::color_from_strength(ui, strength)
+                };
+
+                let label_font_id = self.hints.tick_label_font.clone().unwrap_or_else(|| font_id.clone());
+
+                let galley = painter.layout_no_wrap(text, label_font_id, text_color);
                 let galley_size = match axis {
                     Axis::X => galley.size(),
                     Axis::Y => galley.size() + 2.0 * SIDE_MARGIN * Vec2::X,
