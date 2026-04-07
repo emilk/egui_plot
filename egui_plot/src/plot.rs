@@ -1655,9 +1655,6 @@ impl<'a> Plot<'a> {
         // Compute bounds
         self.compute_bounds(ui, &mut mem, &plot_ui, plot_rect);
 
-        // Handle interactions (modifies plot_ui.response in place)
-        self.handle_interactions(ui, &mut mem, &mut plot_ui, plot_rect, &axis_responses);
-
         // Render axis widgets
         self.render_axis_widgets(ui, &mut mem, axis_widgets);
 
@@ -1673,6 +1670,9 @@ impl<'a> Plot<'a> {
         // The painter is used to render all accumulated shapes
         let painter = ui.painter().with_clip_rect(*mem.transform.frame());
         painter.extend(shapes);
+
+        // Handle interactions (modifies plot_ui.response in place)
+        self.handle_interactions(ui, &mut mem, &mut plot_ui, plot_rect, &axis_responses);
 
         // Show coordinates in a corner of the plot
         // Use ui to access style information and draw the coordinate text overlay
