@@ -991,7 +991,7 @@ impl<'a> Plot<'a> {
 
     fn compute_bounds(&self, ui: &Ui, mem: &mut PlotMemory, plot_ui: &PlotUi<'a>, plot_rect: Rect) {
         // Find the cursors from other plots we need to draw
-        let mut bounds = *plot_ui.last_plot_transform.bounds();
+        let mut bounds = plot_ui.last_plot_transform.bounds();
 
         // Transfer the bounds from a link group.
         if let Some((id, axes)) = self.linked_axes.as_ref() {
@@ -1244,9 +1244,10 @@ impl<'a> Plot<'a> {
         let bounds = mem.transform.bounds();
         let x_axis_range = bounds.range_x();
         let x_steps = Arc::new({
+            let dvalue_dpos = mem.transform.dvalue_dpos()[0].abs();
             let input = GridInput {
                 bounds: (bounds.min[0], bounds.max[0]),
-                base_step_size: mem.transform.dvalue_dpos()[0].abs() * self.grid_spacing.min as f64,
+                base_step_size: dvalue_dpos * self.grid_spacing.min as f64,
             };
             (self.grid_spacers[0])(input)
         });
@@ -1322,7 +1323,7 @@ impl<'a> Plot<'a> {
     ) -> (Vec<Shape>, Vec<Cursor>, Option<Id>) {
         let mut child_ui = ui.new_child(
             egui::UiBuilder::new()
-                .max_rect(*transform.frame())
+                .max_rect(transform.frame())
                 .layout(Layout::default()),
         );
         child_ui.set_clip_rect(transform.frame().intersect(ui.clip_rect()));
@@ -1431,7 +1432,7 @@ impl<'a> Plot<'a> {
             if let Some(pointer) = hover_pos {
                 let font_id = TextStyle::Monospace.resolve(ui.style());
                 let coordinate = transform.value_from_position(pointer);
-                let text = formatter.format(&coordinate, transform.bounds());
+                let text = formatter.format(&coordinate, &transform.bounds());
                 let padded_frame = transform.frame().shrink(4.0);
                 let (anchor, position) = match corner {
                     Corner::LeftTop => (Align2::LEFT_TOP, padded_frame.left_top()),
@@ -1507,7 +1508,7 @@ impl<'a> Plot<'a> {
             };
 
             let pos_in_gui = transform.position_from_point(&value);
-            let spacing_in_points = (transform.dpos_dvalue()[iaxis] * step.step_size).abs() as f32;
+            let spacing_in_points = (transform.dpos_dvalue()[iaxis] * step.step_size as f32).abs();
 
             if spacing_in_points <= self.grid_spacing.min {
                 continue; // Too close together
@@ -1669,7 +1670,7 @@ impl<'a> Plot<'a> {
 
         // Get the painter from ui and configure it with the plot's clip rect
         // The painter is used to render all accumulated shapes
-        let painter = ui.painter().with_clip_rect(*mem.transform.frame());
+        let painter = ui.painter().with_clip_rect(mem.transform.frame());
         painter.extend(shapes);
 
         // Show coordinates in a corner of the plot
@@ -1705,7 +1706,7 @@ impl<'a> Plot<'a> {
                 link_groups.0.insert(
                     *id,
                     LinkedBounds {
-                        bounds: *mem.transform().bounds(),
+                        bounds: mem.transform().bounds(),
                         auto_bounds: mem.auto_bounds,
                     },
                 );
@@ -1904,7 +1905,7 @@ impl<'a> PlotUi<'a> {
     /// this will return bounds centered on the origin. The bounds do
     /// not change until the plot is drawn.
     pub fn plot_bounds(&self) -> PlotBounds {
-        *self.last_plot_transform.bounds()
+        self.last_plot_transform.bounds()
     }
 
     /// Set the plot bounds. Can be useful for implementing alternative plot
@@ -1991,9 +1992,11 @@ impl<'a> PlotUi<'a> {
 
     /// The pointer drag delta in plot coordinates.
     pub fn pointer_coordinate_drag_delta(&self) -> Vec2 {
+        // todo: We are going to need to get a start and end here to
+        // compute the actual delta in the log case.
         let delta = self.response.drag_delta();
         let dp_dv = self.last_plot_transform.dpos_dvalue();
-        Vec2::new(delta.x / dp_dv[0] as f32, delta.y / dp_dv[1] as f32)
+        Vec2::new(delta.x / dp_dv[0], delta.y / dp_dv[1])
     }
 
     /// Read the transform between plot coordinates and screen coordinates.
