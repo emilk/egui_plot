@@ -132,6 +132,9 @@ pub struct Plot<'a> {
     grid_strength_exponent: f32,
     clamp_grid: bool,
 
+    x_axis_transform_kind: crate::axis_transform::AxisTransformKind,
+    y_axis_transform_kind: crate::axis_transform::AxisTransformKind,
+
     sense: Sense,
 }
 
@@ -185,6 +188,9 @@ impl<'a> Plot<'a> {
             grid_color: None,
             grid_strength_exponent: 0.5,
             clamp_grid: false,
+
+            x_axis_transform_kind: crate::axis_transform::AxisTransformKind::Linear,
+            y_axis_transform_kind: crate::axis_transform::AxisTransformKind::Linear,
 
             sense: egui::Sense::click_and_drag(),
         }
@@ -771,11 +777,79 @@ impl<'a> Plot<'a> {
         self
     }
 
+    /// Use logarithmic scale on the X-axis with base 10.
+    ///
+    /// Default: linear scale.
+    ///
+    /// Note: logarithmic scales only work with positive values.
+    /// By default, axis labels will use superscript notation (e.g., 10², 10³).
+    /// You can customize this with `x_axis_formatter()`.
+    #[inline]
+    pub fn log_x(mut self) -> Self {
+        self.x_axis_transform_kind = crate::axis_transform::AxisTransformKind::Log;
+        // Update the grid spacer to use the log scale grid generation
+        let transform = self.x_axis_transform_kind.make_transform();
+        self.grid_spacers[0] = Box::new(move |input| transform.generate_marks(input));
+
+        // Set default superscript formatter for log scale
+        if let Some(main) = self.x_axes.first_mut() {
+            main.formatter = std::sync::Arc::new(crate::log_formatter_superscript());
+        }
+
+        self
+    }
+
+    /// Use logarithmic scale on the Y-axis with the specified base.
+    ///
+    /// Default: linear scale.
+    ///
+    /// Note: logarithmic scales only work with positive values.
+    /// By default, axis labels will use superscript notation (e.g., 10², 10³).
+    /// You can customize this with `y_axis_formatter()`.
+    #[inline]
+    pub fn log_y(mut self) -> Self {
+        self.y_axis_transform_kind = crate::axis_transform::AxisTransformKind::Log;
+        // Update the grid spacer to use the log scale grid generation
+        let transform = self.y_axis_transform_kind.make_transform();
+        self.grid_spacers[1] = Box::new(move |input| transform.generate_marks(input));
+
+        // Set default superscript formatter for log scale
+        if let Some(main) = self.y_axes.first_mut() {
+            main.formatter = std::sync::Arc::new(crate::log_formatter_superscript());
+        }
+
+        self
+    }
+
     /// Set the main Y-axis-width by number of digits
     #[inline]
     #[deprecated = "Use `y_axis_min_width` instead"]
     pub fn y_axis_width(self, digits: usize) -> Self {
         self.y_axis_min_width(12.0 * digits as f32)
+    }
+
+    /// Set a custom axis transform for the X-axis.
+    ///
+    /// For common cases, prefer [`Self::x_axis_logarithmic`].
+    #[inline]
+    pub fn x_axis_transform(mut self, transform: crate::axis_transform::AxisTransformKind) -> Self {
+        self.x_axis_transform_kind = transform;
+        // Update the grid spacer to use the transform's grid generation
+        let transform_impl = transform.make_transform();
+        self.grid_spacers[0] = Box::new(move |input| transform_impl.generate_marks(input));
+        self
+    }
+
+    /// Set a custom axis transform for the Y-axis.
+    ///
+    /// For common cases, prefer [`Self::y_axis_logarithmic`].
+    #[inline]
+    pub fn y_axis_transform(mut self, transform: crate::axis_transform::AxisTransformKind) -> Self {
+        self.y_axis_transform_kind = transform;
+        // Update the grid spacer to use the transform's grid generation
+        let transform_impl = transform.make_transform();
+        self.grid_spacers[1] = Box::new(move |input| transform_impl.generate_marks(input));
+        self
     }
 
     /// Set custom configuration for X-axis
@@ -897,31 +971,60 @@ impl<'a> Plot<'a> {
                 auto_bounds: self.default_auto_bounds,
                 hovered_legend_item: None,
                 hidden_items: Default::default(),
-                transform: PlotTransform::new_with_invert_axis(
+                transform: PlotTransform::new_with_transforms_and_invert(
                     plot_rect,
                     self.min_auto_bounds,
                     self.center_axis,
                     Vec2b::new(self.invert_x, self.invert_y),
+                    self.x_axis_transform_kind.make_transform(),
+                    self.y_axis_transform_kind.make_transform(),
                 ),
                 last_click_pos_for_zoom: None,
                 x_axis_thickness: Default::default(),
                 y_axis_thickness: Default::default(),
+                last_x_transform: Some(self.x_axis_transform_kind),
+                last_y_transform: Some(self.y_axis_transform_kind),
             }
         } else {
-            PlotMemory::load(ui.ctx(), plot_id).unwrap_or_else(|| PlotMemory {
+            let mut mem = PlotMemory::load(ui.ctx(), plot_id).unwrap_or_else(|| PlotMemory {
                 auto_bounds: self.default_auto_bounds,
                 hovered_legend_item: None,
                 hidden_items: Default::default(),
-                transform: PlotTransform::new_with_invert_axis(
+                transform: PlotTransform::new_with_transforms_and_invert(
                     plot_rect,
                     self.min_auto_bounds,
                     self.center_axis,
                     Vec2b::new(self.invert_x, self.invert_y),
+                    self.x_axis_transform_kind.make_transform(),
+                    self.y_axis_transform_kind.make_transform(),
                 ),
                 last_click_pos_for_zoom: None,
                 x_axis_thickness: Default::default(),
                 y_axis_thickness: Default::default(),
-            })
+                last_x_transform: Some(self.x_axis_transform_kind),
+                last_y_transform: Some(self.y_axis_transform_kind),
+            });
+
+            // Detect if axis transform type changed and reset auto-bounds if so
+            let x_transform_changed = mem.last_x_transform.map_or(true, |last| {
+                std::mem::discriminant(&last) != std::mem::discriminant(&self.x_axis_transform_kind)
+            });
+            let y_transform_changed = mem.last_y_transform.map_or(true, |last| {
+                std::mem::discriminant(&last) != std::mem::discriminant(&self.y_axis_transform_kind)
+            });
+
+            if x_transform_changed {
+                mem.auto_bounds.x = true;
+            }
+            if y_transform_changed {
+                mem.auto_bounds.y = true;
+            }
+
+            // Update the stored transform kinds
+            mem.last_x_transform = Some(self.x_axis_transform_kind);
+            mem.last_y_transform = Some(self.y_axis_transform_kind);
+
+            mem
         }
     }
 
@@ -1068,20 +1171,59 @@ impl<'a> Plot<'a> {
                 }
             }
 
+            // Apply margins based on the axis transform type
+            // For linear axes: apply margin in data space (additive)
+            // For log axes: apply margin in plot space (multiplicative in data
+            // space)
+
             if auto_x {
-                bounds.add_relative_margin_x(self.margin_fraction);
+                match self.x_axis_transform_kind {
+                    crate::axis_transform::AxisTransformKind::Linear => {
+                        // Linear: apply margin in data space
+                        bounds.add_relative_margin_x(self.margin_fraction);
+                    }
+                    crate::axis_transform::AxisTransformKind::Log => {
+                        // Log: apply margin in plot space
+                        let transform = self.x_axis_transform_kind.make_transform();
+                        let (mut plot_min, mut plot_max) = transform.bounds_to_plot(bounds.min[0], bounds.max[0]);
+                        let plot_range = (plot_max - plot_min).abs();
+                        let margin = plot_range * self.margin_fraction.x as f64;
+                        plot_min -= margin;
+                        plot_max += margin;
+                        bounds.min[0] = transform.transform_from_plot(plot_min);
+                        bounds.max[0] = transform.transform_from_plot(plot_max);
+                    }
+                }
             }
 
             if auto_y {
-                bounds.add_relative_margin_y(self.margin_fraction);
+                match self.y_axis_transform_kind {
+                    crate::axis_transform::AxisTransformKind::Linear => {
+                        // Linear: apply margin in data space
+                        bounds.add_relative_margin_y(self.margin_fraction);
+                    }
+                    crate::axis_transform::AxisTransformKind::Log => {
+                        // Log: apply margin in plot space
+                        let transform = self.y_axis_transform_kind.make_transform();
+                        let (mut plot_min, mut plot_max) = transform.bounds_to_plot(bounds.min[1], bounds.max[1]);
+                        let plot_range = (plot_max - plot_min).abs();
+                        let margin = plot_range * self.margin_fraction.y as f64;
+                        plot_min -= margin;
+                        plot_max += margin;
+                        bounds.min[1] = transform.transform_from_plot(plot_min);
+                        bounds.max[1] = transform.transform_from_plot(plot_max);
+                    }
+                }
             }
         }
 
-        mem.transform = PlotTransform::new_with_invert_axis(
+        mem.transform = PlotTransform::new_with_transforms_and_invert(
             plot_rect,
             bounds,
             self.center_axis,
             Vec2b::new(self.invert_x, self.invert_y),
+            self.x_axis_transform_kind.make_transform(),
+            self.y_axis_transform_kind.make_transform(),
         );
 
         // Enforce aspect ratio
@@ -1264,7 +1406,7 @@ impl<'a> Plot<'a> {
         // Process X-axis widgets
         for widget in &mut axis_widgets[0] {
             widget.range = x_axis_range.clone();
-            widget.transform = Some(mem.transform);
+            widget.transform = Some(mem.transform.clone());
             widget.steps = Arc::clone(&x_steps);
         }
         let x_axis_widgets = std::mem::take(&mut axis_widgets[0]);
@@ -1276,7 +1418,7 @@ impl<'a> Plot<'a> {
         // Process Y-axis widgets
         for widget in &mut axis_widgets[1] {
             widget.range = y_axis_range.clone();
-            widget.transform = Some(mem.transform);
+            widget.transform = Some(mem.transform.clone());
             widget.steps = Arc::clone(&y_steps);
         }
         let y_axis_widgets = std::mem::take(&mut axis_widgets[1]);
@@ -1629,7 +1771,7 @@ impl<'a> Plot<'a> {
 
         // Load or initialize memory
         let mut mem = self.load_or_init_memory(ui, plot_id, plot_rect);
-        let last_plot_transform = mem.transform;
+        let last_plot_transform = mem.transform.clone();
 
         // Call the plot build function.
         let mut plot_ui = PlotUi {
@@ -1667,7 +1809,7 @@ impl<'a> Plot<'a> {
         }
 
         let (shapes, plot_cursors, mut hovered_plot_item) =
-            self.collect_shapes(ui, &plot_ui, plot_id, &mem.transform, show_xy);
+            self.collect_shapes(ui, &plot_ui, plot_id, mem.transform(), show_xy);
 
         // Get the painter from ui and configure it with the plot's clip rect
         // The painter is used to render all accumulated shapes
@@ -1721,7 +1863,7 @@ impl<'a> Plot<'a> {
         };
 
         // Store memory for the next frame.
-        let transform = mem.transform();
+        let transform = mem.transform().clone();
         mem.store(ui.ctx(), plot_id);
 
         ui.advance_cursor_after_rect(complete_rect);

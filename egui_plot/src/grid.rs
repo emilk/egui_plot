@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 type GridSpacerFn<'a> = dyn Fn(GridInput) -> Vec<GridMark> + 'a;
 pub type GridSpacer<'a> = Box<GridSpacerFn<'a>>;
 
-/// Input for "grid spacer" functions.
+/// Input for "grid spacer" functions. These values live in the data space.
 ///
 /// See [`crate::Plot::x_grid_spacer()`] and [`crate::Plot::y_grid_spacer()`].
 pub struct GridInput {
@@ -14,9 +14,9 @@ pub struct GridInput {
     /// Recommended (but not required) lower-bound on the step size returned by
     /// custom grid spacers.
     ///
-    /// Computed as the ratio between the diagram's bounds (in plot coordinates)
-    /// and the viewport (in frame/window coordinates), scaled up to
-    /// represent the minimal possible step.
+    /// Computed as the ratio between the diagram's bounds (in dataspace
+    /// coordinates) and the viewport (in frame/window coordinates), scaled up
+    /// to represent the minimal possible step.
     ///
     /// Always positive.
     pub base_step_size: f64,
@@ -60,7 +60,7 @@ pub fn log_grid_spacer(log_base: i64) -> GridSpacer<'static> {
             smallest_visible_unit * log_base * log_base,
         ];
 
-        generate_marks(step_sizes, input.bounds)
+        generate_marks_linear(step_sizes, input.bounds)
     };
 
     Box::new(step_sizes)
@@ -79,7 +79,7 @@ pub fn uniform_grid_spacer<'a>(spacer: impl Fn(GridInput) -> [f64; 3] + 'a) -> G
     let get_marks = move |input: GridInput| -> Vec<GridMark> {
         let bounds = input.bounds;
         let step_sizes = spacer(input);
-        generate_marks(step_sizes, bounds)
+        generate_marks_linear(step_sizes, bounds)
     };
 
     Box::new(get_marks)
@@ -99,7 +99,10 @@ fn next_power(value: f64, base: f64) -> f64 {
 }
 
 /// Fill in all values between [min, max] which are a multiple of `step_size`
-fn generate_marks(step_sizes: [f64; 3], bounds: (f64, f64)) -> Vec<GridMark> {
+///
+/// This is used for linear gridding. For logarithmic scales with < 1 decade visible,
+/// we switch to linear marks for better readability.
+pub(crate) fn generate_marks_linear(step_sizes: [f64; 3], bounds: (f64, f64)) -> Vec<GridMark> {
     let mut steps = vec![];
     fill_marks_between(&mut steps, step_sizes[0], bounds);
     fill_marks_between(&mut steps, step_sizes[1], bounds);
@@ -135,14 +138,14 @@ fn generate_marks(step_sizes: [f64; 3], bounds: (f64, f64)) -> Vec<GridMark> {
 }
 
 #[test]
-fn test_generate_marks() {
+fn test_generate_marks_linear() {
     fn approx_eq(a: &GridMark, b: &GridMark) -> bool {
         (a.value - b.value).abs() < 1e-10 && a.step_size == b.step_size
     }
 
     let gm = |value, step_size| GridMark { value, step_size };
 
-    let marks = generate_marks([0.01, 0.1, 1.0], (2.855, 3.015));
+    let marks = generate_marks_linear([0.01, 0.1, 1.0], (2.855, 3.015));
     let expected = vec![
         gm(2.86, 0.01),
         gm(2.87, 0.01),
