@@ -6,7 +6,7 @@ use egui::Pos2;
 use egui::Vec2b;
 
 use crate::axis::PlotTransform;
-use crate::axis_transform::AxisTransformKind;
+use crate::axis_transform::AxisTransformType;
 use crate::bounds::PlotBounds;
 
 /// Information about the plot that has to persist between frames.
@@ -41,9 +41,9 @@ pub struct PlotMemory {
     /// The axis transform kinds from last frame.
     /// Used to detect when the transform type changes and reset auto-bounds.
     #[cfg_attr(feature = "serde", serde(skip))]
-    pub(crate) last_x_transform: Option<AxisTransformKind>,
+    pub(crate) last_x_transform: Option<AxisTransformType>,
     #[cfg_attr(feature = "serde", serde(skip))]
-    pub(crate) last_y_transform: Option<AxisTransformKind>,
+    pub(crate) last_y_transform: Option<AxisTransformType>,
 }
 
 impl PlotMemory {

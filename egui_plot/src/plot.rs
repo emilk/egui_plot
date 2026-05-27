@@ -30,6 +30,8 @@ use crate::axis::Axis;
 use crate::axis::AxisHints;
 use crate::axis::AxisWidget;
 use crate::axis::PlotTransform;
+use crate::axis_transform::AxisTransform;
+use crate::axis_transform::AxisTransformType;
 use crate::bounds::BoundsLinkGroups;
 use crate::bounds::BoundsModification;
 use crate::bounds::LinkedBounds;
@@ -132,8 +134,8 @@ pub struct Plot<'a> {
     grid_strength_exponent: f32,
     clamp_grid: bool,
 
-    x_axis_transform_kind: crate::axis_transform::AxisTransformKind,
-    y_axis_transform_kind: crate::axis_transform::AxisTransformKind,
+    x_axis_transform_type: AxisTransformType,
+    y_axis_transform_type: AxisTransformType,
 
     sense: Sense,
 }
@@ -189,8 +191,8 @@ impl<'a> Plot<'a> {
             grid_strength_exponent: 0.5,
             clamp_grid: false,
 
-            x_axis_transform_kind: crate::axis_transform::AxisTransformKind::Linear,
-            y_axis_transform_kind: crate::axis_transform::AxisTransformKind::Linear,
+            x_axis_transform_type: AxisTransformType::linear(),
+            y_axis_transform_type: AxisTransformType::linear(),
 
             sense: egui::Sense::click_and_drag(),
         }
@@ -786,10 +788,9 @@ impl<'a> Plot<'a> {
     /// You can customize this with `x_axis_formatter()`.
     #[inline]
     pub fn log_x(mut self) -> Self {
-        self.x_axis_transform_kind = crate::axis_transform::AxisTransformKind::Log;
+        self.x_axis_transform_type = AxisTransformType::log();
         // Update the grid spacer to use the log scale grid generation
-        let transform = self.x_axis_transform_kind.make_transform();
-        self.grid_spacers[0] = Box::new(move |input| transform.generate_marks(input));
+        self.grid_spacers[0] = Box::new(move |input| AxisTransformType::log().generate_marks(input));
 
         // Set default superscript formatter for log scale
         if let Some(main) = self.x_axes.first_mut() {
@@ -808,13 +809,13 @@ impl<'a> Plot<'a> {
     /// You can customize this with `y_axis_formatter()`.
     #[inline]
     pub fn log_y(mut self) -> Self {
-        self.y_axis_transform_kind = crate::axis_transform::AxisTransformKind::Log;
         // Update the grid spacer to use the log scale grid generation
-        let transform = self.y_axis_transform_kind.make_transform();
-        self.grid_spacers[1] = Box::new(move |input| transform.generate_marks(input));
+        self.grid_spacers[1] = Box::new(move |input| AxisTransformType::log().generate_marks(input));
+
+        self.y_axis_transform_type = AxisTransformType::log();
 
         // Set default superscript formatter for log scale
-        if let Some(main) = self.y_axes.first_mut() {
+        if let Some(main) = (&mut self.y_axes).first_mut() {
             main.formatter = std::sync::Arc::new(crate::log_formatter_superscript());
         }
 
@@ -832,11 +833,11 @@ impl<'a> Plot<'a> {
     ///
     /// For common cases, prefer [`Self::x_axis_logarithmic`].
     #[inline]
-    pub fn x_axis_transform(mut self, transform: crate::axis_transform::AxisTransformKind) -> Self {
-        self.x_axis_transform_kind = transform;
+    pub fn x_axis_transform(mut self, transform: AxisTransformType) -> Self {
+        self.x_axis_transform_type = transform;
         // Update the grid spacer to use the transform's grid generation
-        let transform_impl = transform.make_transform();
-        self.grid_spacers[0] = Box::new(move |input| transform_impl.generate_marks(input));
+
+        self.grid_spacers[0] = Box::new(move |input| transform.generate_marks(input));
         self
     }
 
@@ -844,11 +845,10 @@ impl<'a> Plot<'a> {
     ///
     /// For common cases, prefer [`Self::y_axis_logarithmic`].
     #[inline]
-    pub fn y_axis_transform(mut self, transform: crate::axis_transform::AxisTransformKind) -> Self {
-        self.y_axis_transform_kind = transform;
+    pub fn y_axis_transform(mut self, transform: AxisTransformType) -> Self {
+        self.y_axis_transform_type = transform;
         // Update the grid spacer to use the transform's grid generation
-        let transform_impl = transform.make_transform();
-        self.grid_spacers[1] = Box::new(move |input| transform_impl.generate_marks(input));
+        self.grid_spacers[1] = Box::new(move |input| transform.generate_marks(input));
         self
     }
 
@@ -976,14 +976,14 @@ impl<'a> Plot<'a> {
                     self.min_auto_bounds,
                     self.center_axis,
                     Vec2b::new(self.invert_x, self.invert_y),
-                    self.x_axis_transform_kind.make_transform(),
-                    self.y_axis_transform_kind.make_transform(),
+                    self.x_axis_transform_type,
+                    self.y_axis_transform_type,
                 ),
                 last_click_pos_for_zoom: None,
                 x_axis_thickness: Default::default(),
                 y_axis_thickness: Default::default(),
-                last_x_transform: Some(self.x_axis_transform_kind),
-                last_y_transform: Some(self.y_axis_transform_kind),
+                last_x_transform: Some(self.x_axis_transform_type),
+                last_y_transform: Some(self.y_axis_transform_type),
             }
         } else {
             let mut mem = PlotMemory::load(ui.ctx(), plot_id).unwrap_or_else(|| PlotMemory {
@@ -995,22 +995,22 @@ impl<'a> Plot<'a> {
                     self.min_auto_bounds,
                     self.center_axis,
                     Vec2b::new(self.invert_x, self.invert_y),
-                    self.x_axis_transform_kind.make_transform(),
-                    self.y_axis_transform_kind.make_transform(),
+                    self.x_axis_transform_type,
+                    self.y_axis_transform_type,
                 ),
                 last_click_pos_for_zoom: None,
                 x_axis_thickness: Default::default(),
                 y_axis_thickness: Default::default(),
-                last_x_transform: Some(self.x_axis_transform_kind),
-                last_y_transform: Some(self.y_axis_transform_kind),
+                last_x_transform: Some(self.x_axis_transform_type),
+                last_y_transform: Some(self.y_axis_transform_type),
             });
 
             // Detect if axis transform type changed and reset auto-bounds if so
             let x_transform_changed = mem.last_x_transform.map_or(true, |last| {
-                std::mem::discriminant(&last) != std::mem::discriminant(&self.x_axis_transform_kind)
+                std::mem::discriminant(&last) != std::mem::discriminant(&self.x_axis_transform_type)
             });
             let y_transform_changed = mem.last_y_transform.map_or(true, |last| {
-                std::mem::discriminant(&last) != std::mem::discriminant(&self.y_axis_transform_kind)
+                std::mem::discriminant(&last) != std::mem::discriminant(&self.y_axis_transform_type)
             });
 
             if x_transform_changed {
@@ -1021,8 +1021,8 @@ impl<'a> Plot<'a> {
             }
 
             // Update the stored transform kinds
-            mem.last_x_transform = Some(self.x_axis_transform_kind);
-            mem.last_y_transform = Some(self.y_axis_transform_kind);
+            mem.last_x_transform = Some(self.x_axis_transform_type);
+            mem.last_y_transform = Some(self.y_axis_transform_type);
 
             mem
         }
@@ -1177,14 +1177,14 @@ impl<'a> Plot<'a> {
             // space)
 
             if auto_x {
-                match self.x_axis_transform_kind {
-                    crate::axis_transform::AxisTransformKind::Linear => {
+                match self.x_axis_transform_type {
+                    AxisTransformType::Linear(_) => {
                         // Linear: apply margin in data space
                         bounds.add_relative_margin_x(self.margin_fraction);
                     }
-                    crate::axis_transform::AxisTransformKind::Log => {
+                    AxisTransformType::Log(_) => {
                         // Log: apply margin in plot space
-                        let transform = self.x_axis_transform_kind.make_transform();
+                        let transform = self.x_axis_transform_type;
                         let (mut plot_min, mut plot_max) = transform.bounds_to_plot(bounds.min[0], bounds.max[0]);
                         let plot_range = (plot_max - plot_min).abs();
                         let margin = plot_range * self.margin_fraction.x as f64;
@@ -1197,14 +1197,14 @@ impl<'a> Plot<'a> {
             }
 
             if auto_y {
-                match self.y_axis_transform_kind {
-                    crate::axis_transform::AxisTransformKind::Linear => {
+                match self.y_axis_transform_type {
+                    AxisTransformType::Linear(_) => {
                         // Linear: apply margin in data space
                         bounds.add_relative_margin_y(self.margin_fraction);
                     }
-                    crate::axis_transform::AxisTransformKind::Log => {
+                    AxisTransformType::Log(_) => {
                         // Log: apply margin in plot space
-                        let transform = self.y_axis_transform_kind.make_transform();
+                        let transform = self.y_axis_transform_type;
                         let (mut plot_min, mut plot_max) = transform.bounds_to_plot(bounds.min[1], bounds.max[1]);
                         let plot_range = (plot_max - plot_min).abs();
                         let margin = plot_range * self.margin_fraction.y as f64;
@@ -1222,8 +1222,8 @@ impl<'a> Plot<'a> {
             bounds,
             self.center_axis,
             Vec2b::new(self.invert_x, self.invert_y),
-            self.x_axis_transform_kind.make_transform(),
-            self.y_axis_transform_kind.make_transform(),
+            self.x_axis_transform_type,
+            self.y_axis_transform_type,
         );
 
         // Enforce aspect ratio

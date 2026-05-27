@@ -21,6 +21,8 @@ use emath::Vec2b;
 use emath::pos2;
 use emath::remap;
 
+use crate::axis_transform::AxisTransform;
+use crate::axis_transform::AxisTransformType;
 use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
 use crate::grid::GridMark;
@@ -463,6 +465,7 @@ impl<'a> AxisWidget<'a> {
 /// Contains the screen rectangle and the plot bounds and provides methods to
 /// transform between them.
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PlotTransform {
     /// The screen rectangle.
     frame: Rect,
@@ -474,10 +477,10 @@ pub struct PlotTransform {
     plot_bounds: PlotBounds,
 
     /// Transform for the x-axis (data space -> plot space).
-    x_transform: Box<dyn crate::axis_transform::AxisTransform>,
+    x_transform: AxisTransformType,
 
     /// Transform for the y-axis (data space -> plot space).
-    y_transform: Box<dyn crate::axis_transform::AxisTransform>,
+    y_transform: AxisTransformType,
 
     /// Whether to always center the x-range or y-range of the bounds.
     centered: Vec2b,
@@ -499,8 +502,8 @@ impl PlotTransform {
             frame,
             bounds,
             center_axis,
-            Box::new(crate::axis_transform::LinearAxisTransform),
-            Box::new(crate::axis_transform::LinearAxisTransform),
+            AxisTransformType::linear(),
+            AxisTransformType::linear(),
         )
     }
 
@@ -509,8 +512,8 @@ impl PlotTransform {
         frame: Rect,
         bounds: PlotBounds,
         center_axis: impl Into<Vec2b>,
-        x_transform: Box<dyn crate::axis_transform::AxisTransform>,
-        y_transform: Box<dyn crate::axis_transform::AxisTransform>,
+        x_transform: AxisTransformType,
+        y_transform: AxisTransformType,
     ) -> Self {
         debug_assert!(
             0.0 <= frame.width() && 0.0 <= frame.height(),
@@ -590,8 +593,8 @@ impl PlotTransform {
         bounds: PlotBounds,
         center_axis: impl Into<Vec2b>,
         invert_axis: impl Into<Vec2b>,
-        x_transform: Box<dyn crate::axis_transform::AxisTransform>,
-        y_transform: Box<dyn crate::axis_transform::AxisTransform>,
+        x_transform: AxisTransformType,
+        y_transform: AxisTransformType,
     ) -> Self {
         let mut new = Self::new_with_transforms(frame, bounds, center_axis, x_transform, y_transform);
         new.inverted_axis = invert_axis.into();

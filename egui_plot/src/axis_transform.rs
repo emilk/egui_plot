@@ -34,9 +34,6 @@ pub trait AxisTransform: Send + Sync + std::fmt::Debug {
         None
     }
 
-    /// Returns a boxed clone of this transform.
-    fn boxed_clone(&self) -> Box<dyn AxisTransform>;
-
     /// Zoom the bounds by a factor around a center point.
     ///
     /// All values are in data space.
@@ -56,14 +53,80 @@ pub trait AxisTransform: Send + Sync + std::fmt::Debug {
     fn pan_bounds(&self, min: f64, max: f64, delta_pixels: f64, dvalue_dpos: f64) -> (f64, f64);
 }
 
-impl Clone for Box<dyn AxisTransform> {
-    fn clone(&self) -> Self {
-        self.boxed_clone()
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+/// Represents the type of axis transform to use.
+pub enum AxisTransformType {
+    Linear(LinearAxisTransform),
+    Log(LogAxisTransform),
+}
+impl Default for AxisTransformType {
+    fn default() -> Self {
+        Self::Linear(LinearAxisTransform)
+    }
+}
+impl AxisTransformType {
+    /// Returns a linear axis transform.
+    pub fn linear() -> Self {
+        Self::Linear(LinearAxisTransform)
+    }
+    /// Returns a logarithmic axis transform.
+    pub fn log() -> Self {
+        Self::Log(LogAxisTransform)
+    }
+}
+
+impl AxisTransform for AxisTransformType {
+    fn transform_to_plot(&self, data_value: f64) -> f64 {
+        match self {
+            Self::Linear(transform) => transform.transform_to_plot(data_value),
+            Self::Log(transform) => transform.transform_to_plot(data_value),
+        }
+    }
+
+    fn transform_from_plot(&self, plot_value: f64) -> f64 {
+        match self {
+            Self::Linear(transform) => transform.transform_from_plot(plot_value),
+            Self::Log(transform) => transform.transform_from_plot(plot_value),
+        }
+    }
+
+    fn generate_marks(&self, input: GridInput) -> Vec<GridMark> {
+        match self {
+            Self::Linear(transform) => transform.generate_marks(input),
+            Self::Log(transform) => transform.generate_marks(input),
+        }
+    }
+
+    fn zoom_bounds(&self, min: f64, max: f64, zoom_factor: f64, center: f64) -> (f64, f64) {
+        match self {
+            Self::Linear(transform) => transform.zoom_bounds(min, max, zoom_factor, center),
+            Self::Log(transform) => transform.zoom_bounds(min, max, zoom_factor, center),
+        }
+    }
+
+    fn pan_bounds(&self, min: f64, max: f64, delta_pixels: f64, dvalue_dpos: f64) -> (f64, f64) {
+        match self {
+            Self::Linear(transform) => transform.pan_bounds(min, max, delta_pixels, dvalue_dpos),
+            Self::Log(transform) => transform.pan_bounds(min, max, delta_pixels, dvalue_dpos),
+        }
+    }
+
+    fn bounds_to_plot(&self, data_min: f64, data_max: f64) -> (f64, f64) {
+        (self.transform_to_plot(data_min), self.transform_to_plot(data_max))
+    }
+
+    fn valid_range(&self) -> Option<(f64, f64)> {
+        match self {
+            Self::Linear(transform) => transform.valid_range(),
+            Self::Log(transform) => transform.valid_range(),
+        }
     }
 }
 
 /// Linear axis transform (identity transform).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct LinearAxisTransform;
 
 impl AxisTransform for LinearAxisTransform {
@@ -86,10 +149,6 @@ impl AxisTransform for LinearAxisTransform {
         spacer(input)
     }
 
-    fn boxed_clone(&self) -> Box<dyn AxisTransform> {
-        Box::new(*self)
-    }
-
     fn zoom_bounds(&self, min: f64, max: f64, zoom_factor: f64, center: f64) -> (f64, f64) {
         // Linear zoom: standard formula
         let new_min = center + (min - center) / zoom_factor;
@@ -106,6 +165,7 @@ impl AxisTransform for LinearAxisTransform {
 
 /// Logarithmic axis transform (base 10).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct LogAxisTransform;
 
 impl LogAxisTransform {
@@ -286,10 +346,6 @@ impl AxisTransform for LogAxisTransform {
         Some((0f64.next_up(), f64::INFINITY))
     }
 
-    fn boxed_clone(&self) -> Box<dyn AxisTransform> {
-        Box::new(*self)
-    }
-
     fn zoom_bounds(&self, min: f64, max: f64, zoom_factor: f64, center: f64) -> (f64, f64) {
         // For log scales, zoom multiplicatively in data space
         // This makes zoom feel natural regardless of the magnitude
@@ -330,25 +386,5 @@ impl AxisTransform for LogAxisTransform {
         let new_max = self.transform_from_plot(new_plot_max);
 
         (new_min, new_max)
-    }
-}
-
-/// Default axis transform configuration for an axis.
-#[derive(Clone, Copy, Default, Debug)]
-pub enum AxisTransformKind {
-    /// Linear scale (default).
-    #[default]
-    Linear,
-    /// Logarithmic scale.
-    Log,
-}
-
-impl AxisTransformKind {
-    /// Create the actual transform implementation.
-    pub fn make_transform(&self) -> Box<dyn AxisTransform> {
-        match self {
-            Self::Linear => Box::new(LinearAxisTransform),
-            Self::Log => Box::new(LogAxisTransform),
-        }
     }
 }
