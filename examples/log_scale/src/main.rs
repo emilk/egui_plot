@@ -88,7 +88,7 @@ impl eframe::App for MyApp {
                 .allow_double_click_reset(true);
 
             if self.log_x {
-                plot = plot.log_x();
+                plot = plot.log_x(true);
                 plot = match self.log_axis_formatter {
                     LogFormatter::Superscript => plot.x_axis_formatter(log_formatter_superscript()),
                     LogFormatter::Computer => plot.x_axis_formatter(log_formatter_computer()),
@@ -96,7 +96,7 @@ impl eframe::App for MyApp {
                 };
             }
             if self.log_y {
-                plot = plot.log_y();
+                plot = plot.log_y(true);
                 // Override default formatter based on selection
                 plot = match self.log_axis_formatter {
                     LogFormatter::Superscript => plot.y_axis_formatter(log_formatter_superscript()),

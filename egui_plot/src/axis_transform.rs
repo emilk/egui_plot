@@ -30,6 +30,7 @@ pub trait AxisTransform: Send + Sync + std::fmt::Debug {
     ///
     /// For example, logarithmic scales are only valid for positive values.
     /// Returns `None` if all values are valid.
+    #[expect(unused)]
     fn valid_range(&self) -> Option<(f64, f64)> {
         None
     }

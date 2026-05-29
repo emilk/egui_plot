@@ -21,6 +21,7 @@ use emath::Vec2b;
 use emath::pos2;
 use emath::remap;
 
+#[expect(clippy::unused_trait_names, reason = "Clippy false positive")]
 use crate::axis_transform::AxisTransform;
 use crate::axis_transform::AxisTransformType;
 use crate::bounds::PlotBounds;

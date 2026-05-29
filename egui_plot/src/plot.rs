@@ -30,6 +30,7 @@ use crate::axis::Axis;
 use crate::axis::AxisHints;
 use crate::axis::AxisWidget;
 use crate::axis::PlotTransform;
+#[expect(clippy::unused_trait_names, reason = "Clippy false positive")]
 use crate::axis_transform::AxisTransform;
 use crate::axis_transform::AxisTransformType;
 use crate::bounds::BoundsLinkGroups;
@@ -781,13 +782,20 @@ impl<'a> Plot<'a> {
 
     /// Use logarithmic scale on the X-axis with base 10.
     ///
-    /// Default: linear scale.
+    /// # Arguments
+    ///
+    /// * `log_x`: whether to use logarithmic scale on the X-axis.
+    ///
+    /// The default is a linear scale.
     ///
     /// Note: logarithmic scales only work with positive values.
     /// By default, axis labels will use superscript notation (e.g., 10², 10³).
     /// You can customize this with `x_axis_formatter()`.
     #[inline]
-    pub fn log_x(mut self) -> Self {
+    pub fn log_x(mut self, log_x: bool) -> Self {
+        if !log_x {
+            return self;
+        }
         self.x_axis_transform_type = AxisTransformType::log();
         // Update the grid spacer to use the log scale grid generation
         self.grid_spacers[0] = Box::new(move |input| AxisTransformType::log().generate_marks(input));
@@ -802,20 +810,27 @@ impl<'a> Plot<'a> {
 
     /// Use logarithmic scale on the Y-axis with the specified base.
     ///
+    /// # Arguments
+    ///
+    /// * `log_y`: whether to use logarithmic scale on the Y-axis.
+    ///
     /// Default: linear scale.
     ///
     /// Note: logarithmic scales only work with positive values.
     /// By default, axis labels will use superscript notation (e.g., 10², 10³).
     /// You can customize this with `y_axis_formatter()`.
     #[inline]
-    pub fn log_y(mut self) -> Self {
+    pub fn log_y(mut self, log_y: bool) -> Self {
+        if !log_y {
+            return self;
+        }
         // Update the grid spacer to use the log scale grid generation
         self.grid_spacers[1] = Box::new(move |input| AxisTransformType::log().generate_marks(input));
 
         self.y_axis_transform_type = AxisTransformType::log();
 
         // Set default superscript formatter for log scale
-        if let Some(main) = (&mut self.y_axes).first_mut() {
+        if let Some(main) = self.y_axes.first_mut() {
             main.formatter = std::sync::Arc::new(crate::log_formatter_superscript());
         }
 
@@ -1006,12 +1021,16 @@ impl<'a> Plot<'a> {
             });
 
             // Detect if axis transform type changed and reset auto-bounds if so
-            let x_transform_changed = mem.last_x_transform.map_or(true, |last| {
-                std::mem::discriminant(&last) != std::mem::discriminant(&self.x_axis_transform_type)
-            });
-            let y_transform_changed = mem.last_y_transform.map_or(true, |last| {
-                std::mem::discriminant(&last) != std::mem::discriminant(&self.y_axis_transform_type)
-            });
+            let x_transform_changed = if let Some(transform) = mem.last_x_transform {
+                transform != self.x_axis_transform_type
+            } else {
+                true
+            };
+            let y_transform_changed = if let Some(transform) = mem.last_y_transform {
+                transform != self.y_axis_transform_type
+            } else {
+                true
+            };
 
             if x_transform_changed {
                 mem.auto_bounds.x = true;
