@@ -21,11 +21,11 @@ Immediate mode 2D plotting library for [`egui`](https://crates.io/crates/https:/
 
 ## Plotting libraries in Rust
 
-To view a list of plotting libraries in Rust, see [notes on Rust plotting ecosystem](ECOSYSTEM.md).
+To view a list of plotting libraries in Rust, see [notes on Rust plotting ecosystem](https://github.com/emilk/egui_plot/blob/main/ECOSYSTEM.md).
 
 ## Contributing
 
-Please see [CONTRIBUTING.md](CONTRIBUTING.md) and [WELCOME_CONTRIBUTIONS.md](WELCOME_CONTRIBUTIONS.md)
+Please see [CONTRIBUTING.md](https://github.com/emilk/egui_plot/blob/main/CONTRIBUTING.md) and [WELCOME_CONTRIBUTIONS.md](https://github.com/emilk/egui_plot/blob/main/WELCOME_CONTRIBUTIONS.md)
 
 ## History
 
