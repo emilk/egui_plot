@@ -81,8 +81,8 @@ impl<'a> Line<'a> {
 
     /// Stroke width. A high value means the plot thickens.
     #[inline]
-    pub fn width(mut self, width: impl Into<f32>) -> Self {
-        self.stroke.width = width.into();
+    pub fn width(mut self, width: f32) -> Self {
+        self.stroke.width = width;
         self
     }
 
@@ -96,15 +96,15 @@ impl<'a> Line<'a> {
 
     /// Fill the area between this line and a given horizontal reference line.
     #[inline]
-    pub fn fill(mut self, y_reference: impl Into<f32>) -> Self {
-        self.fill = Some(y_reference.into());
+    pub fn fill(mut self, y_reference: f32) -> Self {
+        self.fill = Some(y_reference);
         self
     }
 
     /// Set the fill area's alpha channel. Default is `0.05`.
     #[inline]
-    pub fn fill_alpha(mut self, alpha: impl Into<f32>) -> Self {
-        self.fill_alpha = alpha.into();
+    pub fn fill_alpha(mut self, alpha: f32) -> Self {
+        self.fill_alpha = alpha;
         self
     }
 

@@ -96,8 +96,8 @@ impl Span {
 
     /// Convenience for updating the span border width.
     #[inline]
-    pub fn border_width(mut self, width: impl Into<f32>) -> Self {
-        self.border_stroke.width = width.into();
+    pub fn border_width(mut self, width: f32) -> Self {
+        self.border_stroke.width = width;
         self
     }
 
