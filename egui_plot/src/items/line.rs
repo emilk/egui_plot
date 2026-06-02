@@ -45,8 +45,8 @@ impl HLine {
 
     /// Stroke width. A high value means the plot thickens.
     #[inline]
-    pub fn width(mut self, width: impl Into<f32>) -> Self {
-        self.stroke.width = width.into();
+    pub fn width(mut self, width: f32) -> Self {
+        self.stroke.width = width;
         self
     }
 
@@ -180,8 +180,8 @@ impl VLine {
 
     /// Stroke width. A high value means the plot thickens.
     #[inline]
-    pub fn width(mut self, width: impl Into<f32>) -> Self {
-        self.stroke.width = width.into();
+    pub fn width(mut self, width: f32) -> Self {
+        self.stroke.width = width;
         self
     }
 
