@@ -137,7 +137,7 @@ pub struct Plot<'a> {
 
 impl<'a> Plot<'a> {
     /// Give a unique id for each plot within the same [`Ui`].
-    pub fn new(id_source: impl std::hash::Hash) -> Self {
+    pub fn new(id_source: impl egui::AsId) -> Self {
         Self {
             id_source: Id::new(id_source),
             id: None,
