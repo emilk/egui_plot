@@ -718,6 +718,18 @@ impl PlotTransform {
         pos2(self.position_from_point_x(value.x), self.position_from_point_y(value.y))
     }
 
+    /// Returns `true` if the given data-space point is valid for both axis
+    /// transforms. For example, logarithmic transforms reject non-positive
+    /// values, so a point with `x <= 0` on a log x-axis would be invalid.
+    ///
+    /// Invalid points should be excluded from rendering to avoid exploding the
+    /// plot bounds.
+    ///
+    #[inline]
+    pub fn is_point_valid(&self, value: &PlotPoint) -> bool {
+        self.x_transform.is_value_valid(value.x) && self.y_transform.is_value_valid(value.y)
+    }
+
     /// Plot point from screen/ui position.
     pub fn value_from_position(&self, pos: Pos2) -> PlotPoint {
         // Screen space -> Plot space -> Data space

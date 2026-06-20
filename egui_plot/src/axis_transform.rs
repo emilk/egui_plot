@@ -30,9 +30,20 @@ pub trait AxisTransform: Send + Sync + std::fmt::Debug {
     ///
     /// For example, logarithmic scales are only valid for positive values.
     /// Returns `None` if all values are valid.
-    #[expect(unused)]
     fn valid_range(&self) -> Option<(f64, f64)> {
         None
+    }
+
+    /// Returns `true` if the given data value is valid for this transform.
+    ///
+    /// For example, logarithmic transforms reject non-positive values.
+    /// The default implementation checks [`Self::valid_range`].
+    fn is_value_valid(&self, data_value: f64) -> bool {
+        if let Some((valid_min, valid_max)) = self.valid_range() {
+            valid_min <= data_value && data_value <= valid_max
+        } else {
+            true
+        }
     }
 
     /// Zoom the bounds by a factor around a center point.
@@ -121,6 +132,14 @@ impl AxisTransform for AxisTransformType {
         match self {
             Self::Linear(transform) => transform.valid_range(),
             Self::Log(transform) => transform.valid_range(),
+        }
+    }
+
+    #[inline]
+    fn is_value_valid(&self, data_value: f64) -> bool {
+        match self {
+            Self::Linear(transform) => transform.is_value_valid(data_value),
+            Self::Log(transform) => transform.is_value_valid(data_value),
         }
     }
 }

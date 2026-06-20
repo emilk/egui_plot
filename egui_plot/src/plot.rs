@@ -46,6 +46,7 @@ use crate::grid::GridInput;
 use crate::grid::GridMark;
 use crate::grid::GridSpacer;
 use crate::items;
+use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::Span;
 use crate::items::horizontal_line;
@@ -1190,6 +1191,17 @@ impl<'a> Plot<'a> {
                 }
             }
 
+            // For log axes, clamp the auto-bounds to valid positive values.
+            // Data points with values <= 0 cannot be plotted on a log scale,
+            // but would otherwise still extend the bounds to include them.
+            if auto_x && let AxisTransformType::Log(_) = self.x_axis_transform_type {
+                Self::clamp_log_bounds(&mut bounds, Axis::X, &plot_ui.items);
+            }
+            if auto_y && let AxisTransformType::Log(_) = self.y_axis_transform_type {
+                    Self::clamp_log_bounds(&mut bounds, Axis::Y, &plot_ui.items);
+                }
+            }
+
             // Apply margins based on the axis transform type
             // For linear axes: apply margin in data space (additive)
             // For log axes: apply margin in plot space (multiplicative in data
@@ -1256,6 +1268,59 @@ impl<'a> Plot<'a> {
             } else {
                 mem.transform.set_aspect_by_changing_axis(data_aspect as f64, Axis::Y);
             }
+        }
+    }
+
+    /// Clamp the bounds on an axis to valid positive values for a log scale.
+    ///
+    /// Scans the items' data to find the minimum positive value for the given
+    /// axis and uses it as the lower bound. Invalid (<= 0) data points are
+    /// excluded. If all data is invalid, a default range of `[1.0, 10.0]`
+    /// is used. If the data is a single value or a very tight cluster
+    /// (spanning less than one decade), the bounds are expanded symmetrically
+    /// in log space to `[value/10, value*10]`.
+    fn clamp_log_bounds(bounds: &mut PlotBounds, axis: Axis, items: &[Box<dyn PlotItem + '_>]) {
+        let idx = axis as usize;
+
+        let max = bounds.max[idx];
+        if max <= 0.0 || !max.is_finite() {
+            // All data is negative or zero — invalid for log scale.
+            // Use a reasonable default range.
+            bounds.min[idx] = 1.0;
+            bounds.max[idx] = 10.0;
+            return;
+        }
+
+        // Scan all items' geometry to find the actual minimum positive value.
+        // We cannot rely on `bounds.min[idx]` alone because it may include
+        // negative/zero points that are invalid for log scale.
+        let mut min_positive = f64::INFINITY;
+        for item in items {
+            if let PlotGeometry::Points(points) = item.geometry() {
+                for point in points.iter() {
+                    let val = [point.x, point.y][idx];
+                    if val > 0.0 && val < min_positive {
+                        min_positive = val;
+                    }
+                }
+            }
+        }
+
+        if min_positive.is_finite() {
+            // Use the minimum positive value as the lower bound.
+            bounds.min[idx] = min_positive;
+
+            // If the data is a single value or very tight cluster (< 1 decade),
+            // expand the range symmetrically in log space.
+            if bounds.max[idx] / bounds.min[idx] < 10.0 {
+                let center = (bounds.min[idx] * bounds.max[idx]).sqrt();
+                bounds.min[idx] = center / (10.0_f64.sqrt());
+                bounds.max[idx] = center * (10.0_f64.sqrt());
+            }
+        } else {
+            // No valid positive data found — use a default range.
+            bounds.min[idx] = 1.0;
+            bounds.max[idx] = 10.0;
         }
     }
 

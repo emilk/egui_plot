@@ -64,7 +64,7 @@ impl eframe::App for MyApp {
 
             // Generate exponential data (y = 10^x)
             // X from 0.1 to 10 (suitable for log scale)
-            let exponential: PlotPoints<'_> = (1..=100)
+            let exponential: PlotPoints<'_> = (0..=100)
                 .map(|i| {
                     let x = i as f64 * 0.1;
                     let y = 10_f64.powf(x);
@@ -74,7 +74,7 @@ impl eframe::App for MyApp {
 
             // Generate power law data (y = x^3)
             // X from 1 to 100 (suitable for log scale)
-            let power_law: PlotPoints<'_> = (1..=100)
+            let power_law: PlotPoints<'_> = (0..=100)
                 .map(|i| {
                     let x = i as f64;
                     let y = x.powi(3);
