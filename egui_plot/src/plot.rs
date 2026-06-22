@@ -1198,52 +1198,51 @@ impl<'a> Plot<'a> {
                 Self::clamp_log_bounds(&mut bounds, Axis::X, &plot_ui.items);
             }
             if auto_y && let AxisTransformType::Log(_) = self.y_axis_transform_type {
-                    Self::clamp_log_bounds(&mut bounds, Axis::Y, &plot_ui.items);
+                Self::clamp_log_bounds(&mut bounds, Axis::Y, &plot_ui.items);
+            }
+        }
+
+        // Apply margins based on the axis transform type
+        // For linear axes: apply margin in data space (additive)
+        // For log axes: apply margin in plot space (multiplicative in data
+        // space)
+
+        if auto_x {
+            match self.x_axis_transform_type {
+                AxisTransformType::Linear(_) => {
+                    // Linear: apply margin in data space
+                    bounds.add_relative_margin_x(self.margin_fraction);
+                }
+                AxisTransformType::Log(_) => {
+                    // Log: apply margin in plot space
+                    let transform = self.x_axis_transform_type;
+                    let (mut plot_min, mut plot_max) = transform.bounds_to_plot(bounds.min[0], bounds.max[0]);
+                    let plot_range = (plot_max - plot_min).abs();
+                    let margin = plot_range * self.margin_fraction.x as f64;
+                    plot_min -= margin;
+                    plot_max += margin;
+                    bounds.min[0] = transform.transform_from_plot(plot_min);
+                    bounds.max[0] = transform.transform_from_plot(plot_max);
                 }
             }
+        }
 
-            // Apply margins based on the axis transform type
-            // For linear axes: apply margin in data space (additive)
-            // For log axes: apply margin in plot space (multiplicative in data
-            // space)
-
-            if auto_x {
-                match self.x_axis_transform_type {
-                    AxisTransformType::Linear(_) => {
-                        // Linear: apply margin in data space
-                        bounds.add_relative_margin_x(self.margin_fraction);
-                    }
-                    AxisTransformType::Log(_) => {
-                        // Log: apply margin in plot space
-                        let transform = self.x_axis_transform_type;
-                        let (mut plot_min, mut plot_max) = transform.bounds_to_plot(bounds.min[0], bounds.max[0]);
-                        let plot_range = (plot_max - plot_min).abs();
-                        let margin = plot_range * self.margin_fraction.x as f64;
-                        plot_min -= margin;
-                        plot_max += margin;
-                        bounds.min[0] = transform.transform_from_plot(plot_min);
-                        bounds.max[0] = transform.transform_from_plot(plot_max);
-                    }
+        if auto_y {
+            match self.y_axis_transform_type {
+                AxisTransformType::Linear(_) => {
+                    // Linear: apply margin in data space
+                    bounds.add_relative_margin_y(self.margin_fraction);
                 }
-            }
-
-            if auto_y {
-                match self.y_axis_transform_type {
-                    AxisTransformType::Linear(_) => {
-                        // Linear: apply margin in data space
-                        bounds.add_relative_margin_y(self.margin_fraction);
-                    }
-                    AxisTransformType::Log(_) => {
-                        // Log: apply margin in plot space
-                        let transform = self.y_axis_transform_type;
-                        let (mut plot_min, mut plot_max) = transform.bounds_to_plot(bounds.min[1], bounds.max[1]);
-                        let plot_range = (plot_max - plot_min).abs();
-                        let margin = plot_range * self.margin_fraction.y as f64;
-                        plot_min -= margin;
-                        plot_max += margin;
-                        bounds.min[1] = transform.transform_from_plot(plot_min);
-                        bounds.max[1] = transform.transform_from_plot(plot_max);
-                    }
+                AxisTransformType::Log(_) => {
+                    // Log: apply margin in plot space
+                    let transform = self.y_axis_transform_type;
+                    let (mut plot_min, mut plot_max) = transform.bounds_to_plot(bounds.min[1], bounds.max[1]);
+                    let plot_range = (plot_max - plot_min).abs();
+                    let margin = plot_range * self.margin_fraction.y as f64;
+                    plot_min -= margin;
+                    plot_max += margin;
+                    bounds.min[1] = transform.transform_from_plot(plot_min);
+                    bounds.max[1] = transform.transform_from_plot(plot_max);
                 }
             }
         }
@@ -1297,7 +1296,7 @@ impl<'a> Plot<'a> {
         let mut min_positive = f64::INFINITY;
         for item in items {
             if let PlotGeometry::Points(points) = item.geometry() {
-                for point in points.iter() {
+                for point in points {
                     let val = [point.x, point.y][idx];
                     if val > 0.0 && val < min_positive {
                         min_positive = val;
