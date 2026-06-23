@@ -47,6 +47,7 @@ use crate::items::PlotItem;
 use crate::items::Span;
 use crate::items::horizontal_line;
 use crate::items::vertical_line;
+use crate::label::HoverPosition;
 use crate::label::LabelFormatter;
 use crate::memory::PlotMemory;
 use crate::overlays::CoordinatesFormatter;
@@ -419,7 +420,7 @@ impl<'a> Plot<'a> {
     /// # });
     /// ```
     #[inline]
-    pub fn label_formatter(mut self, label_formatter: impl Fn(&str, &PlotPoint) -> String + 'a) -> Self {
+    pub fn label_formatter(mut self, label_formatter: impl Fn(&HoverPosition<'_>) -> Option<String> + 'a) -> Self {
         self.label_formatter = Some(Box::new(label_formatter));
         self
     }
@@ -1601,7 +1602,7 @@ impl<'a> Plot<'a> {
             items::rulers_and_tooltip_at_value(
                 &plot_ui.response,
                 value,
-                "",
+                None,
                 &plot,
                 &mut cursors,
                 &self.label_formatter,
