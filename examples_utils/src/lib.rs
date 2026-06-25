@@ -39,7 +39,7 @@ pub mod internal {
 
     pub fn run_screenshot_test<State>(builder: impl Fn(&mut eframe::CreationContext<'_>) -> State, manifest_dir: &str)
     where
-        State: eframe::App,
+        State: eframe::App + 'static,
     {
         let output_path = PathBuf::from(manifest_dir);
         let options = SnapshotOptions::new()
