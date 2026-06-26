@@ -5,6 +5,16 @@ This file is updated upon each release.
 Changes since the last release can be found at <https://github.com/emilk/egui_plot/compare/latest...HEAD> or by running the `scripts/generate_changelog.py` script.
 
 
+## 0.36.0 - 2026-06-26
+
+Full diff at https://github.com/emilk/egui_plot/compare/0.35.0..HEAD
+
+#### PRs
+* Replace `impl Into<f32>` parameters with just `f32` [#249](https://github.com/emilk/egui_plot/pull/249) by [@emilk](https://github.com/emilk)
+* Fix broken relative README links on crates.io [#247](https://github.com/emilk/egui_plot/pull/247) by [@Burrdi](https://github.com/Burrdi)
+* Provide element index with label_formatter [#138](https://github.com/emilk/egui_plot/pull/138) by [@upsj](https://github.com/upsj)
+* Update egui to 0.35 [#250](https://github.com/emilk/egui_plot/pull/250) by [@lucasmerlin](https://github.com/lucasmerlin)
+
 
 ## 0.35.0 - 2026-03-26
 * Update to egui 0.34 [#239](https://github.com/emilk/egui_plot/pull/239) by [@emilk](https://github.com/emilk)
