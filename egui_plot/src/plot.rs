@@ -30,6 +30,9 @@ use crate::axis::Axis;
 use crate::axis::AxisHints;
 use crate::axis::AxisWidget;
 use crate::axis::PlotTransform;
+#[expect(clippy::unused_trait_names, reason = "Clippy false positive")]
+use crate::axis_transform::AxisTransform;
+use crate::axis_transform::AxisTransformType;
 use crate::bounds::BoundsLinkGroups;
 use crate::bounds::BoundsModification;
 use crate::bounds::LinkedBounds;
@@ -43,6 +46,7 @@ use crate::grid::GridInput;
 use crate::grid::GridMark;
 use crate::grid::GridSpacer;
 use crate::items;
+use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::Span;
 use crate::items::horizontal_line;
@@ -132,6 +136,9 @@ pub struct Plot<'a> {
     grid_strength_exponent: f32,
     clamp_grid: bool,
 
+    x_axis_transform_type: AxisTransformType,
+    y_axis_transform_type: AxisTransformType,
+
     sense: Sense,
 }
 
@@ -185,6 +192,9 @@ impl<'a> Plot<'a> {
             grid_color: None,
             grid_strength_exponent: 0.5,
             clamp_grid: false,
+
+            x_axis_transform_type: AxisTransformType::linear(),
+            y_axis_transform_type: AxisTransformType::linear(),
 
             sense: egui::Sense::click_and_drag(),
         }
@@ -771,11 +781,91 @@ impl<'a> Plot<'a> {
         self
     }
 
+    /// Use logarithmic scale on the X-axis with base 10.
+    ///
+    /// # Arguments
+    ///
+    /// * `log_x`: whether to use logarithmic scale on the X-axis.
+    ///
+    /// The default is a linear scale.
+    ///
+    /// Note: logarithmic scales only work with positive values.
+    /// By default, axis labels will use superscript notation (e.g., 10², 10³).
+    /// You can customize this with `x_axis_formatter()`.
+    #[inline]
+    pub fn log_x(mut self, log_x: bool) -> Self {
+        if !log_x {
+            return self;
+        }
+        self.x_axis_transform_type = AxisTransformType::log();
+        // Update the grid spacer to use the log scale grid generation
+        self.grid_spacers[0] = Box::new(move |input| AxisTransformType::log().generate_marks(input));
+
+        // Set default superscript formatter for log scale
+        if let Some(main) = self.x_axes.first_mut() {
+            main.formatter = std::sync::Arc::new(crate::log_formatter_superscript());
+        }
+
+        self
+    }
+
+    /// Use logarithmic scale on the Y-axis with the specified base.
+    ///
+    /// # Arguments
+    ///
+    /// * `log_y`: whether to use logarithmic scale on the Y-axis.
+    ///
+    /// Default: linear scale.
+    ///
+    /// Note: logarithmic scales only work with positive values.
+    /// By default, axis labels will use superscript notation (e.g., 10², 10³).
+    /// You can customize this with `y_axis_formatter()`.
+    #[inline]
+    pub fn log_y(mut self, log_y: bool) -> Self {
+        if !log_y {
+            return self;
+        }
+        // Update the grid spacer to use the log scale grid generation
+        self.grid_spacers[1] = Box::new(move |input| AxisTransformType::log().generate_marks(input));
+
+        self.y_axis_transform_type = AxisTransformType::log();
+
+        // Set default superscript formatter for log scale
+        if let Some(main) = self.y_axes.first_mut() {
+            main.formatter = std::sync::Arc::new(crate::log_formatter_superscript());
+        }
+
+        self
+    }
+
     /// Set the main Y-axis-width by number of digits
     #[inline]
     #[deprecated = "Use `y_axis_min_width` instead"]
     pub fn y_axis_width(self, digits: usize) -> Self {
         self.y_axis_min_width(12.0 * digits as f32)
+    }
+
+    /// Set a custom axis transform for the X-axis.
+    ///
+    /// For common cases, prefer [`Self::x_axis_logarithmic`].
+    #[inline]
+    pub fn x_axis_transform(mut self, transform: AxisTransformType) -> Self {
+        self.x_axis_transform_type = transform;
+        // Update the grid spacer to use the transform's grid generation
+
+        self.grid_spacers[0] = Box::new(move |input| transform.generate_marks(input));
+        self
+    }
+
+    /// Set a custom axis transform for the Y-axis.
+    ///
+    /// For common cases, prefer [`Self::y_axis_logarithmic`].
+    #[inline]
+    pub fn y_axis_transform(mut self, transform: AxisTransformType) -> Self {
+        self.y_axis_transform_type = transform;
+        // Update the grid spacer to use the transform's grid generation
+        self.grid_spacers[1] = Box::new(move |input| transform.generate_marks(input));
+        self
     }
 
     /// Set custom configuration for X-axis
@@ -897,31 +987,64 @@ impl<'a> Plot<'a> {
                 auto_bounds: self.default_auto_bounds,
                 hovered_legend_item: None,
                 hidden_items: Default::default(),
-                transform: PlotTransform::new_with_invert_axis(
+                transform: PlotTransform::new_with_transforms_and_invert(
                     plot_rect,
                     self.min_auto_bounds,
                     self.center_axis,
                     Vec2b::new(self.invert_x, self.invert_y),
+                    self.x_axis_transform_type,
+                    self.y_axis_transform_type,
                 ),
                 last_click_pos_for_zoom: None,
                 x_axis_thickness: Default::default(),
                 y_axis_thickness: Default::default(),
+                last_x_transform: Some(self.x_axis_transform_type),
+                last_y_transform: Some(self.y_axis_transform_type),
             }
         } else {
-            PlotMemory::load(ui.ctx(), plot_id).unwrap_or_else(|| PlotMemory {
+            let mut mem = PlotMemory::load(ui.ctx(), plot_id).unwrap_or_else(|| PlotMemory {
                 auto_bounds: self.default_auto_bounds,
                 hovered_legend_item: None,
                 hidden_items: Default::default(),
-                transform: PlotTransform::new_with_invert_axis(
+                transform: PlotTransform::new_with_transforms_and_invert(
                     plot_rect,
                     self.min_auto_bounds,
                     self.center_axis,
                     Vec2b::new(self.invert_x, self.invert_y),
+                    self.x_axis_transform_type,
+                    self.y_axis_transform_type,
                 ),
                 last_click_pos_for_zoom: None,
                 x_axis_thickness: Default::default(),
                 y_axis_thickness: Default::default(),
-            })
+                last_x_transform: Some(self.x_axis_transform_type),
+                last_y_transform: Some(self.y_axis_transform_type),
+            });
+
+            // Detect if axis transform type changed and reset auto-bounds if so
+            let x_transform_changed = if let Some(transform) = mem.last_x_transform {
+                transform != self.x_axis_transform_type
+            } else {
+                true
+            };
+            let y_transform_changed = if let Some(transform) = mem.last_y_transform {
+                transform != self.y_axis_transform_type
+            } else {
+                true
+            };
+
+            if x_transform_changed {
+                mem.auto_bounds.x = true;
+            }
+            if y_transform_changed {
+                mem.auto_bounds.y = true;
+            }
+
+            // Update the stored transform kinds
+            mem.last_x_transform = Some(self.x_axis_transform_type);
+            mem.last_y_transform = Some(self.y_axis_transform_type);
+
+            mem
         }
     }
 
@@ -1068,20 +1191,69 @@ impl<'a> Plot<'a> {
                 }
             }
 
-            if auto_x {
-                bounds.add_relative_margin_x(self.margin_fraction);
+            // For log axes, clamp the auto-bounds to valid positive values.
+            // Data points with values <= 0 cannot be plotted on a log scale,
+            // but would otherwise still extend the bounds to include them.
+            if auto_x && let AxisTransformType::Log(_) = self.x_axis_transform_type {
+                Self::clamp_log_bounds(&mut bounds, Axis::X, &plot_ui.items);
             }
-
-            if auto_y {
-                bounds.add_relative_margin_y(self.margin_fraction);
+            if auto_y && let AxisTransformType::Log(_) = self.y_axis_transform_type {
+                Self::clamp_log_bounds(&mut bounds, Axis::Y, &plot_ui.items);
             }
         }
 
-        mem.transform = PlotTransform::new_with_invert_axis(
+        // Apply margins based on the axis transform type
+        // For linear axes: apply margin in data space (additive)
+        // For log axes: apply margin in plot space (multiplicative in data
+        // space)
+
+        if auto_x {
+            match self.x_axis_transform_type {
+                AxisTransformType::Linear(_) => {
+                    // Linear: apply margin in data space
+                    bounds.add_relative_margin_x(self.margin_fraction);
+                }
+                AxisTransformType::Log(_) => {
+                    // Log: apply margin in plot space
+                    let transform = self.x_axis_transform_type;
+                    let (mut plot_min, mut plot_max) = transform.bounds_to_plot(bounds.min[0], bounds.max[0]);
+                    let plot_range = (plot_max - plot_min).abs();
+                    let margin = plot_range * self.margin_fraction.x as f64;
+                    plot_min -= margin;
+                    plot_max += margin;
+                    bounds.min[0] = transform.transform_from_plot(plot_min);
+                    bounds.max[0] = transform.transform_from_plot(plot_max);
+                }
+            }
+        }
+
+        if auto_y {
+            match self.y_axis_transform_type {
+                AxisTransformType::Linear(_) => {
+                    // Linear: apply margin in data space
+                    bounds.add_relative_margin_y(self.margin_fraction);
+                }
+                AxisTransformType::Log(_) => {
+                    // Log: apply margin in plot space
+                    let transform = self.y_axis_transform_type;
+                    let (mut plot_min, mut plot_max) = transform.bounds_to_plot(bounds.min[1], bounds.max[1]);
+                    let plot_range = (plot_max - plot_min).abs();
+                    let margin = plot_range * self.margin_fraction.y as f64;
+                    plot_min -= margin;
+                    plot_max += margin;
+                    bounds.min[1] = transform.transform_from_plot(plot_min);
+                    bounds.max[1] = transform.transform_from_plot(plot_max);
+                }
+            }
+        }
+
+        mem.transform = PlotTransform::new_with_transforms_and_invert(
             plot_rect,
             bounds,
             self.center_axis,
             Vec2b::new(self.invert_x, self.invert_y),
+            self.x_axis_transform_type,
+            self.y_axis_transform_type,
         );
 
         // Enforce aspect ratio
@@ -1095,6 +1267,59 @@ impl<'a> Plot<'a> {
             } else {
                 mem.transform.set_aspect_by_changing_axis(data_aspect as f64, Axis::Y);
             }
+        }
+    }
+
+    /// Clamp the bounds on an axis to valid positive values for a log scale.
+    ///
+    /// Scans the items' data to find the minimum positive value for the given
+    /// axis and uses it as the lower bound. Invalid (<= 0) data points are
+    /// excluded. If all data is invalid, a default range of `[1.0, 10.0]`
+    /// is used. If the data is a single value or a very tight cluster
+    /// (spanning less than one decade), the bounds are expanded symmetrically
+    /// in log space to `[value/10, value*10]`.
+    fn clamp_log_bounds(bounds: &mut PlotBounds, axis: Axis, items: &[Box<dyn PlotItem + '_>]) {
+        let idx = axis as usize;
+
+        let max = bounds.max[idx];
+        if max <= 0.0 || !max.is_finite() {
+            // All data is negative or zero — invalid for log scale.
+            // Use a reasonable default range.
+            bounds.min[idx] = 1.0;
+            bounds.max[idx] = 10.0;
+            return;
+        }
+
+        // Scan all items' geometry to find the actual minimum positive value.
+        // We cannot rely on `bounds.min[idx]` alone because it may include
+        // negative/zero points that are invalid for log scale.
+        let mut min_positive = f64::INFINITY;
+        for item in items {
+            if let PlotGeometry::Points(points) = item.geometry() {
+                for point in points {
+                    let val = [point.x, point.y][idx];
+                    if val > 0.0 && val < min_positive {
+                        min_positive = val;
+                    }
+                }
+            }
+        }
+
+        if min_positive.is_finite() {
+            // Use the minimum positive value as the lower bound.
+            bounds.min[idx] = min_positive;
+
+            // If the data is a single value or very tight cluster (< 1 decade),
+            // expand the range symmetrically in log space.
+            if bounds.max[idx] / bounds.min[idx] < 10.0 {
+                let center = (bounds.min[idx] * bounds.max[idx]).sqrt();
+                bounds.min[idx] = center / (10.0_f64.sqrt());
+                bounds.max[idx] = center * (10.0_f64.sqrt());
+            }
+        } else {
+            // No valid positive data found — use a default range.
+            bounds.min[idx] = 1.0;
+            bounds.max[idx] = 10.0;
         }
     }
 
@@ -1264,7 +1489,7 @@ impl<'a> Plot<'a> {
         // Process X-axis widgets
         for widget in &mut axis_widgets[0] {
             widget.range = x_axis_range.clone();
-            widget.transform = Some(mem.transform);
+            widget.transform = Some(mem.transform.clone());
             widget.steps = Arc::clone(&x_steps);
         }
         let x_axis_widgets = std::mem::take(&mut axis_widgets[0]);
@@ -1276,7 +1501,7 @@ impl<'a> Plot<'a> {
         // Process Y-axis widgets
         for widget in &mut axis_widgets[1] {
             widget.range = y_axis_range.clone();
-            widget.transform = Some(mem.transform);
+            widget.transform = Some(mem.transform.clone());
             widget.steps = Arc::clone(&y_steps);
         }
         let y_axis_widgets = std::mem::take(&mut axis_widgets[1]);
@@ -1629,7 +1854,7 @@ impl<'a> Plot<'a> {
 
         // Load or initialize memory
         let mut mem = self.load_or_init_memory(ui, plot_id, plot_rect);
-        let last_plot_transform = mem.transform;
+        let last_plot_transform = mem.transform.clone();
 
         // Call the plot build function.
         let mut plot_ui = PlotUi {
@@ -1667,7 +1892,7 @@ impl<'a> Plot<'a> {
         }
 
         let (shapes, plot_cursors, mut hovered_plot_item) =
-            self.collect_shapes(ui, &plot_ui, plot_id, &mem.transform, show_xy);
+            self.collect_shapes(ui, &plot_ui, plot_id, mem.transform(), show_xy);
 
         // Get the painter from ui and configure it with the plot's clip rect
         // The painter is used to render all accumulated shapes
@@ -1721,7 +1946,7 @@ impl<'a> Plot<'a> {
         };
 
         // Store memory for the next frame.
-        let transform = mem.transform();
+        let transform = mem.transform().clone();
         mem.store(ui.ctx(), plot_id);
 
         ui.advance_cursor_after_rect(complete_rect);

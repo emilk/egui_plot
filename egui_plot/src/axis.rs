@@ -21,6 +21,9 @@ use emath::Vec2b;
 use emath::pos2;
 use emath::remap;
 
+#[expect(clippy::unused_trait_names, reason = "Clippy false positive")]
+use crate::axis_transform::AxisTransform;
+use crate::axis_transform::AxisTransformType;
 use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
 use crate::grid::GridMark;
@@ -210,7 +213,7 @@ impl<'a> AxisWidget<'a> {
             return (response, 0.0);
         }
 
-        let Some(transform) = self.transform else {
+        let Some(transform) = &self.transform else {
             return (response, 0.0);
         };
         let tick_labels_thickness = self.add_tick_labels(ui, transform, axis);
@@ -271,19 +274,116 @@ impl<'a> AxisWidget<'a> {
     }
 
     /// Add tick labels to the axis. Returns the thickness of the axis.
-    fn add_tick_labels(&self, ui: &Ui, transform: PlotTransform, axis: Axis) -> f32 {
+    /// Count how many labels would be shown with a given `step_size` threshold.
+    /// This is used to ensure we always show a minimum number of labels.
+    fn count_labels_with_threshold(
+        &self,
+        _ui: &Ui,
+        transform: &PlotTransform,
+        axis: Axis,
+        step_size_threshold: f64,
+    ) -> usize {
+        let label_spacing = self.hints.label_spacing;
+        let mut count = 0;
+        let mut last_shown_pos: Option<f32> = None;
+
+        let any_large_step = self.steps.iter().any(|s| s.step_size >= 5.0);
+
+        for step in self.steps.iter() {
+            let text = (self.hints.formatter)(*step, &self.range);
+            if text.is_empty() {
+                continue;
+            }
+
+            // Apply step-size filtering
+            if any_large_step && step.step_size < step_size_threshold {
+                continue;
+            }
+
+            // Calculate position in screen space
+            let current_pos = match axis {
+                Axis::X => transform.position_from_point(&super::PlotPoint::new(step.value, 0.0)),
+                Axis::Y => transform.position_from_point(&super::PlotPoint::new(0.0, step.value)),
+            };
+            let current_coord = current_pos[usize::from(axis)];
+
+            // Apply spacing filtering
+            let spacing_in_points = if let Some(last_coord) = last_shown_pos {
+                (current_coord - last_coord).abs()
+            } else {
+                f32::INFINITY
+            };
+
+            if spacing_in_points <= label_spacing.min {
+                continue;
+            }
+
+            count += 1;
+            last_shown_pos = Some(current_coord);
+        }
+
+        count
+    }
+
+    fn add_tick_labels(&self, ui: &Ui, transform: &PlotTransform, axis: Axis) -> f32 {
         let font_id = TextStyle::Body.resolve(ui.style());
         let label_spacing = self.hints.label_spacing;
         let mut thickness: f32 = 0.0;
 
         const SIDE_MARGIN: f32 = 4.0; // Add some margin to both sides of the text on the Y axis.
+        const MIN_LABEL_COUNT: usize = 3; // Minimum number of labels to show on an axis
         let painter = ui.painter();
+
+        // Determine the step_size threshold to use
+        // Try progressively more permissive thresholds until we get enough labels
+        let any_large_step = self.steps.iter().any(|s| s.step_size >= 5.0);
+
+        let step_size_threshold = if !any_large_step {
+            0.0 // Linear mode - don't filter by step_size
+        } else {
+            // Try threshold 1.0 first (only major marks)
+            let count_with_1_0 = self.count_labels_with_threshold(ui, transform, axis, 1.0);
+            if count_with_1_0 >= MIN_LABEL_COUNT {
+                1.0 // Enough labels with strict filtering
+            } else {
+                // Try threshold 0.5 (include tier 3: 2×, 5× marks)
+                let count_with_0_5 = self.count_labels_with_threshold(ui, transform, axis, 0.5);
+                if count_with_0_5 >= MIN_LABEL_COUNT {
+                    0.5 // Need tier 3 marks
+                } else {
+                    0.0 // Show all marks, no step_size filtering
+                }
+            }
+        };
+
+        // Track the last shown label position to calculate spacing correctly
+        let mut last_shown_pos: Option<f32> = None;
 
         // Add tick labels:
         for step in self.steps.iter() {
             let text = (self.hints.formatter)(*step, &self.range);
             if !text.is_empty() {
-                let spacing_in_points = (transform.dpos_dvalue()[usize::from(axis)] * step.step_size).abs() as f32;
+                // For log scales, use step_size to determine label importance
+                // Only label marks that are "significant enough" based on
+                // `step_size` This prevents labeling every minor grid line But
+                // skip this filtering if we seem to be in linear mode (all
+                // step_sizes are small)
+                if any_large_step && step.step_size < step_size_threshold {
+                    continue; // Show as grid line only, no label (log scale filtering)
+                }
+                // Calculate current label position in screen space
+                let current_pos = match axis {
+                    Axis::X => transform.position_from_point(&super::PlotPoint::new(step.value, 0.0)),
+                    Axis::Y => transform.position_from_point(&super::PlotPoint::new(0.0, step.value)),
+                };
+                let current_coord = current_pos[usize::from(axis)];
+
+                // Calculate spacing from the last shown label (if any)
+                let spacing_in_points = if let Some(last_coord) = last_shown_pos {
+                    (current_coord - last_coord).abs()
+                } else {
+                    f32::INFINITY // First label always has enough space
+                };
 
                 if spacing_in_points <= label_spacing.min {
                     // Labels are too close together - don't paint them.
@@ -310,6 +410,9 @@ impl<'a> AxisWidget<'a> {
                 if spacing_in_points < galley_size[axis as usize] {
                     continue; // the galley won't fit (likely too wide on the X axis).
                 }
+
+                // We're going to show this label - update the last shown position
+                last_shown_pos = Some(current_coord);
 
                 match axis {
                     Axis::X => {
@@ -362,14 +465,23 @@ impl<'a> AxisWidget<'a> {
 
 /// Contains the screen rectangle and the plot bounds and provides methods to
 /// transform between them.
-#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PlotTransform {
     /// The screen rectangle.
     frame: Rect,
 
-    /// The plot bounds.
+    /// The plot bounds in data space.
     bounds: PlotBounds,
+
+    /// The plot bounds in plot space (after applying axis transforms).
+    plot_bounds: PlotBounds,
+
+    /// Transform for the x-axis (data space -> plot space).
+    x_transform: AxisTransformType,
+
+    /// Transform for the y-axis (data space -> plot space).
+    y_transform: AxisTransformType,
 
     /// Whether to always center the x-range or y-range of the bounds.
     centered: Vec2b,
@@ -379,7 +491,31 @@ pub struct PlotTransform {
 }
 
 impl PlotTransform {
+    /// Create a new transform with linear axes
+    ///
+    /// # Arguments
+    ///
+    /// * `frame` - The screen rectangle.
+    /// * `bounds` - The plot bounds in data space.
+    /// * `center_axis` - Whether to always center the x-range or y-range of the bounds.
     pub fn new(frame: Rect, bounds: PlotBounds, center_axis: impl Into<Vec2b>) -> Self {
+        Self::new_with_transforms(
+            frame,
+            bounds,
+            center_axis,
+            AxisTransformType::linear(),
+            AxisTransformType::linear(),
+        )
+    }
+
+    /// Create a new transform with custom axis transforms.
+    pub fn new_with_transforms(
+        frame: Rect,
+        bounds: PlotBounds,
+        center_axis: impl Into<Vec2b>,
+        x_transform: AxisTransformType,
+        y_transform: AxisTransformType,
+    ) -> Self {
         debug_assert!(
             0.0 <= frame.width() && 0.0 <= frame.height(),
             "Bad plot frame: {frame:?}"
@@ -424,9 +560,18 @@ impl PlotTransform {
 
         debug_assert!(new_bounds.is_valid(), "Bad final plot bounds: {new_bounds:?}");
 
+        // Transform the bounds to plot space using bounds_to_plot which handles edge cases
+        let (plot_min_x, plot_max_x) = x_transform.bounds_to_plot(new_bounds.min[0], new_bounds.max[0]);
+        let (plot_min_y, plot_max_y) = y_transform.bounds_to_plot(new_bounds.min[1], new_bounds.max[1]);
+
+        let plot_bounds = PlotBounds::from_min_max([plot_min_x, plot_min_y], [plot_max_x, plot_max_y]);
+
         Self {
             frame,
             bounds: new_bounds,
+            plot_bounds,
+            x_transform,
+            y_transform,
             centered: center_axis,
             inverted_axis: Vec2b::new(false, false),
         }
@@ -439,6 +584,20 @@ impl PlotTransform {
         invert_axis: impl Into<Vec2b>,
     ) -> Self {
         let mut new = Self::new(frame, bounds, center_axis);
+        new.inverted_axis = invert_axis.into();
+        new
+    }
+
+    /// Create a new transform with custom axis transforms and inversion.
+    pub fn new_with_transforms_and_invert(
+        frame: Rect,
+        bounds: PlotBounds,
+        center_axis: impl Into<Vec2b>,
+        invert_axis: impl Into<Vec2b>,
+        x_transform: AxisTransformType,
+        y_transform: AxisTransformType,
+    ) -> Self {
+        let mut new = Self::new_with_transforms(frame, bounds, center_axis, x_transform, y_transform);
         new.inverted_axis = invert_axis.into();
         new
     }
@@ -458,6 +617,10 @@ impl PlotTransform {
     #[inline]
     pub fn set_bounds(&mut self, bounds: PlotBounds) {
         self.bounds = bounds;
+        // Update plot bounds using bounds_to_plot
+        let (plot_min_x, plot_max_x) = self.x_transform.bounds_to_plot(bounds.min[0], bounds.max[0]);
+        let (plot_min_y, plot_max_y) = self.y_transform.bounds_to_plot(bounds.min[1], bounds.max[1]);
+        self.plot_bounds = PlotBounds::from_min_max([plot_min_x, plot_min_y], [plot_max_x, plot_max_y]);
     }
 
     pub fn translate_bounds(&mut self, mut delta_pos: (f64, f64)) {
@@ -467,27 +630,66 @@ impl PlotTransform {
         if self.centered.y {
             delta_pos.1 = 0.;
         }
-        delta_pos.0 *= self.dvalue_dpos()[0];
-        delta_pos.1 *= self.dvalue_dpos()[1];
-        self.bounds.translate((delta_pos.0, delta_pos.1));
+
+        // Use transform-aware pan for each axis
+        let (new_min_x, new_max_x) = self.x_transform.pan_bounds(
+            self.bounds.min[0],
+            self.bounds.max[0],
+            delta_pos.0,
+            self.dvalue_dpos()[0],
+        );
+
+        let (new_min_y, new_max_y) = self.y_transform.pan_bounds(
+            self.bounds.min[1],
+            self.bounds.max[1],
+            delta_pos.1,
+            self.dvalue_dpos()[1],
+        );
+
+        self.bounds = PlotBounds::from_min_max([new_min_x, new_min_y], [new_max_x, new_max_y]);
+
+        // Update plot bounds
+        let (plot_min_x, plot_max_x) = self.x_transform.bounds_to_plot(new_min_x, new_max_x);
+        let (plot_min_y, plot_max_y) = self.y_transform.bounds_to_plot(new_min_y, new_max_y);
+        self.plot_bounds = PlotBounds::from_min_max([plot_min_x, plot_min_y], [plot_max_x, plot_max_y]);
     }
 
     /// Zoom by a relative factor with the given screen position as center.
     pub fn zoom(&mut self, zoom_factor: Vec2, center: Pos2) {
-        let center = self.value_from_position(center);
+        let center_data = self.value_from_position(center);
 
-        let mut new_bounds = self.bounds;
-        new_bounds.zoom(zoom_factor, center);
+        // Use transform-aware zoom for each axis
+        let (new_min_x, new_max_x) = self.x_transform.zoom_bounds(
+            self.bounds.min[0],
+            self.bounds.max[0],
+            zoom_factor.x as f64,
+            center_data.x,
+        );
 
-        if new_bounds.is_valid() {
-            self.bounds = new_bounds;
+        let (new_min_y, new_max_y) = self.y_transform.zoom_bounds(
+            self.bounds.min[1],
+            self.bounds.max[1],
+            zoom_factor.y as f64,
+            center_data.y,
+        );
+
+        let new_data_bounds = PlotBounds::from_min_max([new_min_x, new_min_y], [new_max_x, new_max_y]);
+
+        if new_data_bounds.is_valid() {
+            self.bounds = new_data_bounds;
+            // Update plot bounds
+            let (plot_min_x, plot_max_x) = self.x_transform.bounds_to_plot(new_min_x, new_max_x);
+            let (plot_min_y, plot_max_y) = self.y_transform.bounds_to_plot(new_min_y, new_max_y);
+            self.plot_bounds = PlotBounds::from_min_max([plot_min_x, plot_min_y], [plot_max_x, plot_max_y]);
         }
     }
 
     pub fn position_from_point_x(&self, value: f64) -> f32 {
+        // Data space -> Plot space -> Screen space
+        let plot_value = self.x_transform.transform_to_plot(value);
         remap(
-            value,
-            self.bounds.min[0]..=self.bounds.max[0],
+            plot_value,
+            self.plot_bounds.min[0]..=self.plot_bounds.max[0],
             if self.inverted_axis[0] {
                 (self.frame.right() as f64)..=(self.frame.left() as f64)
             } else {
@@ -497,9 +699,11 @@ impl PlotTransform {
     }
 
     pub fn position_from_point_y(&self, value: f64) -> f32 {
+        // Data space -> Plot space -> Screen space
+        let plot_value = self.y_transform.transform_to_plot(value);
         remap(
-            value,
-            self.bounds.min[1]..=self.bounds.max[1],
+            plot_value,
+            self.plot_bounds.min[1]..=self.plot_bounds.max[1],
             // negated y axis by default
             if self.inverted_axis[1] {
                 (self.frame.top() as f64)..=(self.frame.bottom() as f64)
@@ -514,18 +718,31 @@ impl PlotTransform {
         pos2(self.position_from_point_x(value.x), self.position_from_point_y(value.y))
     }
 
+    /// Returns `true` if the given data-space point is valid for both axis
+    /// transforms. For example, logarithmic transforms reject non-positive
+    /// values, so a point with `x <= 0` on a log x-axis would be invalid.
+    ///
+    /// Invalid points should be excluded from rendering to avoid exploding the
+    /// plot bounds.
+    ///
+    #[inline]
+    pub fn is_point_valid(&self, value: &PlotPoint) -> bool {
+        self.x_transform.is_value_valid(value.x) && self.y_transform.is_value_valid(value.y)
+    }
+
     /// Plot point from screen/ui position.
     pub fn value_from_position(&self, pos: Pos2) -> PlotPoint {
-        let x = remap(
+        // Screen space -> Plot space -> Data space
+        let plot_x = remap(
             pos.x as f64,
             if self.inverted_axis[0] {
                 (self.frame.right() as f64)..=(self.frame.left() as f64)
             } else {
                 (self.frame.left() as f64)..=(self.frame.right() as f64)
             },
-            self.bounds.range_x(),
+            self.plot_bounds.range_x(),
         );
-        let y = remap(
+        let plot_y = remap(
             pos.y as f64,
             // negated y axis by default
             if self.inverted_axis[1] {
@@ -533,8 +750,12 @@ impl PlotTransform {
             } else {
                 (self.frame.bottom() as f64)..=(self.frame.top() as f64)
             },
-            self.bounds.range_y(),
+            self.plot_bounds.range_y(),
         );
+
+        // Convert from plot space back to data space
+        let x = self.x_transform.transform_from_plot(plot_x);
+        let y = self.y_transform.transform_from_plot(plot_y);
 
         PlotPoint::new(x, y)
     }
@@ -555,17 +776,23 @@ impl PlotTransform {
     }
 
     /// delta position / delta value = how many ui points per step in the X axis
-    /// in "plot space"
+    ///
+    /// Note: This is computed in plot space, so it represents the linear relationship
+    /// between plot coordinates and screen coordinates. For non-linear transforms
+    /// (like log scale), the derivative in data space is not constant.
     pub fn dpos_dvalue_x(&self) -> f64 {
         let flip = if self.inverted_axis[0] { -1.0 } else { 1.0 };
-        flip * (self.frame.width() as f64) / self.bounds.width()
+        flip * (self.frame.width() as f64) / self.plot_bounds.width()
     }
 
     /// delta position / delta value = how many ui points per step in the Y axis
-    /// in "plot space"
+    ///
+    /// Note: This is computed in plot space, so it represents the linear relationship
+    /// between plot coordinates and screen coordinates. For non-linear transforms
+    /// (like log scale), the derivative in data space is not constant.
     pub fn dpos_dvalue_y(&self) -> f64 {
         let flip = if self.inverted_axis[1] { 1.0 } else { -1.0 };
-        flip * (self.frame.height() as f64) / self.bounds.height()
+        flip * (self.frame.height() as f64) / self.plot_bounds.height()
     }
 
     /// delta position / delta value = how many ui points per step in "plot

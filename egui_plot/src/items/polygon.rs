@@ -118,27 +118,29 @@ impl PlotItem for Polygon<'_> {
             ..
         } = self;
 
-        let mut values_tf: Vec<_> = series
-            .points()
-            .iter()
-            .map(|v| transform.position_from_point(v))
-            .collect();
+        let points = series.points();
+        // Only draw the polygon if all points are valid. Other option
+        // might be to skip invalid points. But we need to check all points
+        // to avoid drawing a partial polygon.
+        if points.iter().all(|p| transform.is_point_valid(p)) {
+            let mut values_tf: Vec<_> = points.iter().map(|v| transform.position_from_point(v)).collect();
 
-        let fill_color = fill_color.unwrap_or(stroke.color.linear_multiply(DEFAULT_FILL_ALPHA));
+            let fill_color = fill_color.unwrap_or(stroke.color.linear_multiply(DEFAULT_FILL_ALPHA));
 
-        let shape = Shape::convex_polygon(values_tf.clone(), fill_color, Stroke::NONE);
-        shapes.push(shape);
+            let shape = Shape::convex_polygon(values_tf.clone(), fill_color, Stroke::NONE);
+            shapes.push(shape);
 
-        if let Some(first) = values_tf.first() {
-            values_tf.push(*first); // close the polygon
+            if let Some(first) = values_tf.first() {
+                values_tf.push(*first); // close the polygon
+            }
+
+            style.style_line(
+                values_tf,
+                PathStroke::new(stroke.width, stroke.color),
+                base.highlight,
+                shapes,
+            );
         }
-
-        style.style_line(
-            values_tf,
-            PathStroke::new(stroke.width, stroke.color),
-            base.highlight,
-            shapes,
-        );
     }
 
     fn initialize(&mut self, x_range: RangeInclusive<f64>) {

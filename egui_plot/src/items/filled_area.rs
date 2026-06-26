@@ -129,6 +129,17 @@ impl PlotItem for FilledArea {
             return;
         }
 
+        // Skip if any point is invalid for the axis transforms
+        // (e.g. non-positive values on log scales).
+        let all_valid = self
+            .upper_line
+            .iter()
+            .chain(&self.lower_line)
+            .all(|p| transform.is_point_valid(p));
+        if !all_valid {
+            return;
+        }
+
         let n = self.lower_line.len();
 
         // Create a mesh for the filled area

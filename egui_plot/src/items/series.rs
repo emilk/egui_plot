@@ -169,12 +169,12 @@ impl PlotItem for Line<'_> {
             style,
             ..
         } = self;
-        let mut fill = *fill;
+        let fill = *fill;
 
         let final_stroke: PathStroke = if let Some(gradient_callback) = self.gradient_color.clone() {
             // if we have a gradient color, we need to wrap the stroke callback to transpose
             // the position to a value the caller can reason about
-            let local_transform = *transform;
+            let local_transform = transform.clone();
             let wrapped_callback = move |_rec: Rect, pos: Pos2| -> Color32 {
                 let point = local_transform.value_from_position(pos);
                 gradient_callback(point)
@@ -184,17 +184,35 @@ impl PlotItem for Line<'_> {
             (*stroke).into()
         };
 
-        let values_tf: Vec<_> = series
-            .points()
-            .iter()
-            .map(|v| transform.position_from_point(v))
-            .collect();
-        let n_values = values_tf.len();
+        // Filter out points that are invalid for the axis transforms
+        // (e.g. non-positive values on log scales) and group the remaining
+        // valid points into contiguous segments. Invalid points break the line.
+        let points = series.points();
+        let mut segments: Vec<Vec<&PlotPoint>> = Vec::with_capacity(1);
+        let mut current_segment: Vec<&PlotPoint> = Vec::new();
+        for point in points {
+            if transform.is_point_valid(point) {
+                current_segment.push(point);
+            } else {
+                if current_segment.len() >= 2 {
+                    segments.push(std::mem::take(&mut current_segment));
+                }
+                current_segment.clear();
+            }
+        }
+        // Add last segment if it contains more than 1 point
+        if current_segment.len() >= 2 {
+            segments.push(current_segment);
+        }
+
+        // Segments of lines that contain valid points (i.e. not broken by
+        // invalid points).
+        for segment in &segments {
+            let values_tf: Vec<Pos2> = segment.iter().map(|v| transform.position_from_point(v)).collect();
+            style.style_line(values_tf, final_stroke.clone(), base.highlight, shapes);
+        }
 
         // Fill the area between the line and a reference line, if required.
-        if n_values < 2 {
-            fill = None;
-        }
         if let Some(y_reference) = fill {
             let mut fill_alpha = self.fill_alpha;
             if base.highlight {
@@ -214,32 +232,39 @@ impl PlotItem for Line<'_> {
                 }
             };
 
-            let mut mesh = Mesh::default();
-            let expected_intersections = 20;
-            mesh.reserve_triangles((n_values - 1) * 2);
-            mesh.reserve_vertices(n_values * 2 + expected_intersections);
-            values_tf.windows(2).for_each(|w| {
-                let fill_color = fill_color_for_point(w[0]);
-                let i = mesh.vertices.len() as u32;
-                mesh.colored_vertex(w[0], fill_color);
-                mesh.colored_vertex(pos2(w[0].x, y), fill_color);
-                if let Some(x) = y_intersection(&w[0], &w[1], y) {
-                    let point = pos2(x, y);
-                    mesh.colored_vertex(point, fill_color_for_point(point));
-                    mesh.add_triangle(i, i + 1, i + 2);
-                    mesh.add_triangle(i + 2, i + 3, i + 4);
-                } else {
-                    mesh.add_triangle(i, i + 1, i + 2);
-                    mesh.add_triangle(i + 1, i + 2, i + 3);
+            for segment in &segments {
+                let values_tf: Vec<Pos2> = segment.iter().map(|v| transform.position_from_point(v)).collect();
+                let n_values = values_tf.len();
+                if n_values < 2 {
+                    continue;
                 }
-            });
-            let last = values_tf[n_values - 1];
-            let fill_color = fill_color_for_point(last);
-            mesh.colored_vertex(last, fill_color);
-            mesh.colored_vertex(pos2(last.x, y), fill_color);
-            shapes.push(Shape::Mesh(std::sync::Arc::new(mesh)));
+
+                let mut mesh = Mesh::default();
+                let expected_intersections = 20;
+                mesh.reserve_triangles((n_values - 1) * 2);
+                mesh.reserve_vertices(n_values * 2 + expected_intersections);
+                values_tf.windows(2).for_each(|w| {
+                    let fill_color = fill_color_for_point(w[0]);
+                    let i = mesh.vertices.len() as u32;
+                    mesh.colored_vertex(w[0], fill_color);
+                    mesh.colored_vertex(pos2(w[0].x, y), fill_color);
+                    if let Some(x) = y_intersection(&w[0], &w[1], y) {
+                        let point = pos2(x, y);
+                        mesh.colored_vertex(point, fill_color_for_point(point));
+                        mesh.add_triangle(i, i + 1, i + 2);
+                        mesh.add_triangle(i + 2, i + 3, i + 4);
+                    } else {
+                        mesh.add_triangle(i, i + 1, i + 2);
+                        mesh.add_triangle(i + 1, i + 2, i + 3);
+                    }
+                });
+                let last = values_tf[n_values - 1];
+                let fill_color = fill_color_for_point(last);
+                mesh.colored_vertex(last, fill_color);
+                mesh.colored_vertex(pos2(last.x, y), fill_color);
+                shapes.push(Shape::Mesh(std::sync::Arc::new(mesh)));
+            }
         }
-        style.style_line(values_tf, final_stroke, base.highlight, shapes);
     }
 
     fn find_closest(&self, point: Pos2, transform: &PlotTransform) -> Option<ClosestElem> {
