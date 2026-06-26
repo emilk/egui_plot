@@ -397,9 +397,7 @@ impl<'a> Plot<'a> {
     ///
     /// ```
     /// # egui::__run_test_ui(|ui| {
-    /// use egui_plot::Line;
-    /// use egui_plot::Plot;
-    /// use egui_plot::PlotPoints;
+    /// use egui_plot::{HoverPosition, Line, Plot, PlotPoints};
     /// let sin: PlotPoints = (0..1000)
     ///     .map(|i| {
     ///         let x = i as f64 * 0.01;
@@ -409,12 +407,11 @@ impl<'a> Plot<'a> {
     /// let line = Line::new("sin", sin);
     /// Plot::new("my_plot")
     ///     .view_aspect(2.0)
-    ///     .label_formatter(|name, value| {
-    ///         if !name.is_empty() {
-    ///             format!("{}: {:.*}%", name, 1, value.y)
-    ///         } else {
-    ///             "".to_owned()
+    ///     .label_formatter(|pos| match pos {
+    ///         HoverPosition::NearDataPoint { plot_name, position, .. } if !plot_name.is_empty() => {
+    ///             Some(format!("{}: {:.*}%", plot_name, 1, position.y))
     ///         }
+    ///         _ => None,
     ///     })
     ///     .show(ui, |plot_ui| plot_ui.line(line));
     /// # });

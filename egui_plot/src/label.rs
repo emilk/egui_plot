@@ -27,8 +27,10 @@ pub enum HoverPosition<'a> {
     NearDataPoint {
         /// The name of the plot whose data point is nearest to the cursor
         plot_name: &'a str,
+
         /// The position of the nearest data point
         position: PlotPoint,
+
         /// The index of the nearest data point in its plot
         index: usize,
     },
