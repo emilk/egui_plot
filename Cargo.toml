@@ -52,10 +52,10 @@ ahash = { version = "0.8.12", default-features = false, features = [
 ] }
 assertables = "9.8.2"
 document-features = "0.2.12"
-eframe = { version = "0.34.0", default-features = false }
-egui = { version = "0.34.0", default-features = false }
-egui_kittest = { version = "0.34.0", default-features = false }
-emath = { version = "0.34.0", default-features = false }
+eframe = { version = "0.35.0", default-features = false }
+egui = { version = "0.35.0", default-features = false }
+egui_kittest = { version = "0.35.0", default-features = false }
+emath = { version = "0.35.0", default-features = false }
 env_logger = { version = "0.11.8", default-features = false, features = [
     "auto-color",
     "humantime",

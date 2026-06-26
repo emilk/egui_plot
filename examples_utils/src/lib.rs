@@ -39,7 +39,7 @@ pub mod internal {
 
     pub fn run_screenshot_test<State>(builder: impl Fn(&mut eframe::CreationContext<'_>) -> State, manifest_dir: &str)
     where
-        State: eframe::App,
+        State: eframe::App + 'static,
     {
         let output_path = PathBuf::from(manifest_dir);
         let options = SnapshotOptions::new()
@@ -89,7 +89,7 @@ macro_rules! make_main {
 
         impl eframe::App for AppWrapper {
             fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-                egui::CentralPanel::default().show_inside(ui, |ui| {
+                egui::CentralPanel::default().show(ui, |ui| {
                     if self.plot_only {
                         self.inner.show_plot(ui);
                     } else {
