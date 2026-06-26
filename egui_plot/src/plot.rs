@@ -47,6 +47,7 @@ use crate::items::PlotItem;
 use crate::items::Span;
 use crate::items::horizontal_line;
 use crate::items::vertical_line;
+use crate::label::HoverPosition;
 use crate::label::LabelFormatter;
 use crate::memory::PlotMemory;
 use crate::overlays::CoordinatesFormatter;
@@ -396,9 +397,7 @@ impl<'a> Plot<'a> {
     ///
     /// ```
     /// # egui::__run_test_ui(|ui| {
-    /// use egui_plot::Line;
-    /// use egui_plot::Plot;
-    /// use egui_plot::PlotPoints;
+    /// use egui_plot::{HoverPosition, Line, Plot, PlotPoints};
     /// let sin: PlotPoints = (0..1000)
     ///     .map(|i| {
     ///         let x = i as f64 * 0.01;
@@ -408,18 +407,17 @@ impl<'a> Plot<'a> {
     /// let line = Line::new("sin", sin);
     /// Plot::new("my_plot")
     ///     .view_aspect(2.0)
-    ///     .label_formatter(|name, value| {
-    ///         if !name.is_empty() {
-    ///             format!("{}: {:.*}%", name, 1, value.y)
-    ///         } else {
-    ///             "".to_owned()
+    ///     .label_formatter(|pos| match pos {
+    ///         HoverPosition::NearDataPoint { plot_name, position, .. } if !plot_name.is_empty() => {
+    ///             Some(format!("{}: {:.*}%", plot_name, 1, position.y))
     ///         }
+    ///         _ => None,
     ///     })
     ///     .show(ui, |plot_ui| plot_ui.line(line));
     /// # });
     /// ```
     #[inline]
-    pub fn label_formatter(mut self, label_formatter: impl Fn(&str, &PlotPoint) -> String + 'a) -> Self {
+    pub fn label_formatter(mut self, label_formatter: impl Fn(&HoverPosition<'_>) -> Option<String> + 'a) -> Self {
         self.label_formatter = Some(Box::new(label_formatter));
         self
     }
@@ -1601,7 +1599,7 @@ impl<'a> Plot<'a> {
             items::rulers_and_tooltip_at_value(
                 &plot_ui.response,
                 value,
-                "",
+                None,
                 &plot,
                 &mut cursors,
                 &self.label_formatter,

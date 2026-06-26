@@ -40,6 +40,7 @@ pub use crate::items::polygon::Polygon;
 pub use crate::items::series::Line;
 pub use crate::items::span::Span;
 pub use crate::items::text::Text;
+use crate::label::HoverPosition;
 use crate::label::LabelFormatter;
 use crate::rect_elem::RectElement;
 
@@ -198,7 +199,14 @@ pub trait PlotItem {
         let pointer = plot.transform.position_from_point(&value);
         shapes.push(Shape::circle_filled(pointer, 3.0, line_color));
 
-        rulers_and_tooltip_at_value(plot_area_response, value, self.name(), plot, cursors, label_formatter);
+        rulers_and_tooltip_at_value(
+            plot_area_response,
+            value,
+            Some((self.name(), elem.index)),
+            plot,
+            cursors,
+            label_formatter,
+        );
     }
 }
 
@@ -272,7 +280,7 @@ fn add_rulers_and_text(
 pub(super) fn rulers_and_tooltip_at_value(
     plot_area_response: &egui::Response,
     value: PlotPoint,
-    name: &str,
+    nearest_point: Option<(&str, usize)>,
     plot: &PlotConfig<'_>,
     cursors: &mut Vec<Cursor>,
     label_formatter: &Option<LabelFormatter<'_>>,
@@ -292,10 +300,18 @@ pub(super) fn rulers_and_tooltip_at_value(
         return;
     };
 
-    let text = custom_label(name, &value);
-    if text.is_empty() {
+    let hover_position = match nearest_point {
+        Some((name, index)) => HoverPosition::NearDataPoint {
+            plot_name: name,
+            position: value,
+            index,
+        },
+        None => HoverPosition::Elsewhere { position: value },
+    };
+
+    let Some(text) = custom_label(&hover_position) else {
         return;
-    }
+    };
 
     // We show the tooltip as soon as we're hovering the plot area:
     let mut tooltip = egui::Tooltip::always_open(
