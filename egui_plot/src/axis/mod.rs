@@ -1,5 +1,6 @@
 pub mod transform;
 pub mod linear;
+pub mod log;
 
 use std::fmt::Debug;
 use std::ops::RangeInclusive;

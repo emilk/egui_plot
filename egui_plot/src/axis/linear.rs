@@ -107,14 +107,6 @@ impl AxisSpace for LinearAxisSpace {
         (frame_range.end() - frame_range.start()) / (self.value_length() as f32)
     }
 
-    fn expand(&mut self, pad: f64) {
-        if pad.is_finite() {
-            self.min -= pad;
-            self.max += pad;
-            self.clamp_to_finite();
-        }
-    }
-
     fn set_inverted(&mut self, invert: bool) {
         self.invert = invert;
     }

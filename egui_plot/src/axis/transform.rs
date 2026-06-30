@@ -47,7 +47,13 @@ pub(super) trait AxisSpace {
     fn zoom(&mut self, factor: f32, center: f64);
 
     /// Extend both ends of the value range by the provided `pad` value.
-    fn expand(&mut self, pad: f64);
+    fn expand(&mut self, pad: f64) {
+        if pad.is_finite() {
+            let new_min = self.value_min() - pad;
+            let new_max = self.value_max() + pad;
+            self.set_value_range(new_min..=new_max);
+        }
+    }
 
 
 }
