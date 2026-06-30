@@ -30,6 +30,7 @@ use crate::axis::Axis;
 use crate::axis::AxisHints;
 use crate::axis::AxisWidget;
 use crate::axis::PlotTransform;
+use crate::axis::transform::AxisSpace;
 use crate::bounds::BoundsLinkGroups;
 use crate::bounds::BoundsModification;
 use crate::bounds::LinkedBounds;
@@ -1244,19 +1245,12 @@ impl<'a> Plot<'a> {
         let bounds = mem.transform.bounds();
         let x_axis_range = bounds.range_x();
         let x_steps = Arc::new({
-            let dvalue_dpos = mem.transform.dvalue_dpos()[0].abs();
-            let input = GridInput {
-                bounds: (bounds.min[0], bounds.max[0]),
-                base_step_size: dvalue_dpos * self.grid_spacing.min as f64,
-            };
+            let input = grid_input_for_axis(mem.transform.axis_space(Axis::X), self.grid_spacing.min); 
             (self.grid_spacers[0])(input)
         });
         let y_axis_range = bounds.range_y();
         let y_steps = Arc::new({
-            let input = GridInput {
-                bounds: (bounds.min[1], bounds.max[1]),
-                base_step_size: mem.transform.dvalue_dpos()[1].abs() * self.grid_spacing.min as f64,
-            };
+            let input = grid_input_for_axis(mem.transform.axis_space(Axis::Y), self.grid_spacing.min);
             (self.grid_spacers[1])(input)
         });
 
@@ -1467,11 +1461,9 @@ impl<'a> Plot<'a> {
         // Where on the cross-dimension to show the label values
         let bounds = transform.bounds();
         let value_cross = 0.0_f64.clamp(bounds.min[1 - iaxis], bounds.max[1 - iaxis]);
-
-        let input = GridInput {
-            bounds: (bounds.min[iaxis], bounds.max[iaxis]),
-            base_step_size: transform.dvalue_dpos()[iaxis].abs() * self.grid_spacing.min as f64,
-        };
+        
+        let axis_space = transform.axis_space(axis);
+        let input = grid_input_for_axis(axis_space, self.grid_spacing.min);
         let steps = (self.grid_spacers[iaxis])(input);
 
         let clamp_range = self.clamp_grid.then(|| {
@@ -1508,7 +1500,7 @@ impl<'a> Plot<'a> {
             };
 
             let pos_in_gui = transform.position_from_point(&value);
-            let spacing_in_points = (transform.dpos_dvalue()[iaxis] * step.step_size as f32).abs();
+            let spacing_in_points = transform.minimum_value_step(axis, step.step_size as f32) as f32;
 
             if spacing_in_points <= self.grid_spacing.min {
                 continue; // Too close together
@@ -1732,6 +1724,14 @@ impl<'a> Plot<'a> {
             hovered_plot_item,
         }
     }
+}
+
+fn grid_input_for_axis<T: AxisSpace>(axis: &T, spacing: f32) -> GridInput {
+    GridInput {
+        bounds: (axis.value_min(), axis.value_max()),
+        base_step_size: axis.minimum_value_step(spacing)
+    }
+    
 }
 
 /// Returns the rect left after adding axes.
@@ -1995,8 +1995,9 @@ impl<'a> PlotUi<'a> {
         // todo: We are going to need to get a start and end here to
         // compute the actual delta in the log case.
         let delta = self.response.drag_delta();
-        let dp_dv = self.last_plot_transform.dpos_dvalue();
-        Vec2::new(delta.x / dp_dv[0], delta.y / dp_dv[1])
+        let x_dp_dv = self.last_plot_transform.axis_space(Axis::X).minimum_value_step(1.0);
+        let y_dp_dv = self.last_plot_transform.axis_space(Axis::Y).minimum_value_step(1.0);
+        Vec2::new(delta.x / x_dp_dv as f32, delta.y / y_dp_dv as f32)
     }
 
     /// Read the transform between plot coordinates and screen coordinates.

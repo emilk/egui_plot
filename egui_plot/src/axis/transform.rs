@@ -3,7 +3,7 @@ use emath::{pos2, Pos2, Rect, Vec2, Vec2b};
 use crate::{Axis, PlotBounds, PlotPoint};
 use crate::axis::linear::LinearAxisSpace;
 
-pub(super) trait AxisSpace {
+pub trait AxisSpace {
     /// The minimum value of the axis.
     fn value_min(&self) -> f64;
     /// The maximum value of the axis.
@@ -34,11 +34,8 @@ pub(super) trait AxisSpace {
     /// Convert a screen position to a value.
     fn value_from_position(&self, position: f32) -> f64;
 
-    /// Get value per screen distance.
-    fn dvalue_per_dpos(&self) -> f64;
-
-    /// Get screen distance per value unit.
-    fn dpos_per_dvalue(&self) -> f32;
+    /// Provides the minimum value step for the screen step size provided.
+    fn minimum_value_step(&self, spacing: f32) -> f64;
 
     /// Alter the value minimum and maximum to produce a translation
     /// in the screen space.
@@ -190,6 +187,22 @@ impl PlotTransform {
             self.y_axis = new_y;
         }
     }
+    
+    pub(crate) fn axis_space(&self, axis: Axis) -> &impl AxisSpace {
+        match axis {
+            Axis::X => &self.x_axis,
+            Axis::Y => &self.y_axis,
+        }
+    }
+    
+    /// Returns the smallest possible value step for the given input step size
+    /// in screen units. Often used to confirm if lines should be visibl.
+    pub(crate) fn minimum_value_step(&self, axis: Axis, screen_step_size: f32) -> f64 {
+        match axis {
+            Axis::X => self.x_axis.minimum_value_step(screen_step_size),
+            Axis::Y => self.y_axis.minimum_value_step(screen_step_size),
+        }
+    }
 
     pub fn position_from_point_x(&self, value: f64) -> f32 {
         self.x_axis.position_from_value(value)
@@ -227,23 +240,15 @@ impl PlotTransform {
     }
 
 
-    /// delta position / delta value = how many ui points per step in "plot
-    /// space"
-    pub fn dpos_dvalue(&self) -> [f32; 2] {
-        [self.x_axis.dpos_per_dvalue(), self.y_axis.dpos_per_dvalue()]
-    }
-
-    /// delta value / delta position = how much ground do we cover in "plot
-    /// space" per ui point?
-    pub fn dvalue_dpos(&self) -> [f64; 2] {
-        [self.x_axis.dvalue_per_dpos(), self.y_axis.dvalue_per_dpos()]
-    }
-
     /// scale.x/scale.y ratio.
     ///
     /// If 1.0, it means the scale factor is the same in both axes.
     fn aspect(&self) -> f64 {
-        self.x_axis.dvalue_per_dpos().abs() / self.y_axis.dvalue_per_dpos().abs()
+        let x_value_range = self.x_axis.value_length().abs();
+        let y_value_range = self.y_axis.value_length().abs();
+        let x_frame_range = self.x_axis.frame_max() - self.x_axis.frame_min();
+        let y_frame_range = self.y_axis.frame_max() - self.y_axis.frame_min();
+        (x_value_range / x_frame_range as f64) / (y_value_range / y_frame_range as f64)
     }
 
     /// Sets the aspect ratio by expanding the x- or y-axis.

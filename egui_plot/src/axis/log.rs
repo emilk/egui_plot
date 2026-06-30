@@ -87,11 +87,7 @@ impl AxisSpace for LogAxis {
         self.base.power(exponent)
     }
 
-    fn dvalue_per_dpos(&self) -> f64 {
-        todo!()
-    }
-
-    fn dpos_per_dvalue(&self) -> f32 {
+    fn minimum_value_step(&self, spacing: f32) -> f64 {
         todo!()
     }
 

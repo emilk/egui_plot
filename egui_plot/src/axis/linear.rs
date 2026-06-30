@@ -52,6 +52,11 @@ impl LinearAxisSpace {
         *as_f32.start() as f64..=*as_f32.end() as f64
     }
 
+    fn dvalue_per_dpos(&self) -> f64 {
+        let frame_range = self.frame_range_f64();
+        self.value_length() / (frame_range.end() - frame_range.start())
+    }
+
 }
 
 impl AxisSpace for LinearAxisSpace {
@@ -97,14 +102,9 @@ impl AxisSpace for LinearAxisSpace {
         remap(position as f64, self.frame_range_f64(), self.min..=self.max)
     }
 
-    fn dvalue_per_dpos(&self) -> f64 {
-        let frame_range = self.frame_range_f64();
-        self.value_length() / (frame_range.end() - frame_range.start())
-    }
-
-    fn dpos_per_dvalue(&self) -> f32 {
-        let frame_range = self.frame_range();
-        (frame_range.end() - frame_range.start()) / (self.value_length() as f32)
+    /// Provides the minimum value step for the screen step size provided.
+    fn minimum_value_step(&self, spacing: f32) -> f64 {
+        self.dvalue_per_dpos() * (spacing as f64)
     }
 
     fn set_inverted(&mut self, invert: bool) {

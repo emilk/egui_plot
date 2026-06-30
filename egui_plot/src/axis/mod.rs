@@ -23,6 +23,7 @@ use egui::emath::remap_clamp;
 use egui::epaint::TextShape;
 
 pub use transform::PlotTransform;
+use crate::axis::transform::AxisSpace;
 use crate::grid::GridMark;
 use crate::placement::HPlacement;
 use crate::placement::Placement;
@@ -283,8 +284,7 @@ impl<'a> AxisWidget<'a> {
         for step in self.steps.iter() {
             let text = (self.hints.formatter)(*step, &self.range);
             if !text.is_empty() {
-                // todo: This mimics the grid spacing logic. May want to make this common.
-                let spacing_in_points = (transform.dpos_dvalue()[usize::from(axis)] * step.step_size as f32).abs();
+                let spacing_in_points = transform.minimum_value_step(axis, step.step_size as f32) as f32;
 
                 if spacing_in_points <= label_spacing.min {
                     // Labels are too close together - don't paint them.
