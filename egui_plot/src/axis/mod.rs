@@ -1,6 +1,6 @@
-pub mod transform;
 pub mod linear;
 pub mod log;
+pub mod transform;
 
 use std::fmt::Debug;
 use std::ops::RangeInclusive;
@@ -22,12 +22,12 @@ use egui::emath::Rot2;
 use egui::emath::remap_clamp;
 use egui::epaint::TextShape;
 
-pub use transform::PlotTransform;
-use crate::axis::transform::AxisSpace;
+use crate::axis::transform::AxisSpace as _;
 use crate::grid::GridMark;
 use crate::placement::HPlacement;
 use crate::placement::Placement;
 use crate::placement::VPlacement;
+pub use transform::PlotTransform;
 
 // Gap between tick labels and axis label in units of the axis label height
 const AXIS_LABEL_GAP: f32 = 0.25;
@@ -279,12 +279,15 @@ impl<'a> AxisWidget<'a> {
 
         const SIDE_MARGIN: f32 = 4.0; // Add some margin to both sides of the text on the Y axis.
         let painter = ui.painter();
+        let axis_space = transform.axis_space(axis);
 
         // Add tick labels:
         for step in self.steps.iter() {
             let text = (self.hints.formatter)(*step, &self.range);
             if !text.is_empty() {
-                let spacing_in_points = transform.minimum_value_step(axis, step.step_size as f32) as f32;
+                let spacing_in_points = axis_space
+                    .screen_distance_between_values(step.value, step.value + step.step_size)
+                    .abs();
 
                 if spacing_in_points <= label_spacing.min {
                     // Labels are too close together - don't paint them.
@@ -360,4 +363,3 @@ impl<'a> AxisWidget<'a> {
         thickness
     }
 }
-

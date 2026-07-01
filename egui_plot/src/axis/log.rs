@@ -1,7 +1,8 @@
-use std::ops::RangeInclusive;
-use emath::Rangef;
+use crate::GridInput;
 use crate::axis::linear::LinearAxisSpace;
 use crate::axis::transform::AxisSpace;
+use emath::Rangef;
+use std::ops::RangeInclusive;
 
 enum LogBase {
     Base10,
@@ -17,15 +18,15 @@ impl LogBase {
             return None;
         }
         match self {
-            LogBase::Base10 => Some(value.log10()),
-            LogBase::Base2 => Some(value.log2()),
+            Self::Base10 => Some(value.log10()),
+            Self::Base2 => Some(value.log2()),
         }
     }
 
     pub fn power(&self, value: f64) -> f64 {
         match self {
-            LogBase::Base10 => f64::powf(10.0, value),
-            LogBase::Base2 => value.exp2(),
+            Self::Base10 => f64::powf(10.0, value),
+            Self::Base2 => value.exp2(),
         }
     }
 }
@@ -36,7 +37,7 @@ struct LogAxis {
     /// This allows us to reuse much of the linear logic.
     exponent_scale: LinearAxisSpace,
     /// The base of the logarithm.
-    base: LogBase
+    base: LogBase,
 }
 
 impl LogAxis {
@@ -91,6 +92,14 @@ impl AxisSpace for LogAxis {
         todo!()
     }
 
+    fn grid_input(&self, spacing: f32) -> GridInput {
+        todo!()
+    }
+
+    fn screen_distance_between_values(&self, value1: f64, value2: f64) -> f32 {
+        todo!()
+    }
+
     fn translate(&mut self, frame_distance: f32) {
         todo!()
     }
@@ -100,13 +109,12 @@ impl AxisSpace for LogAxis {
             self.exponent_scale.zoom(factor, exponent);
         }
     }
-
 }
 
 #[cfg(test)]
 mod tests {
-    use assertables::{assert_approx_eq, assert_in_delta};
     use super::*;
+    use assertables::{assert_approx_eq, assert_in_delta};
 
     #[test]
     fn test_value_changes_map_to_linear_and_back() {
@@ -127,7 +135,6 @@ mod tests {
         assert_approx_eq!(log_axis.value_max(), 10000.0);
         assert_approx_eq!(log_axis.frame_min(), 0.0);
         assert_approx_eq!(log_axis.frame_max(), 1.0);
-
     }
     #[test]
     fn test_value_changes_map_to_linear_and_back_base2() {
@@ -148,6 +155,5 @@ mod tests {
         assert_approx_eq!(log_axis.value_max(), 16.0);
         assert_approx_eq!(log_axis.frame_min(), 0.0);
         assert_approx_eq!(log_axis.frame_max(), 1.0);
-
     }
 }

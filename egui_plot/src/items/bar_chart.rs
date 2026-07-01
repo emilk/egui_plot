@@ -11,10 +11,10 @@ use emath::Float as _;
 use emath::NumExt as _;
 use emath::Pos2;
 
-use crate::aesthetics::Orientation;
 use crate::Axis;
+use crate::aesthetics::Orientation;
 use crate::axis::PlotTransform;
-use crate::axis::transform::AxisSpace;
+use crate::axis::transform::AxisSpace as _;
 use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
 use crate::colors::highlighted_color;

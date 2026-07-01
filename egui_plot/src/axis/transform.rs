@@ -1,7 +1,14 @@
-use std::ops::RangeInclusive;
-use emath::{pos2, Pos2, Rect, Vec2, Vec2b};
-use crate::{Axis, PlotBounds, PlotPoint};
+//! Handles the transformations between the data space
+//! and the screen space.
+//!
+// Broadly speaking f32 values are screen units and f64 are
+// value units. We could consider a unit type in the future to
+// make this explicit.
+
 use crate::axis::linear::LinearAxisSpace;
+use crate::{Axis, GridInput, PlotBounds, PlotPoint};
+use emath::{Pos2, Rect, Vec2, Vec2b, pos2};
+use std::ops::RangeInclusive;
 
 pub trait AxisSpace {
     /// The minimum value of the axis.
@@ -37,6 +44,13 @@ pub trait AxisSpace {
     /// Provides the minimum value step for the screen step size provided.
     fn minimum_value_step(&self, spacing: f32) -> f64;
 
+    /// Get the grid input configuration for the axis given the provided
+    /// minimum gap in screen units.
+    fn grid_input(&self, spacing: f32) -> GridInput;
+
+    /// Screen distance between two points.
+    fn screen_distance_between_values(&self, value1: f64, value2: f64) -> f32;
+
     /// Alter the value minimum and maximum to produce a translation
     /// in the screen space.
     fn translate(&mut self, frame_distance: f32);
@@ -51,8 +65,6 @@ pub trait AxisSpace {
             self.set_value_range(new_min..=new_max);
         }
     }
-
-
 }
 
 /// Contains the screen rectangle and the plot bounds and provides methods to
@@ -60,16 +72,14 @@ pub trait AxisSpace {
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[derive(Clone, Copy, Debug)]
 pub struct PlotTransform {
-
     /// The X axis space
     x_axis: LinearAxisSpace,
-    
+
     /// The Y axis space
     y_axis: LinearAxisSpace,
 
     /// Whether to always center the x-range or y-range of the bounds.
     centered: Vec2b,
-
 }
 
 impl PlotTransform {
@@ -153,7 +163,10 @@ impl PlotTransform {
     /// Plot-space bounds.
     #[inline]
     pub fn bounds(&self) -> PlotBounds {
-        PlotBounds::from_min_max([self.x_axis.value_min(), self.y_axis.value_min()], [self.x_axis.value_max(), self.y_axis.value_max()])
+        PlotBounds::from_min_max(
+            [self.x_axis.value_min(), self.y_axis.value_min()],
+            [self.x_axis.value_max(), self.y_axis.value_max()],
+        )
     }
 
     #[inline]
@@ -187,20 +200,11 @@ impl PlotTransform {
             self.y_axis = new_y;
         }
     }
-    
+
     pub(crate) fn axis_space(&self, axis: Axis) -> &impl AxisSpace {
         match axis {
             Axis::X => &self.x_axis,
             Axis::Y => &self.y_axis,
-        }
-    }
-    
-    /// Returns the smallest possible value step for the given input step size
-    /// in screen units. Often used to confirm if lines should be visibl.
-    pub(crate) fn minimum_value_step(&self, axis: Axis, screen_step_size: f32) -> f64 {
-        match axis {
-            Axis::X => self.x_axis.minimum_value_step(screen_step_size),
-            Axis::Y => self.y_axis.minimum_value_step(screen_step_size),
         }
     }
 
@@ -239,7 +243,6 @@ impl PlotTransform {
         rect
     }
 
-
     /// scale.x/scale.y ratio.
     ///
     /// If 1.0, it means the scale factor is the same in both axes.
@@ -264,9 +267,11 @@ impl PlotTransform {
         }
 
         if current_aspect < aspect {
-            self.x_axis.expand((aspect / current_aspect - 1.0) * self.x_axis.value_length() * 0.5);
+            self.x_axis
+                .expand((aspect / current_aspect - 1.0) * self.x_axis.value_length() * 0.5);
         } else {
-            self.y_axis.expand((current_aspect / aspect - 1.0) * self.y_axis.value_length() * 0.5);
+            self.y_axis
+                .expand((current_aspect / aspect - 1.0) * self.y_axis.value_length() * 0.5);
         }
     }
 
@@ -283,10 +288,12 @@ impl PlotTransform {
 
         match axis {
             Axis::X => {
-                self.x_axis.expand((aspect / current_aspect - 1.0) * self.x_axis.value_length() * 0.5);
+                self.x_axis
+                    .expand((aspect / current_aspect - 1.0) * self.x_axis.value_length() * 0.5);
             }
             Axis::Y => {
-                self.y_axis.expand((current_aspect / aspect - 1.0) * self.y_axis.value_length() * 0.5);
+                self.y_axis
+                    .expand((current_aspect / aspect - 1.0) * self.y_axis.value_length() * 0.5);
             }
         }
     }
@@ -294,8 +301,8 @@ impl PlotTransform {
 
 #[cfg(test)]
 mod tests {
-    use assertables::assert_approx_eq;
     use super::*;
+    use assertables::assert_approx_eq;
 
     #[test]
     fn test_basic_linear_axis_transform() {
@@ -304,15 +311,38 @@ mod tests {
 
         let transform = PlotTransform::new(frame, bounds, false);
 
-        assert_eq!(transform.position_from_point(&PlotPoint::new(0.0, 0.0)), pos2(50.0, 50.0));
-        assert_eq!(transform.value_from_position(pos2(50.0, 50.0)), PlotPoint::new(0.0, 0.0));
-        assert_eq!(transform.position_from_point(&PlotPoint::new(10.0, 10.0)), pos2(100.0, 0.0));
-        assert_eq!(transform.value_from_position(pos2(100.0, 0.0)), PlotPoint::new(10.0, 10.0));
-        assert_eq!(transform.position_from_point(&PlotPoint::new(-10.0, -10.0)), pos2(0.0, 100.0));
-        assert_eq!(transform.value_from_position(pos2(0.0, 100.0)), PlotPoint::new(-10.0, -10.0));
-        assert_eq!(transform.position_from_point(&PlotPoint::new(5.0, -5.0)), pos2(75.0, 75.0));
-        assert_eq!(transform.value_from_position(pos2(75.0, 75.0)), PlotPoint::new(5.0, -5.0));
-
+        assert_eq!(
+            transform.position_from_point(&PlotPoint::new(0.0, 0.0)),
+            pos2(50.0, 50.0)
+        );
+        assert_eq!(
+            transform.value_from_position(pos2(50.0, 50.0)),
+            PlotPoint::new(0.0, 0.0)
+        );
+        assert_eq!(
+            transform.position_from_point(&PlotPoint::new(10.0, 10.0)),
+            pos2(100.0, 0.0)
+        );
+        assert_eq!(
+            transform.value_from_position(pos2(100.0, 0.0)),
+            PlotPoint::new(10.0, 10.0)
+        );
+        assert_eq!(
+            transform.position_from_point(&PlotPoint::new(-10.0, -10.0)),
+            pos2(0.0, 100.0)
+        );
+        assert_eq!(
+            transform.value_from_position(pos2(0.0, 100.0)),
+            PlotPoint::new(-10.0, -10.0)
+        );
+        assert_eq!(
+            transform.position_from_point(&PlotPoint::new(5.0, -5.0)),
+            pos2(75.0, 75.0)
+        );
+        assert_eq!(
+            transform.value_from_position(pos2(75.0, 75.0)),
+            PlotPoint::new(5.0, -5.0)
+        );
     }
 
     #[test]
@@ -321,14 +351,38 @@ mod tests {
         let bounds = PlotBounds::new_symmetrical(10.0);
         let invert_axis = Vec2b::new(true, false);
         let transform = PlotTransform::new_with_invert_axis(frame, bounds, false, invert_axis);
-        assert_eq!(transform.position_from_point(&PlotPoint::new(0.0, 0.0)), pos2(50.0, 50.0));
-        assert_eq!(transform.value_from_position(pos2(50.0, 50.0)), PlotPoint::new(0.0, 0.0));
-        assert_eq!(transform.position_from_point(&PlotPoint::new(10.0, 10.0)), pos2(0.0, 0.0));
-        assert_eq!(transform.value_from_position(pos2(0.0, 0.0)), PlotPoint::new(10.0, 10.0));
-        assert_eq!(transform.position_from_point(&PlotPoint::new(-10.0, -10.0)), pos2(100.0, 100.0));
-        assert_eq!(transform.value_from_position(pos2(100.0, 100.0)), PlotPoint::new(-10.0, -10.0));
-        assert_eq!(transform.position_from_point(&PlotPoint::new(5.0, -5.0)), pos2(25.0, 75.0));
-        assert_eq!(transform.value_from_position(pos2(25.0, 75.0)), PlotPoint::new(5.0, -5.0));
+        assert_eq!(
+            transform.position_from_point(&PlotPoint::new(0.0, 0.0)),
+            pos2(50.0, 50.0)
+        );
+        assert_eq!(
+            transform.value_from_position(pos2(50.0, 50.0)),
+            PlotPoint::new(0.0, 0.0)
+        );
+        assert_eq!(
+            transform.position_from_point(&PlotPoint::new(10.0, 10.0)),
+            pos2(0.0, 0.0)
+        );
+        assert_eq!(
+            transform.value_from_position(pos2(0.0, 0.0)),
+            PlotPoint::new(10.0, 10.0)
+        );
+        assert_eq!(
+            transform.position_from_point(&PlotPoint::new(-10.0, -10.0)),
+            pos2(100.0, 100.0)
+        );
+        assert_eq!(
+            transform.value_from_position(pos2(100.0, 100.0)),
+            PlotPoint::new(-10.0, -10.0)
+        );
+        assert_eq!(
+            transform.position_from_point(&PlotPoint::new(5.0, -5.0)),
+            pos2(25.0, 75.0)
+        );
+        assert_eq!(
+            transform.value_from_position(pos2(25.0, 75.0)),
+            PlotPoint::new(5.0, -5.0)
+        );
     }
 
     #[test]
@@ -343,7 +397,6 @@ mod tests {
         let transform = PlotTransform::new(frame, bounds, false);
         assert_eq!(transform.aspect(), 2.0);
 
-
         let frame = Rect::from_min_max(pos2(0.0, 0.0), pos2(100.0, 50.0));
         let bounds = PlotBounds::new_symmetrical(10.0);
         let transform = PlotTransform::new(frame, bounds, false);
@@ -353,8 +406,7 @@ mod tests {
     /// Real values captured from a test which was failing.
     #[test]
     fn aspect_calculation_from_custom_axes() {
-
-        let frame = Rect::from_min_max(Pos2::new(22.0,49.0), Pos2::new(778.0, 564.0));
+        let frame = Rect::from_min_max(Pos2::new(22.0, 49.0), Pos2::new(778.0, 564.0));
         let bounds = PlotBounds::from_min_max([-360.0, -0.04294], [7560.0, 1.049]);
         let transform = PlotTransform::new(frame, bounds, [false, false]);
         assert_approx_eq!(transform.aspect(), 4940.965708);
@@ -495,4 +547,3 @@ mod tests {
         assert_bounds_eq(transform.bounds(), original.min(), original.max());
     }
 }
-
