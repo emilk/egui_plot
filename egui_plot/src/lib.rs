@@ -77,3 +77,4 @@ pub use crate::placement::VPlacement;
 pub use crate::plot::Plot;
 pub use crate::plot::PlotResponse;
 pub use crate::plot::PlotUi;
+pub use crate::axis::AxisScale;

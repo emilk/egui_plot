@@ -5,12 +5,13 @@
 // value units. We could consider a unit type in the future to
 // make this explicit.
 
-use crate::axis::linear::LinearAxisSpace;
-use crate::{Axis, GridInput, PlotBounds, PlotPoint};
+use std::fmt::Debug;
+use crate::{Axis, AxisScale, GridInput, PlotBounds, PlotPoint};
 use emath::{Pos2, Rect, Vec2, Vec2b, pos2};
 use std::ops::RangeInclusive;
+use crate::axis::AxisSpaceImpl;
 
-pub trait AxisSpace {
+pub trait AxisSpace: Debug + Clone {
     /// The minimum value of the axis.
     fn value_min(&self) -> f64;
     /// The maximum value of the axis.
@@ -73,17 +74,17 @@ pub trait AxisSpace {
 #[derive(Clone, Copy, Debug)]
 pub struct PlotTransform {
     /// The X axis space
-    x_axis: LinearAxisSpace,
+    x_axis: AxisSpaceImpl,
 
     /// The Y axis space
-    y_axis: LinearAxisSpace,
+    y_axis: AxisSpaceImpl,
 
     /// Whether to always center the x-range or y-range of the bounds.
     centered: Vec2b,
 }
 
 impl PlotTransform {
-    pub fn new(frame: Rect, bounds: PlotBounds, center_axis: impl Into<Vec2b>) -> Self {
+    pub fn new(frame: Rect, bounds: PlotBounds, x_scale: AxisScale, y_scale: AxisScale, center_axis: impl Into<Vec2b>) -> Self {
         debug_assert!(
             0.0 <= frame.width() && 0.0 <= frame.height(),
             "Bad plot frame: {frame:?}"
@@ -127,9 +128,9 @@ impl PlotTransform {
         }
 
         debug_assert!(new_bounds.is_valid(), "Bad final plot bounds: {new_bounds:?}");
-        let x_axis = LinearAxisSpace::new(bounds.range_x(), frame.x_range(), false);
+        let x_axis = x_scale.new_axis(bounds.range_x(), frame.x_range(), false);
         // Y is naturally inverted.
-        let y_axis = LinearAxisSpace::new(bounds.range_y(), frame.y_range(), true);
+        let y_axis = y_scale.new_axis(bounds.range_y(), frame.y_range(), true);
 
         Self {
             centered: center_axis,
@@ -141,10 +142,12 @@ impl PlotTransform {
     pub fn new_with_invert_axis(
         frame: Rect,
         bounds: PlotBounds,
+        x_scale: AxisScale,
+        y_scale: AxisScale,
         center_axis: impl Into<Vec2b>,
         invert_axis: impl Into<Vec2b>,
     ) -> Self {
-        let mut new = Self::new(frame, bounds, center_axis);
+        let mut new = Self::new(frame, bounds, x_scale, y_scale, center_axis);
         let inverted = invert_axis.into();
         new.x_axis.set_inverted(inverted.x);
         // y is naturally inverted so !inverted.y is the required input.
@@ -309,7 +312,7 @@ mod tests {
         let frame = Rect::from_min_max(pos2(0.0, 0.0), pos2(100.0, 100.0));
         let bounds = PlotBounds::new_symmetrical(10.0);
 
-        let transform = PlotTransform::new(frame, bounds, false);
+        let transform = PlotTransform::new(frame, bounds, AxisScale::Linear, AxisScale::Linear, false);
 
         assert_eq!(
             transform.position_from_point(&PlotPoint::new(0.0, 0.0)),
@@ -350,7 +353,7 @@ mod tests {
         let frame = Rect::from_min_max(pos2(0.0, 0.0), pos2(100.0, 100.0));
         let bounds = PlotBounds::new_symmetrical(10.0);
         let invert_axis = Vec2b::new(true, false);
-        let transform = PlotTransform::new_with_invert_axis(frame, bounds, false, invert_axis);
+        let transform = PlotTransform::new_with_invert_axis(frame, bounds, AxisScale::Linear, AxisScale::Linear,false, invert_axis);
         assert_eq!(
             transform.position_from_point(&PlotPoint::new(0.0, 0.0)),
             pos2(50.0, 50.0)
@@ -389,17 +392,17 @@ mod tests {
     fn aspect_ratio_calculation() {
         let frame = Rect::from_min_max(pos2(0.0, 0.0), pos2(100.0, 100.0));
         let bounds = PlotBounds::new_symmetrical(10.0);
-        let transform = PlotTransform::new(frame, bounds, false);
+        let transform = PlotTransform::new(frame, bounds, AxisScale::Linear, AxisScale::Linear, false);
         assert_eq!(transform.aspect(), 1.0);
 
         let frame = Rect::from_min_max(pos2(0.0, 0.0), pos2(100.0, 100.0));
         let bounds = PlotBounds::from_min_max([0.0, 0.0], [100.0, 50.0]);
-        let transform = PlotTransform::new(frame, bounds, false);
+        let transform = PlotTransform::new(frame, bounds, AxisScale::Linear, AxisScale::Linear, false);
         assert_eq!(transform.aspect(), 2.0);
 
         let frame = Rect::from_min_max(pos2(0.0, 0.0), pos2(100.0, 50.0));
         let bounds = PlotBounds::new_symmetrical(10.0);
-        let transform = PlotTransform::new(frame, bounds, false);
+        let transform = PlotTransform::new(frame, bounds, AxisScale::Linear, AxisScale::Linear, false);
         assert_eq!(transform.aspect(), 0.5);
     }
 
@@ -408,7 +411,7 @@ mod tests {
     fn aspect_calculation_from_custom_axes() {
         let frame = Rect::from_min_max(Pos2::new(22.0, 49.0), Pos2::new(778.0, 564.0));
         let bounds = PlotBounds::from_min_max([-360.0, -0.04294], [7560.0, 1.049]);
-        let transform = PlotTransform::new(frame, bounds, [false, false]);
+        let transform = PlotTransform::new(frame, bounds, AxisScale::Linear, AxisScale::Linear, [false, false]);
         assert_approx_eq!(transform.aspect(), 4940.965708);
     }
 
@@ -431,7 +434,7 @@ mod tests {
     fn set_aspect_by_expanding_noop_when_already_correct() {
         let frame = Rect::from_min_max(pos2(0.0, 0.0), pos2(100.0, 100.0));
         let bounds = PlotBounds::new_symmetrical(10.0);
-        let mut transform = PlotTransform::new(frame, bounds, false);
+        let mut transform = PlotTransform::new(frame, bounds, AxisScale::Linear, AxisScale::Linear, false);
         let original = transform.bounds();
 
         transform.set_aspect_by_expanding(1.0);
@@ -444,7 +447,7 @@ mod tests {
         // current_aspect = (10/100) / (20/100) = 0.5, target = 1.0 -> grow x
         let frame = Rect::from_min_max(pos2(0.0, 0.0), pos2(100.0, 100.0));
         let bounds = PlotBounds::from_min_max([0.0, 0.0], [10.0, 20.0]);
-        let mut transform = PlotTransform::new(frame, bounds, false);
+        let mut transform = PlotTransform::new(frame, bounds, AxisScale::Linear, AxisScale::Linear, false);
 
         transform.set_aspect_by_expanding(1.0);
 
@@ -457,7 +460,7 @@ mod tests {
         // current_aspect = (20/100) / (10/100) = 2.0, target = 1.0 -> grow y
         let frame = Rect::from_min_max(pos2(0.0, 0.0), pos2(100.0, 100.0));
         let bounds = PlotBounds::from_min_max([0.0, 0.0], [20.0, 10.0]);
-        let mut transform = PlotTransform::new(frame, bounds, false);
+        let mut transform = PlotTransform::new(frame, bounds, AxisScale::Linear, AxisScale::Linear, false);
 
         transform.set_aspect_by_expanding(1.0);
 
@@ -471,7 +474,7 @@ mod tests {
         // target 1.0 -> grow x by (1/0.5 - 1) * 20 * 0.5 = 10 on each side
         let frame = Rect::from_min_max(pos2(0.0, 0.0), pos2(100.0, 50.0));
         let bounds = PlotBounds::new_symmetrical(10.0);
-        let mut transform = PlotTransform::new(frame, bounds, false);
+        let mut transform = PlotTransform::new(frame, bounds, AxisScale::Linear, AxisScale::Linear, false);
 
         transform.set_aspect_by_expanding(1.0);
 
@@ -484,7 +487,7 @@ mod tests {
         // current_aspect = 0.5, target = 1.0, change X -> grow x
         let frame = Rect::from_min_max(pos2(0.0, 0.0), pos2(100.0, 100.0));
         let bounds = PlotBounds::from_min_max([0.0, 0.0], [10.0, 20.0]);
-        let mut transform = PlotTransform::new(frame, bounds, false);
+        let mut transform = PlotTransform::new(frame, bounds, AxisScale::Linear, AxisScale::Linear, false);
 
         transform.set_aspect_by_changing_axis(1.0, Axis::X);
 
@@ -498,7 +501,7 @@ mod tests {
         // pad = (1/2 - 1) * 20 * 0.5 = -5 -> min += 5, max -= 5
         let frame = Rect::from_min_max(pos2(0.0, 0.0), pos2(100.0, 100.0));
         let bounds = PlotBounds::from_min_max([0.0, 0.0], [20.0, 10.0]);
-        let mut transform = PlotTransform::new(frame, bounds, false);
+        let mut transform = PlotTransform::new(frame, bounds, AxisScale::Linear, AxisScale::Linear, false);
 
         transform.set_aspect_by_changing_axis(1.0, Axis::X);
 
@@ -511,7 +514,7 @@ mod tests {
         // current_aspect = 2.0, target = 1.0, change Y -> grow y
         let frame = Rect::from_min_max(pos2(0.0, 0.0), pos2(100.0, 100.0));
         let bounds = PlotBounds::from_min_max([0.0, 0.0], [20.0, 10.0]);
-        let mut transform = PlotTransform::new(frame, bounds, false);
+        let mut transform = PlotTransform::new(frame, bounds, AxisScale::Linear, AxisScale::Linear, false);
 
         transform.set_aspect_by_changing_axis(1.0, Axis::Y);
 
@@ -525,7 +528,7 @@ mod tests {
         // pad = (0.5/1 - 1) * 20 * 0.5 = -5 -> min += 5, max -= 5
         let frame = Rect::from_min_max(pos2(0.0, 0.0), pos2(100.0, 100.0));
         let bounds = PlotBounds::from_min_max([0.0, 0.0], [10.0, 20.0]);
-        let mut transform = PlotTransform::new(frame, bounds, false);
+        let mut transform = PlotTransform::new(frame, bounds, AxisScale::Linear, AxisScale::Linear, false);
 
         transform.set_aspect_by_changing_axis(1.0, Axis::Y);
 
@@ -537,7 +540,7 @@ mod tests {
     fn set_aspect_by_changing_axis_noop_when_already_correct() {
         let frame = Rect::from_min_max(pos2(0.0, 0.0), pos2(100.0, 100.0));
         let bounds = PlotBounds::new_symmetrical(10.0);
-        let mut transform = PlotTransform::new(frame, bounds, false);
+        let mut transform = PlotTransform::new(frame, bounds, AxisScale::Linear, AxisScale::Linear, false);
         let original = transform.bounds();
 
         transform.set_aspect_by_changing_axis(1.0, Axis::X);

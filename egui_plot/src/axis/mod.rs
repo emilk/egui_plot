@@ -22,12 +22,15 @@ use egui::emath::Rot2;
 use egui::emath::remap_clamp;
 use egui::epaint::TextShape;
 
-use crate::axis::transform::AxisSpace as _;
+use crate::axis::transform::AxisSpace;
 use crate::grid::GridMark;
 use crate::placement::HPlacement;
 use crate::placement::Placement;
 use crate::placement::VPlacement;
 pub use transform::PlotTransform;
+use crate::axis::linear::LinearAxisSpace;
+use crate::axis::log::{LogAxis, LogBase};
+use crate::GridInput;
 
 // Gap between tick labels and axis label in units of the axis label height
 const AXIS_LABEL_GAP: f32 = 0.25;
@@ -50,6 +53,157 @@ impl From<Axis> for usize {
         match value {
             Axis::X => 0,
             Axis::Y => 1,
+        }
+    }
+}
+
+/// The scaling method for the axis.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AxisScale {
+    Linear,
+    Log10,
+    Log2,
+}
+
+impl AxisScale {
+    pub(crate) fn new_axis(&self, bounds: RangeInclusive<f64>, frame: Rangef, invert: bool) -> AxisSpaceImpl {
+        match self {
+            AxisScale::Linear => LinearAxisSpace::new(bounds, frame, invert).into(),
+            AxisScale::Log10 => LogAxis::new(bounds, frame, invert, LogBase::Base10).into(),
+            AxisScale::Log2 => LogAxis::new(bounds, frame, invert, LogBase::Base2).into(),
+        }
+    }
+}
+
+/// An enum style dispatch for the axis space.
+#[derive(Debug, Clone, Copy)]
+pub enum AxisSpaceImpl {
+    Linear(LinearAxisSpace),
+    Log(LogAxis),
+}
+
+impl From<LinearAxisSpace> for AxisSpaceImpl {
+    fn from(value: LinearAxisSpace) -> Self {
+        Self::Linear(value)
+    }
+}
+
+impl From<LogAxis> for AxisSpaceImpl {
+    fn from(value: LogAxis) -> Self {
+        Self::Log(value)
+    }
+}
+
+impl AxisSpace for AxisSpaceImpl {
+    fn value_min(&self) -> f64 {
+        match self {
+            AxisSpaceImpl::Linear(axis) => axis.value_min(),
+            AxisSpaceImpl::Log(axis) => axis.value_min(),
+        }
+    }
+
+    fn value_max(&self) -> f64 {
+        match self {
+            AxisSpaceImpl::Linear(axis) => axis.value_max(),
+            AxisSpaceImpl::Log(axis) => axis.value_max(),
+        }
+    }
+
+    fn frame_min(&self) -> f32 {
+        match self {
+            AxisSpaceImpl::Linear(axis) => axis.frame_min(),
+            AxisSpaceImpl::Log(axis) => axis.frame_min(),
+        }
+    }
+
+    fn frame_max(&self) -> f32 {
+        match self {
+            AxisSpaceImpl::Linear(axis) => axis.frame_max(),
+            AxisSpaceImpl::Log(axis) => axis.frame_max(),
+        }
+    }
+
+    fn value_length(&self) -> f64 {
+        match self {
+            AxisSpaceImpl::Linear(axis) => axis.value_length(),
+            AxisSpaceImpl::Log(axis) => axis.value_length(),
+        }
+    }
+
+    fn is_valid(&self) -> bool {
+        match self {
+            AxisSpaceImpl::Linear(axis) => axis.is_valid(),
+            AxisSpaceImpl::Log(axis) => axis.is_valid(),
+        }
+    }
+
+    fn set_inverted(&mut self, invert: bool) {
+        match self {
+            AxisSpaceImpl::Linear(axis) => axis.set_inverted(invert),
+            AxisSpaceImpl::Log(axis) => axis.set_inverted(invert),
+        }
+    }
+
+    fn set_value_range(&mut self, range: RangeInclusive<f64>) {
+        match self {
+            AxisSpaceImpl::Linear(axis) => axis.set_value_range(range),
+            AxisSpaceImpl::Log(axis) => axis.set_value_range(range),
+        }
+    }
+
+    fn position_from_value(&self, value: f64) -> f32 {
+        match self {
+            AxisSpaceImpl::Linear(axis) => axis.position_from_value(value),
+            AxisSpaceImpl::Log(axis) => axis.position_from_value(value),
+        }
+    }
+
+    fn value_from_position(&self, position: f32) -> f64 {
+        match self {
+            AxisSpaceImpl::Linear(axis) => axis.value_from_position(position),
+            AxisSpaceImpl::Log(axis) => axis.value_from_position(position),
+        }
+    }
+
+    fn minimum_value_step(&self, spacing: f32) -> f64 {
+        match self {
+            AxisSpaceImpl::Linear(axis) => axis.minimum_value_step(spacing),
+            AxisSpaceImpl::Log(axis) => axis.minimum_value_step(spacing),
+        }
+    }
+
+    fn grid_input(&self, spacing: f32) -> GridInput {
+        match self {
+            AxisSpaceImpl::Linear(axis) => axis.grid_input(spacing),
+            AxisSpaceImpl::Log(axis) => axis.grid_input(spacing),
+        }
+    }
+
+    fn screen_distance_between_values(&self, value1: f64, value2: f64) -> f32 {
+        match self {
+            AxisSpaceImpl::Linear(axis) => axis.screen_distance_between_values(value1, value2),
+            AxisSpaceImpl::Log(axis) => axis.screen_distance_between_values(value1, value2),
+        }
+    }
+
+    fn translate(&mut self, frame_distance: f32) {
+        match self {
+            AxisSpaceImpl::Linear(axis) => axis.translate(frame_distance),
+            AxisSpaceImpl::Log(axis) => axis.translate(frame_distance),
+        }
+    }
+
+    fn zoom(&mut self, factor: f32, center: f64) {
+        match self {
+            AxisSpaceImpl::Linear(axis) => axis.zoom(factor, center),
+            AxisSpaceImpl::Log(axis) => axis.zoom(factor, center),
+        }
+    }
+
+    fn expand(&mut self, pad: f64) {
+        match self {
+            AxisSpaceImpl::Linear(axis) => axis.expand(pad),
+            AxisSpaceImpl::Log(axis) => axis.expand(pad),
         }
     }
 }

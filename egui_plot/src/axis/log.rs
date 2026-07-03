@@ -4,7 +4,8 @@ use crate::axis::transform::AxisSpace;
 use emath::Rangef;
 use std::ops::RangeInclusive;
 
-enum LogBase {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LogBase {
     Base10,
     Base2,
 }
@@ -31,7 +32,8 @@ impl LogBase {
     }
 }
 
-struct LogAxis {
+#[derive(Debug, Clone, Copy)]
+pub struct LogAxis {
     /// A linear scale for the exponent of the logarithm.
     ///
     /// This allows us to reuse much of the linear logic.
@@ -42,8 +44,8 @@ struct LogAxis {
 
 impl LogAxis {
     pub fn new(value_range: RangeInclusive<f64>, frame_range: Rangef, invert: bool, base: LogBase) -> Self {
-        let exponent_min = base.exponent(*value_range.start()).unwrap();
-        let exponent_max = base.exponent(*value_range.end()).unwrap();
+        let exponent_min = base.exponent(*value_range.start()).unwrap_or(0.0);
+        let exponent_max = base.exponent(*value_range.end()).unwrap_or(0.0);
         Self {
             exponent_scale: LinearAxisSpace::new(exponent_min..=exponent_max, frame_range, invert),
             base,
@@ -73,13 +75,13 @@ impl AxisSpace for LogAxis {
     }
 
     fn set_value_range(&mut self, range: RangeInclusive<f64>) {
-        let exponent_min = self.base.exponent(*range.start()).unwrap();
-        let exponent_max = self.base.exponent(*range.end()).unwrap();
+        let exponent_min = self.base.exponent(*range.start()).unwrap_or(0.0);
+        let exponent_max = self.base.exponent(*range.end()).unwrap_or(0.0);
         self.exponent_scale.set_value_range(exponent_min..=exponent_max);
     }
 
     fn position_from_value(&self, value: f64) -> f32 {
-        let exponent = self.base.exponent(value).unwrap();
+        let exponent = self.base.exponent(value).unwrap_or(0.0);
         self.exponent_scale.position_from_value(exponent)
     }
 
@@ -89,19 +91,27 @@ impl AxisSpace for LogAxis {
     }
 
     fn minimum_value_step(&self, spacing: f32) -> f64 {
-        todo!()
+        let linear_step = self.exponent_scale.minimum_value_step(spacing);
+        let linear_min = self.exponent_scale.value_min();
+        let log_min_step = self.base.power(linear_step + linear_min);
+        log_min_step - self.value_min()
     }
 
     fn grid_input(&self, spacing: f32) -> GridInput {
-        todo!()
+       GridInput {
+           bounds: (self.value_min(), self.value_max()),
+           base_step_size: self.minimum_value_step(spacing),
+       }
     }
 
     fn screen_distance_between_values(&self, value1: f64, value2: f64) -> f32 {
-        todo!()
+        let exponent1 = self.base.exponent(value1).unwrap_or(0.0);
+        let exponent2 = self.base.exponent(value2).unwrap_or(0.0);
+        self.exponent_scale.screen_distance_between_values(exponent1, exponent2)
     }
 
     fn translate(&mut self, frame_distance: f32) {
-        todo!()
+        self.exponent_scale.translate(frame_distance);
     }
 
     fn zoom(&mut self, factor: f32, center: f64) {
@@ -116,6 +126,17 @@ mod tests {
     use super::*;
     use assertables::{assert_approx_eq, assert_in_delta};
 
+
+    #[test]
+    fn basic_log10_conversions() {
+        let pairings = [[100.0, 2.0], [1000.0, 3.0], [0.1, -1.0]];
+        for [value, exponent] in pairings {
+            assert_approx_eq!(exponent, LogBase::Base10.exponent(value).unwrap());
+            assert_approx_eq!(value, LogBase::Base10.power(exponent));
+        }
+        assert!(LogBase::Base10.exponent(0.0).is_none());
+        assert!(LogBase::Base10.exponent(-1.0).is_none());
+    }
     #[test]
     fn test_value_changes_map_to_linear_and_back() {
         let mut log_axis = LogAxis::new(1.0..=1000.0, Rangef::new(0.0, 1.0), false, LogBase::Base10);

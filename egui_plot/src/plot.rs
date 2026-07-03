@@ -26,7 +26,7 @@ use emath::Vec2b;
 use emath::remap_clamp;
 use emath::vec2;
 
-use crate::axis::Axis;
+use crate::axis::{Axis, AxisScale};
 use crate::axis::AxisHints;
 use crate::axis::AxisWidget;
 use crate::axis::PlotTransform;
@@ -112,7 +112,9 @@ pub struct Plot<'a> {
     view_aspect: Option<f32>,
     invert_x: bool,
     invert_y: bool,
-
+    x_scale: AxisScale,
+    y_scale: AxisScale,
+    
     reset: bool,
 
     show_x: bool,
@@ -166,6 +168,8 @@ impl<'a> Plot<'a> {
             view_aspect: None,
             invert_x: false,
             invert_y: false,
+            x_scale: AxisScale::Linear,
+            y_scale: AxisScale::Linear,
 
             reset: false,
 
@@ -236,6 +240,20 @@ impl<'a> Plot<'a> {
     #[inline]
     pub fn invert_y(mut self, invert: bool) -> Self {
         self.invert_y = invert;
+        self
+    }
+    
+    /// Set the scaling mode for the x-axis.
+    #[inline]
+    pub fn x_scale(mut self, scale: AxisScale) -> Self {
+        self.x_scale = scale;
+        self
+    }
+    
+    /// Set the scaling mode for the y-axis.
+    #[inline]
+    pub fn y_scale(mut self, scale: AxisScale) -> Self {
+        self.y_scale = scale;
         self
     }
 
@@ -899,6 +917,8 @@ impl<'a> Plot<'a> {
                 transform: PlotTransform::new_with_invert_axis(
                     plot_rect,
                     self.min_auto_bounds,
+                    self.x_scale,
+                    self.y_scale,
                     self.center_axis,
                     Vec2b::new(self.invert_x, self.invert_y),
                 ),
@@ -914,6 +934,8 @@ impl<'a> Plot<'a> {
                 transform: PlotTransform::new_with_invert_axis(
                     plot_rect,
                     self.min_auto_bounds,
+                    self.x_scale,
+                    self.y_scale,
                     self.center_axis,
                     Vec2b::new(self.invert_x, self.invert_y),
                 ),
@@ -1079,6 +1101,8 @@ impl<'a> Plot<'a> {
         mem.transform = PlotTransform::new_with_invert_axis(
             plot_rect,
             bounds,
+            self.x_scale,
+            self.y_scale,
             self.center_axis,
             Vec2b::new(self.invert_x, self.invert_y),
         );
