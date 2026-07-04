@@ -44,8 +44,8 @@ pub struct LogAxis {
 
 impl LogAxis {
     pub fn new(value_range: RangeInclusive<f64>, frame_range: Rangef, invert: bool, base: LogBase) -> Self {
-        let exponent_min = base.exponent(*value_range.start()).unwrap_or(0.0);
-        let exponent_max = base.exponent(*value_range.end()).unwrap_or(0.0);
+        let exponent_min = base.exponent(*value_range.start()).unwrap_or(-9.0);
+        let exponent_max = base.exponent(*value_range.end()).unwrap_or(-9.0);
         Self {
             exponent_scale: LinearAxisSpace::new(exponent_min..=exponent_max, frame_range, invert),
             base,
@@ -75,12 +75,13 @@ impl AxisSpace for LogAxis {
     }
 
     fn set_value_range(&mut self, range: RangeInclusive<f64>) {
-        let exponent_min = self.base.exponent(*range.start()).unwrap_or(0.0);
-        let exponent_max = self.base.exponent(*range.end()).unwrap_or(0.0);
+        let exponent_min = self.base.exponent(*range.start()).unwrap_or(-9.0);
+        let exponent_max = self.base.exponent(*range.end()).unwrap_or(-9.0);
         self.exponent_scale.set_value_range(exponent_min..=exponent_max);
     }
 
     fn position_from_value(&self, value: f64) -> f32 {
+        //todo: appropriate response, NaN?
         let exponent = self.base.exponent(value).unwrap_or(0.0);
         self.exponent_scale.position_from_value(exponent)
     }
