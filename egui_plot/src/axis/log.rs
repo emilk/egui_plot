@@ -90,18 +90,25 @@ impl AxisSpace for LogAxis {
         self.base.power(exponent)
     }
 
-    fn minimum_value_step(&self, spacing: f32) -> f64 {
-        let linear_step = self.exponent_scale.minimum_value_step(spacing);
-        let linear_min = self.exponent_scale.value_min();
-        let log_min_step = self.base.power(linear_step + linear_min);
-        log_min_step - self.value_min()
+    fn position_delta_from_screen_delta(&self, start_position_value: f64, delta: f32) -> f64 {
+        let start_exponent = self.base.exponent(start_position_value).unwrap_or(0.0);
+        let exponent_delta = self
+            .exponent_scale
+            .position_delta_from_screen_delta(start_position_value, delta);
+        let end_exponent = start_exponent + exponent_delta;
+        let end_value = self.base.power(end_exponent);
+        end_value - start_position_value
     }
 
-    fn grid_input(&self, spacing: f32) -> GridInput {
-       GridInput {
-           bounds: (self.value_min(), self.value_max()),
-           base_step_size: self.minimum_value_step(spacing),
-       }
+    fn grid_input(&self, _spacing: f32) -> GridInput {
+        //todo: This still isn't right
+        let max_exponent = self.exponent_scale.value_max();
+        let min_step_exponent = max_exponent - 3.0;
+
+        GridInput {
+            bounds: (self.value_min(), self.value_max()),
+            base_step_size: self.base.power(min_step_exponent),
+        }
     }
 
     fn screen_distance_between_values(&self, value1: f64, value2: f64) -> f32 {
@@ -125,7 +132,6 @@ impl AxisSpace for LogAxis {
 mod tests {
     use super::*;
     use assertables::{assert_approx_eq, assert_in_delta};
-
 
     #[test]
     fn basic_log10_conversions() {
@@ -176,5 +182,30 @@ mod tests {
         assert_approx_eq!(log_axis.value_max(), 16.0);
         assert_approx_eq!(log_axis.frame_min(), 0.0);
         assert_approx_eq!(log_axis.frame_max(), 1.0);
+    }
+
+    #[test]
+    fn value_delta_from_screen_delta() {
+        let log_axis = LogAxis::new(1.0..=1000.0, Rangef::new(0.0, 1.0), false, LogBase::Base10);
+
+        let screen_start = 0.1;
+        let screen_end = 0.2;
+
+        let value_start = log_axis.value_from_position(screen_start);
+        let value_end = log_axis.value_from_position(screen_end);
+        let delta = value_end - value_start;
+
+        let calculated_delta = log_axis.position_delta_from_screen_delta(value_start, 0.1);
+        assert_approx_eq!(calculated_delta, delta);
+
+        //non linear means that offsetting should still compensate.
+        let screen_start = 0.3;
+        let screen_end = 0.4;
+        let value_start = log_axis.value_from_position(screen_start);
+        let value_end = log_axis.value_from_position(screen_end);
+        let delta = value_end - value_start;
+
+        let calculated_delta = log_axis.position_delta_from_screen_delta(value_start, 0.1);
+        assert_approx_eq!(calculated_delta, delta);
     }
 }

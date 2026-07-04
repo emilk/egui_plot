@@ -26,11 +26,11 @@ use emath::Vec2b;
 use emath::remap_clamp;
 use emath::vec2;
 
-use crate::axis::{Axis, AxisScale};
 use crate::axis::AxisHints;
 use crate::axis::AxisWidget;
 use crate::axis::PlotTransform;
 use crate::axis::transform::AxisSpace as _;
+use crate::axis::{Axis, AxisScale};
 use crate::bounds::BoundsLinkGroups;
 use crate::bounds::BoundsModification;
 use crate::bounds::LinkedBounds;
@@ -114,7 +114,7 @@ pub struct Plot<'a> {
     invert_y: bool,
     x_scale: AxisScale,
     y_scale: AxisScale,
-    
+
     reset: bool,
 
     show_x: bool,
@@ -242,14 +242,14 @@ impl<'a> Plot<'a> {
         self.invert_y = invert;
         self
     }
-    
+
     /// Set the scaling mode for the x-axis.
     #[inline]
     pub fn x_scale(mut self, scale: AxisScale) -> Self {
         self.x_scale = scale;
         self
     }
-    
+
     /// Set the scaling mode for the y-axis.
     #[inline]
     pub fn y_scale(mut self, scale: AxisScale) -> Self {
@@ -2011,12 +2011,17 @@ impl<'a> PlotUi<'a> {
 
     /// The pointer drag delta in plot coordinates.
     pub fn pointer_coordinate_drag_delta(&self) -> Vec2 {
-        // todo: We are going to need to get a start and end here to
-        // compute the actual delta in the log case.
         let delta = self.response.drag_delta();
-        let x_dp_dv = self.last_plot_transform.axis_space(Axis::X).minimum_value_step(1.0);
-        let y_dp_dv = self.last_plot_transform.axis_space(Axis::Y).minimum_value_step(1.0);
-        Vec2::new(delta.x / x_dp_dv as f32, delta.y / y_dp_dv as f32)
+        let position = self.pointer_coordinate().expect("Needed for drag action");
+        let x = self
+            .transform()
+            .axis_space(Axis::X)
+            .position_delta_from_screen_delta(position.x, delta.x);
+        let y = self
+            .transform()
+            .axis_space(Axis::Y)
+            .position_delta_from_screen_delta(position.y, delta.y);
+        Vec2::new(x as f32, y as f32)
     }
 
     /// Read the transform between plot coordinates and screen coordinates.

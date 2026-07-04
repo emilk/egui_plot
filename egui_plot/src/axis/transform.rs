@@ -5,11 +5,11 @@
 // value units. We could consider a unit type in the future to
 // make this explicit.
 
-use std::fmt::Debug;
+use crate::axis::AxisSpaceImpl;
 use crate::{Axis, AxisScale, GridInput, PlotBounds, PlotPoint};
 use emath::{Pos2, Rect, Vec2, Vec2b, pos2};
+use std::fmt::Debug;
 use std::ops::RangeInclusive;
-use crate::axis::AxisSpaceImpl;
 
 pub trait AxisSpace: Debug + Clone {
     /// The minimum value of the axis.
@@ -42,8 +42,8 @@ pub trait AxisSpace: Debug + Clone {
     /// Convert a screen position to a value.
     fn value_from_position(&self, position: f32) -> f64;
 
-    /// Provides the minimum value step for the screen step size provided.
-    fn minimum_value_step(&self, spacing: f32) -> f64;
+    /// Convert a screen drag vector to the distance of the vector in plot space.
+    fn position_delta_from_screen_delta(&self, start_position_value: f64, delta: f32) -> f64;
 
     /// Get the grid input configuration for the axis given the provided
     /// minimum gap in screen units.
@@ -84,7 +84,13 @@ pub struct PlotTransform {
 }
 
 impl PlotTransform {
-    pub fn new(frame: Rect, bounds: PlotBounds, x_scale: AxisScale, y_scale: AxisScale, center_axis: impl Into<Vec2b>) -> Self {
+    pub fn new(
+        frame: Rect,
+        bounds: PlotBounds,
+        x_scale: AxisScale,
+        y_scale: AxisScale,
+        center_axis: impl Into<Vec2b>,
+    ) -> Self {
         debug_assert!(
             0.0 <= frame.width() && 0.0 <= frame.height(),
             "Bad plot frame: {frame:?}"
@@ -353,7 +359,14 @@ mod tests {
         let frame = Rect::from_min_max(pos2(0.0, 0.0), pos2(100.0, 100.0));
         let bounds = PlotBounds::new_symmetrical(10.0);
         let invert_axis = Vec2b::new(true, false);
-        let transform = PlotTransform::new_with_invert_axis(frame, bounds, AxisScale::Linear, AxisScale::Linear,false, invert_axis);
+        let transform = PlotTransform::new_with_invert_axis(
+            frame,
+            bounds,
+            AxisScale::Linear,
+            AxisScale::Linear,
+            false,
+            invert_axis,
+        );
         assert_eq!(
             transform.position_from_point(&PlotPoint::new(0.0, 0.0)),
             pos2(50.0, 50.0)

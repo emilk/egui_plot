@@ -93,15 +93,14 @@ impl AxisSpace for LinearAxisSpace {
         remap(position as f64, self.frame_range_f64(), self.min..=self.max)
     }
 
-    /// Provides the minimum value step for the screen step size provided.
-    fn minimum_value_step(&self, spacing: f32) -> f64 {
-        self.dvalue_per_dpos().abs() * (spacing as f64)
+    fn position_delta_from_screen_delta(&self, _start_position: f64, drag_delta: f32) -> f64 {
+        drag_delta as f64 * self.dvalue_per_dpos()
     }
 
     fn grid_input(&self, spacing: f32) -> GridInput {
         GridInput {
             bounds: (self.min, self.max),
-            base_step_size: self.minimum_value_step(spacing),
+            base_step_size: self.dvalue_per_dpos().abs() * (spacing as f64),
         }
     }
 

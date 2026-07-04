@@ -1,7 +1,5 @@
-
 use eframe::egui;
 use eframe::egui::Response;
-use egui::NumExt as _;
 use egui_plot::AxisScale;
 use egui_plot::Legend;
 use egui_plot::Line;
@@ -9,7 +7,7 @@ use egui_plot::LineStyle;
 use egui_plot::Plot;
 use egui_plot::PlotPoints;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct LogScaleExample {
     invert_x: bool,
     invert_y: bool,
@@ -23,7 +21,7 @@ impl Default for LogScaleExample {
             invert_x: false,
             invert_y: false,
             log_x: false,
-            log_y: false,
+            log_y: true,
         }
     }
 }
@@ -41,21 +39,32 @@ impl LogScaleExample {
         .response
     }
 
-    fn squared_line(&self) -> Line<'_> {
-        Line::new("exponential", PlotPoints::from_explicit_callback(|x| 10.0_f64.powf(x), 0.0..10.0, 512))
-            .color(egui::Color32::from_rgb(100, 150, 250))
-            .style(LineStyle::Solid)
+    fn squared_line() -> Line<'static> {
+        Line::new(
+            "exponential",
+            PlotPoints::from_explicit_callback(|x| 10.0_f64.powf(x), 0.0..10.0, 512),
+        )
+        .color(egui::Color32::from_rgb(100, 150, 250))
+        .style(LineStyle::Solid)
     }
 
-    pub fn show_plot(&mut self, ui: &mut egui::Ui) -> Response {
-        let mut plot = Plot::new("lines_demo")
+    pub fn show_plot(&self, ui: &mut egui::Ui) -> Response {
+        let plot = Plot::new("log_demo")
             .legend(Legend::default().title("Lines"))
             .invert_x(self.invert_x)
             .invert_y(self.invert_y)
-            .x_scale(if self.log_x { AxisScale::Log10 } else { AxisScale::Linear })
-            .y_scale(if self.log_y { AxisScale::Log10 } else { AxisScale::Linear });
+            .x_scale(if self.log_x {
+                AxisScale::Log10
+            } else {
+                AxisScale::Linear
+            })
+            .y_scale(if self.log_y {
+                AxisScale::Log10
+            } else {
+                AxisScale::Linear
+            });
         plot.show(ui, |plot_ui| {
-            plot_ui.line(self.squared_line());
+            plot_ui.line(Self::squared_line());
         })
         .response
     }

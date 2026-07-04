@@ -443,8 +443,8 @@ impl RectElement for BoxElem {
 
     fn default_values_format(&self, transform: &PlotTransform) -> String {
         let scale = match self.orientation {
-            Orientation::Horizontal => transform.axis_space(Axis::X).minimum_value_step(1.0),
-            Orientation::Vertical => transform.axis_space(Axis::Y).minimum_value_step(1.0),
+            Orientation::Horizontal => transform.axis_space(Axis::X).grid_input(1.0).base_step_size,
+            Orientation::Vertical => transform.axis_space(Axis::Y).grid_input(1.0).base_step_size,
         };
         let y_decimals = ((-scale.abs().log10()).ceil().at_least(0.0) as usize)
             .at_most(6)
