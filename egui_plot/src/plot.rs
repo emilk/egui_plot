@@ -1424,9 +1424,9 @@ impl<'a> Plot<'a> {
         response: &Response,
         transform: &PlotTransform,
         painter: &Painter,
-        coordinates_formatter: &Option<(Corner, CoordinatesFormatter<'_>)>,
+        coordinates_formatter: Option<&(Corner, CoordinatesFormatter<'_>)>,
     ) {
-        if let Some((corner, formatter)) = coordinates_formatter.as_ref() {
+        if let Some((corner, formatter)) = coordinates_formatter {
             let hover_pos = response.hover_pos();
             if let Some(pointer) = hover_pos {
                 let font_id = TextStyle::Monospace.resolve(ui.style());
@@ -1591,7 +1591,7 @@ impl<'a> Plot<'a> {
                 shapes,
                 &mut cursors,
                 &plot,
-                &self.label_formatter,
+                self.label_formatter.as_deref(),
             );
             Some(item.id())
         } else {
@@ -1602,7 +1602,7 @@ impl<'a> Plot<'a> {
                 None,
                 &plot,
                 &mut cursors,
-                &self.label_formatter,
+                self.label_formatter.as_deref(),
             );
             None
         };
@@ -1679,7 +1679,7 @@ impl<'a> Plot<'a> {
             &plot_ui.response,
             &mem.transform,
             &painter,
-            &self.coordinates_formatter,
+            self.coordinates_formatter.as_ref(),
         );
 
         // Show legend and update memory

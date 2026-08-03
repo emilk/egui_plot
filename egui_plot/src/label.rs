@@ -16,7 +16,8 @@ pub fn format_number(number: f64, num_decimals: usize) -> String {
     }
 }
 
-type LabelFormatterFn<'a> = dyn Fn(&HoverPosition<'_>) -> Option<String> + 'a;
+/// The unboxed form of [`LabelFormatter`].
+pub type LabelFormatterFn<'a> = dyn Fn(&HoverPosition<'_>) -> Option<String> + 'a;
 
 /// Optional label formatter function for customizing hover labels.
 pub type LabelFormatter<'a> = Box<LabelFormatterFn<'a>>;
