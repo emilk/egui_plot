@@ -1098,6 +1098,7 @@ impl<'a> Plot<'a> {
         }
     }
 
+    /// Returns shapes (e.g. the boxed zoom rect) that should be painted on top of the plot contents.
     fn handle_interactions(
         &self,
         ui: &Ui,
@@ -1105,7 +1106,8 @@ impl<'a> Plot<'a> {
         plot_ui: &mut PlotUi<'_>,
         plot_rect: Rect,
         axis_responses: &AxisResponses,
-    ) {
+    ) -> Vec<Shape> {
+        let mut foreground_shapes = Vec::new();
         let response = &mut plot_ui.response;
         let allow_drag = self.allow_drag.and(ui.is_enabled());
         let allow_zoom = self.allow_zoom.and(ui.is_enabled());
@@ -1182,8 +1184,8 @@ impl<'a> Plot<'a> {
                             egui::StrokeKind::Middle,
                         ), // Inner stroke
                     );
-                    ui.painter().with_clip_rect(plot_rect).add(boxed_zoom_rect.0);
-                    ui.painter().with_clip_rect(plot_rect).add(boxed_zoom_rect.1);
+                    foreground_shapes.push(Shape::Rect(boxed_zoom_rect.0));
+                    foreground_shapes.push(Shape::Rect(boxed_zoom_rect.1));
                 }
                 // when the click is release perform the zoom
                 if response.drag_stopped() {
@@ -1240,6 +1242,8 @@ impl<'a> Plot<'a> {
                 }
             }
         }
+
+        foreground_shapes
     }
 
     fn render_axis_widgets(&self, ui: &mut Ui, mem: &mut PlotMemory, mut axis_widgets: AxisWidgets<'_>) {
@@ -1655,6 +1659,9 @@ impl<'a> Plot<'a> {
         // Compute bounds
         self.compute_bounds(ui, &mut mem, &plot_ui, plot_rect);
 
+        // Handle interactions (modifies plot_ui.response in place)
+        let foreground_shapes = self.handle_interactions(ui, &mut mem, &mut plot_ui, plot_rect, &axis_responses);
+
         // Render axis widgets
         self.render_axis_widgets(ui, &mut mem, axis_widgets);
 
@@ -1671,8 +1678,8 @@ impl<'a> Plot<'a> {
         let painter = ui.painter().with_clip_rect(*mem.transform.frame());
         painter.extend(shapes);
 
-        // Handle interactions (modifies plot_ui.response in place)
-        self.handle_interactions(ui, &mut mem, &mut plot_ui, plot_rect, &axis_responses);
+        // Paint interaction shapes (e.g. the boxed zoom rect) on top of the plot contents.
+        painter.extend(foreground_shapes);
 
         // Show coordinates in a corner of the plot
         // Use ui to access style information and draw the coordinate text overlay
