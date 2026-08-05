@@ -41,7 +41,7 @@ pub use crate::items::series::Line;
 pub use crate::items::span::Span;
 pub use crate::items::text::Text;
 use crate::label::HoverPosition;
-use crate::label::LabelFormatter;
+use crate::label::LabelFormatterFn;
 use crate::rect_elem::RectElement;
 
 mod arrows;
@@ -175,7 +175,7 @@ pub trait PlotItem {
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
         plot: &PlotConfig<'_>,
-        label_formatter: &Option<LabelFormatter<'_>>,
+        label_formatter: Option<&LabelFormatterFn<'_>>,
     ) {
         let points = match self.geometry() {
             PlotGeometry::Points(points) => points,
@@ -283,7 +283,7 @@ pub(super) fn rulers_and_tooltip_at_value(
     nearest_point: Option<(&str, usize)>,
     plot: &PlotConfig<'_>,
     cursors: &mut Vec<Cursor>,
-    label_formatter: &Option<LabelFormatter<'_>>,
+    label_formatter: Option<&LabelFormatterFn<'_>>,
 ) {
     // Add crosshair rulers if enabled
     if plot.show_crosshair {

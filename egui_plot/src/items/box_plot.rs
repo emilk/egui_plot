@@ -22,7 +22,7 @@ use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
 use crate::items::add_rulers_and_text;
-use crate::label::LabelFormatter;
+use crate::label::LabelFormatterFn;
 use crate::math::find_closest_rect;
 use crate::rect_elem::RectElement;
 
@@ -176,7 +176,7 @@ impl PlotItem for BoxPlot {
         shapes: &mut Vec<Shape>,
         cursors: &mut Vec<Cursor>,
         plot: &PlotConfig<'_>,
-        _: &Option<LabelFormatter<'_>>,
+        _: Option<&LabelFormatterFn<'_>>,
     ) {
         let box_plot = &self.boxes[elem.index];
 

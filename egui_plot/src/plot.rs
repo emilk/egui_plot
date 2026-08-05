@@ -1424,9 +1424,9 @@ impl<'a> Plot<'a> {
         response: &Response,
         transform: &PlotTransform,
         painter: &Painter,
-        coordinates_formatter: &Option<(Corner, CoordinatesFormatter<'_>)>,
+        coordinates_formatter: Option<&(Corner, CoordinatesFormatter<'_>)>,
     ) {
-        if let Some((corner, formatter)) = coordinates_formatter.as_ref() {
+        if let Some((corner, formatter)) = coordinates_formatter {
             let hover_pos = response.hover_pos();
             if let Some(pointer) = hover_pos {
                 let font_id = TextStyle::Monospace.resolve(ui.style());
@@ -1591,7 +1591,7 @@ impl<'a> Plot<'a> {
                 shapes,
                 &mut cursors,
                 &plot,
-                &self.label_formatter,
+                self.label_formatter.as_deref(),
             );
             Some(item.id())
         } else {
@@ -1602,7 +1602,7 @@ impl<'a> Plot<'a> {
                 None,
                 &plot,
                 &mut cursors,
-                &self.label_formatter,
+                self.label_formatter.as_deref(),
             );
             None
         };
@@ -1679,7 +1679,7 @@ impl<'a> Plot<'a> {
             &plot_ui.response,
             &mem.transform,
             &painter,
-            &self.coordinates_formatter,
+            self.coordinates_formatter.as_ref(),
         );
 
         // Show legend and update memory
@@ -1890,7 +1890,7 @@ impl<'a> PlotUi<'a> {
     fn auto_color(&mut self) -> Color32 {
         let i = self.next_auto_color_idx;
         self.next_auto_color_idx += 1;
-        let golden_ratio = (5.0_f32.sqrt() - 1.0) / 2.0; // 0.61803398875
+        let golden_ratio = std::f32::consts::GOLDEN_RATIO - 1.0; // 0.61803398875
         let h = i as f32 * golden_ratio;
         Hsva::new(h, 0.85, 0.5, 1.0).into() // TODO(#165): OkLab or some other perspective color space
     }
