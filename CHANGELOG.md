@@ -4,6 +4,16 @@ All notable changes to the `egui_plot` integration will be noted in this file.
 This file is updated upon each release.
 Changes since the last release can be found at <https://github.com/emilk/egui_plot/compare/latest...HEAD> or by running the `scripts/generate_changelog.py` script.
 
+## 0.37.0 - 2026-08-05
+
+Full diff at https://github.com/emilk/egui_plot/compare/0.36.0..HEAD
+
+#### PRs
+* Fix: `boxed_zoom_rect` not in foreground [#242](https://github.com/emilk/egui_plot/pull/242)
+* Fix dead matplotlib links in `WELCOME_CONTRIBUTIONS.md` [#253](https://github.com/emilk/egui_plot/pull/253)
+* Update to Rust 1.95 [#252](https://github.com/emilk/egui_plot/pull/252)
+* Update egui to 0.36 [#254](https://github.com/emilk/egui_plot/pull/254)
+
 
 ## 0.36.0 - 2026-06-26
 
