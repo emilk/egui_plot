@@ -44,7 +44,7 @@ pub mod internal {
         let output_path = PathBuf::from(manifest_dir);
         let options = SnapshotOptions::new()
             .threshold(2.0)
-            .failed_pixel_count_threshold(5)
+            .max_failed_pixels(5)
             .output_path(output_path);
 
         // Generate main screenshot
