@@ -218,12 +218,12 @@ impl PlotItem for Line<'_> {
             let expected_intersections = 20;
             mesh.reserve_triangles((n_values - 1) * 2);
             mesh.reserve_vertices(n_values * 2 + expected_intersections);
-            values_tf.windows(2).for_each(|w| {
-                let fill_color = fill_color_for_point(w[0]);
+            for [prev, next] in values_tf.array_windows::<2>() {
+                let fill_color = fill_color_for_point(*prev);
                 let i = mesh.vertices.len() as u32;
-                mesh.colored_vertex(w[0], fill_color);
-                mesh.colored_vertex(pos2(w[0].x, y), fill_color);
-                if let Some(x) = y_intersection(&w[0], &w[1], y) {
+                mesh.colored_vertex(*prev, fill_color);
+                mesh.colored_vertex(pos2(prev.x, y), fill_color);
+                if let Some(x) = y_intersection(prev, next, y) {
                     let point = pos2(x, y);
                     mesh.colored_vertex(point, fill_color_for_point(point));
                     mesh.add_triangle(i, i + 1, i + 2);
@@ -232,7 +232,7 @@ impl PlotItem for Line<'_> {
                     mesh.add_triangle(i, i + 1, i + 2);
                     mesh.add_triangle(i + 1, i + 2, i + 3);
                 }
-            });
+            }
             let last = values_tf[n_values - 1];
             let fill_color = fill_color_for_point(last);
             mesh.colored_vertex(last, fill_color);
@@ -260,11 +260,11 @@ impl PlotItem for Line<'_> {
         }
 
         points
-            .windows(2)
+            .array_windows::<2>()
             .enumerate()
-            .map(|(i, w)| {
-                let p0 = transform.position_from_point(&w[0]);
-                let p1 = transform.position_from_point(&w[1]);
+            .map(|(i, [v0, v1])| {
+                let p0 = transform.position_from_point(v0);
+                let p1 = transform.position_from_point(v1);
                 let dist_sq = dist_sq_to_segment(point, [p0, p1]);
                 // Pick the closer endpoint so the tooltip shows a real data point
                 let index = if point.distance_sq(p0) <= point.distance_sq(p1) {
