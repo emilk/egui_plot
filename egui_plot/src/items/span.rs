@@ -294,10 +294,10 @@ impl PlotItem for Span {
     fn initialize(&mut self, _x_range: RangeInclusive<f64>) {}
 
     fn color(&self) -> Color32 {
-        if self.fill != Color32::TRANSPARENT {
-            self.fill
-        } else {
+        if self.fill == Color32::TRANSPARENT {
             self.border_stroke.color
+        } else {
+            self.fill
         }
     }
 
