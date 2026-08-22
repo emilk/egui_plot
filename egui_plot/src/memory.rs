@@ -51,7 +51,7 @@ impl PlotMemory {
 
     /// Plot-space bounds.
     #[inline]
-    pub fn bounds(&self) -> &PlotBounds {
+    pub fn bounds(&self) -> PlotBounds {
         self.transform.bounds()
     }
 

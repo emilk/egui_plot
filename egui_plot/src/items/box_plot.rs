@@ -10,8 +10,10 @@ use egui::epaint::RectShape;
 use emath::NumExt as _;
 use emath::Pos2;
 
+use crate::Axis;
 use crate::aesthetics::Orientation;
 use crate::axis::PlotTransform;
+use crate::axis::transform::AxisSpace as _;
 use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
 use crate::colors::highlighted_color;
@@ -440,10 +442,9 @@ impl RectElement for BoxElem {
     }
 
     fn default_values_format(&self, transform: &PlotTransform) -> String {
-        let scale = transform.dvalue_dpos();
         let scale = match self.orientation {
-            Orientation::Horizontal => scale[0],
-            Orientation::Vertical => scale[1],
+            Orientation::Horizontal => transform.axis_space(Axis::X).grid_input(1.0).base_step_size,
+            Orientation::Vertical => transform.axis_space(Axis::Y).grid_input(1.0).base_step_size,
         };
         let y_decimals = ((-scale.abs().log10()).ceil().at_least(0.0) as usize)
             .at_most(6)

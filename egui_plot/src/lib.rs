@@ -30,6 +30,7 @@ pub use crate::aesthetics::MarkerShape;
 pub use crate::aesthetics::Orientation;
 pub use crate::axis::Axis;
 pub use crate::axis::AxisHints;
+pub use crate::axis::AxisScale;
 pub use crate::axis::PlotTransform;
 pub use crate::bounds::PlotBounds;
 pub use crate::bounds::PlotPoint;

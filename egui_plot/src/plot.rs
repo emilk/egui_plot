@@ -26,10 +26,11 @@ use emath::Vec2b;
 use emath::remap_clamp;
 use emath::vec2;
 
-use crate::axis::Axis;
 use crate::axis::AxisHints;
 use crate::axis::AxisWidget;
 use crate::axis::PlotTransform;
+use crate::axis::transform::AxisSpace as _;
+use crate::axis::{Axis, AxisScale};
 use crate::bounds::BoundsLinkGroups;
 use crate::bounds::BoundsModification;
 use crate::bounds::LinkedBounds;
@@ -111,6 +112,8 @@ pub struct Plot<'a> {
     view_aspect: Option<f32>,
     invert_x: bool,
     invert_y: bool,
+    x_scale: AxisScale,
+    y_scale: AxisScale,
 
     reset: bool,
 
@@ -165,6 +168,8 @@ impl<'a> Plot<'a> {
             view_aspect: None,
             invert_x: false,
             invert_y: false,
+            x_scale: AxisScale::Linear,
+            y_scale: AxisScale::Linear,
 
             reset: false,
 
@@ -235,6 +240,20 @@ impl<'a> Plot<'a> {
     #[inline]
     pub fn invert_y(mut self, invert: bool) -> Self {
         self.invert_y = invert;
+        self
+    }
+
+    /// Set the scaling mode for the x-axis.
+    #[inline]
+    pub fn x_scale(mut self, scale: AxisScale) -> Self {
+        self.x_scale = scale;
+        self
+    }
+
+    /// Set the scaling mode for the y-axis.
+    #[inline]
+    pub fn y_scale(mut self, scale: AxisScale) -> Self {
+        self.y_scale = scale;
         self
     }
 
@@ -898,6 +917,8 @@ impl<'a> Plot<'a> {
                 transform: PlotTransform::new_with_invert_axis(
                     plot_rect,
                     self.min_auto_bounds,
+                    self.x_scale,
+                    self.y_scale,
                     self.center_axis,
                     Vec2b::new(self.invert_x, self.invert_y),
                 ),
@@ -913,6 +934,8 @@ impl<'a> Plot<'a> {
                 transform: PlotTransform::new_with_invert_axis(
                     plot_rect,
                     self.min_auto_bounds,
+                    self.x_scale,
+                    self.y_scale,
                     self.center_axis,
                     Vec2b::new(self.invert_x, self.invert_y),
                 ),
@@ -991,7 +1014,7 @@ impl<'a> Plot<'a> {
 
     fn compute_bounds(&self, ui: &Ui, mem: &mut PlotMemory, plot_ui: &PlotUi<'a>, plot_rect: Rect) {
         // Find the cursors from other plots we need to draw
-        let mut bounds = *plot_ui.last_plot_transform.bounds();
+        let mut bounds = plot_ui.last_plot_transform.bounds();
 
         // Transfer the bounds from a link group.
         if let Some((id, axes)) = self.linked_axes.as_ref() {
@@ -1078,6 +1101,8 @@ impl<'a> Plot<'a> {
         mem.transform = PlotTransform::new_with_invert_axis(
             plot_rect,
             bounds,
+            self.x_scale,
+            self.y_scale,
             self.center_axis,
             Vec2b::new(self.invert_x, self.invert_y),
         );
@@ -1248,18 +1273,12 @@ impl<'a> Plot<'a> {
         let bounds = mem.transform.bounds();
         let x_axis_range = bounds.range_x();
         let x_steps = Arc::new({
-            let input = GridInput {
-                bounds: (bounds.min[0], bounds.max[0]),
-                base_step_size: mem.transform.dvalue_dpos()[0].abs() * self.grid_spacing.min as f64,
-            };
+            let input = mem.transform.axis_space(Axis::X).grid_input(self.grid_spacing.min);
             (self.grid_spacers[0])(input)
         });
         let y_axis_range = bounds.range_y();
         let y_steps = Arc::new({
-            let input = GridInput {
-                bounds: (bounds.min[1], bounds.max[1]),
-                base_step_size: mem.transform.dvalue_dpos()[1].abs() * self.grid_spacing.min as f64,
-            };
+            let input = mem.transform.axis_space(Axis::Y).grid_input(self.grid_spacing.min);
             (self.grid_spacers[1])(input)
         });
 
@@ -1326,7 +1345,7 @@ impl<'a> Plot<'a> {
     ) -> (Vec<Shape>, Vec<Cursor>, Option<Id>) {
         let mut child_ui = ui.new_child(
             egui::UiBuilder::new()
-                .max_rect(*transform.frame())
+                .max_rect(transform.frame())
                 .layout(Layout::default()),
         );
         child_ui.set_clip_rect(transform.frame().intersect(ui.clip_rect()));
@@ -1435,7 +1454,7 @@ impl<'a> Plot<'a> {
             if let Some(pointer) = hover_pos {
                 let font_id = TextStyle::Monospace.resolve(ui.style());
                 let coordinate = transform.value_from_position(pointer);
-                let text = formatter.format(&coordinate, transform.bounds());
+                let text = formatter.format(&coordinate, &transform.bounds());
                 let padded_frame = transform.frame().shrink(4.0);
                 let (anchor, position) = match corner {
                     Corner::LeftTop => (Align2::LEFT_TOP, padded_frame.left_top()),
@@ -1471,10 +1490,8 @@ impl<'a> Plot<'a> {
         let bounds = transform.bounds();
         let value_cross = 0.0_f64.clamp(bounds.min[1 - iaxis], bounds.max[1 - iaxis]);
 
-        let input = GridInput {
-            bounds: (bounds.min[iaxis], bounds.max[iaxis]),
-            base_step_size: transform.dvalue_dpos()[iaxis].abs() * self.grid_spacing.min as f64,
-        };
+        let axis_space = transform.axis_space(axis);
+        let input = axis_space.grid_input(self.grid_spacing.min);
         let steps = (self.grid_spacers[iaxis])(input);
 
         let clamp_range = self.clamp_grid.then(|| {
@@ -1487,6 +1504,7 @@ impl<'a> Plot<'a> {
             tight_bounds
         });
 
+        let axis_space = transform.axis_space(axis);
         for step in steps {
             let value_main = step.value;
 
@@ -1511,7 +1529,9 @@ impl<'a> Plot<'a> {
             };
 
             let pos_in_gui = transform.position_from_point(&value);
-            let spacing_in_points = (transform.dpos_dvalue()[iaxis] * step.step_size).abs() as f32;
+            let spacing_in_points = axis_space
+                .screen_distance_between_values(step.value, step.value + step.step_size)
+                .abs();
 
             if spacing_in_points <= self.grid_spacing.min {
                 continue; // Too close together
@@ -1673,7 +1693,7 @@ impl<'a> Plot<'a> {
 
         // Get the painter from ui and configure it with the plot's clip rect
         // The painter is used to render all accumulated shapes
-        let painter = ui.painter().with_clip_rect(*mem.transform.frame());
+        let painter = ui.painter().with_clip_rect(mem.transform.frame());
         painter.extend(shapes);
 
         // Paint interaction shapes (e.g. the boxed zoom rect) on top of the plot contents.
@@ -1712,7 +1732,7 @@ impl<'a> Plot<'a> {
                 link_groups.0.insert(
                     *id,
                     LinkedBounds {
-                        bounds: *mem.transform().bounds(),
+                        bounds: mem.transform().bounds(),
                         auto_bounds: mem.auto_bounds,
                     },
                 );
@@ -1911,7 +1931,7 @@ impl<'a> PlotUi<'a> {
     /// this will return bounds centered on the origin. The bounds do
     /// not change until the plot is drawn.
     pub fn plot_bounds(&self) -> PlotBounds {
-        *self.last_plot_transform.bounds()
+        self.last_plot_transform.bounds()
     }
 
     /// Set the plot bounds. Can be useful for implementing alternative plot
@@ -1999,8 +2019,16 @@ impl<'a> PlotUi<'a> {
     /// The pointer drag delta in plot coordinates.
     pub fn pointer_coordinate_drag_delta(&self) -> Vec2 {
         let delta = self.response.drag_delta();
-        let dp_dv = self.last_plot_transform.dpos_dvalue();
-        Vec2::new(delta.x / dp_dv[0] as f32, delta.y / dp_dv[1] as f32)
+        let position = self.pointer_coordinate().expect("Needed for drag action");
+        let x = self
+            .transform()
+            .axis_space(Axis::X)
+            .position_delta_from_screen_delta(position.x, delta.x);
+        let y = self
+            .transform()
+            .axis_space(Axis::Y)
+            .position_delta_from_screen_delta(position.y, delta.y);
+        Vec2::new(x as f32, y as f32)
     }
 
     /// Read the transform between plot coordinates and screen coordinates.
