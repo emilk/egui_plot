@@ -50,13 +50,8 @@ def lint_lines(filepath, lines_in):
             stripped = prev_line.strip()
             last_line_was_empty = (
                 stripped == ""
-                or stripped.startswith("#")
-                or stripped.startswith("//")
-                or stripped.endswith("{")
-                or stripped.endswith("(")
-                or stripped.endswith("\\")
-                or stripped.endswith('r"')
-                or stripped.endswith("]")
+                or stripped.startswith(("#", "//"))
+                or stripped.endswith(("{", "(", "\\", 'r"', "]"))
             )
             if not last_line_was_empty:
                 errors.append(
@@ -64,12 +59,15 @@ def lint_lines(filepath, lines_in):
                 )
                 lines_out.append("\n")
 
-        if re.search(r"\(mut self.*-> Self", line) and "pub(crate)" not in line:
-            if prev_line.strip() != "#[inline]":
-                errors.append(
-                    f"{filepath}:{line_nr}: builder methods should be marked #[inline]"
-                )
-                lines_out.append("#[inline]")
+        if (
+            re.search(r"\(mut self.*-> Self", line)
+            and "pub(crate)" not in line
+            and prev_line.strip() != "#[inline]"
+        ):
+            errors.append(
+                f"{filepath}:{line_nr}: builder methods should be marked #[inline]"
+            )
+            lines_out.append("#[inline]")
 
         if re.search(r"TODO[^(]", line):
             errors.append(f"{filepath}:{line_nr}: write 'TODO(username):' instead")
@@ -133,8 +131,6 @@ def test_lint():
         errors, _ = lint_lines("test.py", code.split("\n"))
         assert len(errors) > 0, f"expected this to fail:\n{code}"
 
-    pass
-
 
 def main():
     test_lint()  # Make sure we are bug free before we run!
@@ -163,7 +159,7 @@ def main():
         root_dirpath = os.path.abspath(f"{script_dirpath}/..")
         os.chdir(root_dirpath)
 
-        exclude = set(["target", "target_ra", "target_wasm"])
+        exclude = {"target", "target_ra", "target_wasm"}
         for root, dirs, files in os.walk(".", topdown=True):
             dirs[:] = [d for d in dirs if d not in exclude]
             for filename in files:
