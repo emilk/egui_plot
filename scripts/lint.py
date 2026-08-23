@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Runs custom linting on Rust code.
 """
@@ -71,11 +71,8 @@ def lint_lines(filepath, lines_in):
                 )
                 lines_out.append("#[inline]")
 
-
         if re.search(r"TODO[^(]", line):
-            errors.append(
-                f"{filepath}:{line_nr}: write 'TODO(username):' instead"
-            )
+            errors.append(f"{filepath}:{line_nr}: write 'TODO(username):' instead")
 
         if (
             "(target_os" in line
