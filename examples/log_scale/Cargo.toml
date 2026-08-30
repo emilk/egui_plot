@@ -1,0 +1,22 @@
+[package]
+name = "log_scale"
+version = "0.1.0"
+authors = ["J.A. de Jong <j.a.dejong@ascee.nl"]
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+eframe = { workspace = true, features = ["default"] }
+egui_plot.workspace = true
+env_logger = { workspace = true, default-features = false, features = [
+    "auto-color",
+    "humantime",
+] }
+
+[package.metadata.cargo-shear]
+ignored = ["env_logger"] # might be used by examples
