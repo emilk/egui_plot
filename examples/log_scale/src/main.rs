@@ -1,5 +1,5 @@
 use eframe::egui;
-use egui_plot::{Line, Plot, PlotPoints, log_formatter_computer, log_formatter_engineering, log_formatter_superscript};
+use egui_plot::{log_formatter_computer, log_formatter_engineering, log_formatter_superscript, Line, Plot, PlotPoints};
 
 fn main() -> eframe::Result {
     env_logger::init();
@@ -30,10 +30,8 @@ struct MyApp {
 }
 
 impl eframe::App for MyApp {
-    fn update(&mut self, _ctx: &egui::Context, _frame: &mut eframe::Frame) {}
-
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        egui::CentralPanel::default().show_inside(ui, |ui| {
+        egui::CentralPanel::default().show(ui, |ui| {
             ui.heading("Log Scale Plot Example");
 
             ui.horizontal(|ui| {

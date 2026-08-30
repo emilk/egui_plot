@@ -4,6 +4,26 @@ All notable changes to the `egui_plot` integration will be noted in this file.
 This file is updated upon each release.
 Changes since the last release can be found at <https://github.com/emilk/egui_plot/compare/latest...HEAD> or by running the `scripts/generate_changelog.py` script.
 
+## 0.37.0 - 2026-08-05
+
+Full diff at https://github.com/emilk/egui_plot/compare/0.36.0..HEAD
+
+#### PRs
+* Fix: `boxed_zoom_rect` not in foreground [#242](https://github.com/emilk/egui_plot/pull/242)
+* Fix dead matplotlib links in `WELCOME_CONTRIBUTIONS.md` [#253](https://github.com/emilk/egui_plot/pull/253)
+* Update to Rust 1.95 [#252](https://github.com/emilk/egui_plot/pull/252)
+* Update egui to 0.36 [#254](https://github.com/emilk/egui_plot/pull/254)
+
+
+## 0.36.0 - 2026-06-26
+
+Full diff at https://github.com/emilk/egui_plot/compare/0.35.0..HEAD
+
+#### PRs
+* Replace `impl Into<f32>` parameters with just `f32` [#249](https://github.com/emilk/egui_plot/pull/249) by [@emilk](https://github.com/emilk)
+* Fix broken relative README links on crates.io [#247](https://github.com/emilk/egui_plot/pull/247) by [@Burrdi](https://github.com/Burrdi)
+* Provide element index with label_formatter [#138](https://github.com/emilk/egui_plot/pull/138) by [@upsj](https://github.com/upsj)
+* Update egui to 0.35 [#250](https://github.com/emilk/egui_plot/pull/250) by [@lucasmerlin](https://github.com/lucasmerlin)
 
 
 ## 0.35.0 - 2026-03-26

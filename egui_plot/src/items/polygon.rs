@@ -45,8 +45,8 @@ impl<'a> Polygon<'a> {
 
     /// Set the stroke width.
     #[inline]
-    pub fn width(mut self, width: impl Into<f32>) -> Self {
-        self.stroke.width = width.into();
+    pub fn width(mut self, width: f32) -> Self {
+        self.stroke.width = width;
         self
     }
 

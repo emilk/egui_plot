@@ -51,6 +51,7 @@ use crate::items::PlotItem;
 use crate::items::Span;
 use crate::items::horizontal_line;
 use crate::items::vertical_line;
+use crate::label::HoverPosition;
 use crate::label::LabelFormatter;
 use crate::memory::PlotMemory;
 use crate::overlays::CoordinatesFormatter;
@@ -144,7 +145,7 @@ pub struct Plot<'a> {
 
 impl<'a> Plot<'a> {
     /// Give a unique id for each plot within the same [`Ui`].
-    pub fn new(id_source: impl std::hash::Hash) -> Self {
+    pub fn new(id_source: impl egui::AsId) -> Self {
         Self {
             id_source: Id::new(id_source),
             id: None,
@@ -406,9 +407,7 @@ impl<'a> Plot<'a> {
     ///
     /// ```
     /// # egui::__run_test_ui(|ui| {
-    /// use egui_plot::Line;
-    /// use egui_plot::Plot;
-    /// use egui_plot::PlotPoints;
+    /// use egui_plot::{HoverPosition, Line, Plot, PlotPoints};
     /// let sin: PlotPoints = (0..1000)
     ///     .map(|i| {
     ///         let x = i as f64 * 0.01;
@@ -418,18 +417,17 @@ impl<'a> Plot<'a> {
     /// let line = Line::new("sin", sin);
     /// Plot::new("my_plot")
     ///     .view_aspect(2.0)
-    ///     .label_formatter(|name, value| {
-    ///         if !name.is_empty() {
-    ///             format!("{}: {:.*}%", name, 1, value.y)
-    ///         } else {
-    ///             "".to_owned()
+    ///     .label_formatter(|pos| match pos {
+    ///         HoverPosition::NearDataPoint { plot_name, position, .. } if !plot_name.is_empty() => {
+    ///             Some(format!("{}: {:.*}%", plot_name, 1, position.y))
     ///         }
+    ///         _ => None,
     ///     })
     ///     .show(ui, |plot_ui| plot_ui.line(line));
     /// # });
     /// ```
     #[inline]
-    pub fn label_formatter(mut self, label_formatter: impl Fn(&str, &PlotPoint) -> String + 'a) -> Self {
+    pub fn label_formatter(mut self, label_formatter: impl Fn(&HoverPosition<'_>) -> Option<String> + 'a) -> Self {
         self.label_formatter = Some(Box::new(label_formatter));
         self
     }
@@ -1323,6 +1321,7 @@ impl<'a> Plot<'a> {
         }
     }
 
+    /// Returns shapes (e.g. the boxed zoom rect) that should be painted on top of the plot contents.
     fn handle_interactions(
         &self,
         ui: &Ui,
@@ -1330,7 +1329,8 @@ impl<'a> Plot<'a> {
         plot_ui: &mut PlotUi<'_>,
         plot_rect: Rect,
         axis_responses: &AxisResponses,
-    ) {
+    ) -> Vec<Shape> {
+        let mut foreground_shapes = Vec::new();
         let response = &mut plot_ui.response;
         let allow_drag = self.allow_drag.and(ui.is_enabled());
         let allow_zoom = self.allow_zoom.and(ui.is_enabled());
@@ -1407,8 +1407,8 @@ impl<'a> Plot<'a> {
                             egui::StrokeKind::Middle,
                         ), // Inner stroke
                     );
-                    ui.painter().with_clip_rect(plot_rect).add(boxed_zoom_rect.0);
-                    ui.painter().with_clip_rect(plot_rect).add(boxed_zoom_rect.1);
+                    foreground_shapes.push(Shape::Rect(boxed_zoom_rect.0));
+                    foreground_shapes.push(Shape::Rect(boxed_zoom_rect.1));
                 }
                 // when the click is release perform the zoom
                 if response.drag_stopped() {
@@ -1465,6 +1465,8 @@ impl<'a> Plot<'a> {
                 }
             }
         }
+
+        foreground_shapes
     }
 
     fn render_axis_widgets(&self, ui: &mut Ui, mem: &mut PlotMemory, mut axis_widgets: AxisWidgets<'_>) {
@@ -1651,9 +1653,9 @@ impl<'a> Plot<'a> {
         response: &Response,
         transform: &PlotTransform,
         painter: &Painter,
-        coordinates_formatter: &Option<(Corner, CoordinatesFormatter<'_>)>,
+        coordinates_formatter: Option<&(Corner, CoordinatesFormatter<'_>)>,
     ) {
-        if let Some((corner, formatter)) = coordinates_formatter.as_ref() {
+        if let Some((corner, formatter)) = coordinates_formatter {
             let hover_pos = response.hover_pos();
             if let Some(pointer) = hover_pos {
                 let font_id = TextStyle::Monospace.resolve(ui.style());
@@ -1818,7 +1820,7 @@ impl<'a> Plot<'a> {
                 shapes,
                 &mut cursors,
                 &plot,
-                &self.label_formatter,
+                self.label_formatter.as_deref(),
             );
             Some(item.id())
         } else {
@@ -1826,10 +1828,10 @@ impl<'a> Plot<'a> {
             items::rulers_and_tooltip_at_value(
                 &plot_ui.response,
                 value,
-                "",
+                None,
                 &plot,
                 &mut cursors,
-                &self.label_formatter,
+                self.label_formatter.as_deref(),
             );
             None
         };
@@ -1881,7 +1883,7 @@ impl<'a> Plot<'a> {
         self.compute_bounds(ui, &mut mem, &plot_ui, plot_rect);
 
         // Handle interactions (modifies plot_ui.response in place)
-        self.handle_interactions(ui, &mut mem, &mut plot_ui, plot_rect, &axis_responses);
+        let foreground_shapes = self.handle_interactions(ui, &mut mem, &mut plot_ui, plot_rect, &axis_responses);
 
         // Render axis widgets
         self.render_axis_widgets(ui, &mut mem, axis_widgets);
@@ -1899,6 +1901,9 @@ impl<'a> Plot<'a> {
         let painter = ui.painter().with_clip_rect(*mem.transform.frame());
         painter.extend(shapes);
 
+        // Paint interaction shapes (e.g. the boxed zoom rect) on top of the plot contents.
+        painter.extend(foreground_shapes);
+
         // Show coordinates in a corner of the plot
         // Use ui to access style information and draw the coordinate text overlay
         Self::show_coordinates(
@@ -1906,7 +1911,7 @@ impl<'a> Plot<'a> {
             &plot_ui.response,
             &mem.transform,
             &painter,
-            &self.coordinates_formatter,
+            self.coordinates_formatter.as_ref(),
         );
 
         // Show legend and update memory
@@ -2117,7 +2122,7 @@ impl<'a> PlotUi<'a> {
     fn auto_color(&mut self) -> Color32 {
         let i = self.next_auto_color_idx;
         self.next_auto_color_idx += 1;
-        let golden_ratio = (5.0_f32.sqrt() - 1.0) / 2.0; // 0.61803398875
+        let golden_ratio = std::f32::consts::GOLDEN_RATIO - 1.0; // 0.61803398875
         let h = i as f32 * golden_ratio;
         Hsva::new(h, 0.85, 0.5, 1.0).into() // TODO(#165): OkLab or some other perspective color space
     }

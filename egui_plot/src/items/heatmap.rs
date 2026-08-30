@@ -24,7 +24,7 @@ use crate::items::PlotConfig;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
-use crate::label::LabelFormatter;
+use crate::label::LabelFormatterFn;
 
 /// Default resolution for heatmap color palette
 pub const DEFAULT_RESOLUTION: usize = 128;
@@ -459,7 +459,7 @@ impl PlotItem for Heatmap {
         shapes: &mut Vec<Shape>,
         _cursors: &mut Vec<Cursor>,
         plot: &PlotConfig<'_>,
-        _: &Option<LabelFormatter<'_>>,
+        _: Option<&LabelFormatterFn<'_>>,
     ) {
         let (rect, color, text) = self.tile_view_info(plot.ui, plot.transform, elem.index);
         let mut mesh = Mesh::default();

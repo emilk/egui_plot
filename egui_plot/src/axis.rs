@@ -2,6 +2,9 @@ use std::fmt::Debug;
 use std::ops::RangeInclusive;
 use std::sync::Arc;
 
+use egui::emath::remap_clamp;
+use egui::emath::Rot2;
+use egui::epaint::TextShape;
 use egui::Color32;
 use egui::FontId;
 use egui::Pos2;
@@ -14,12 +17,9 @@ use egui::TextWrapMode;
 use egui::Ui;
 use egui::Vec2;
 use egui::WidgetText;
-use egui::emath::Rot2;
-use egui::emath::remap_clamp;
-use egui::epaint::TextShape;
-use emath::Vec2b;
 use emath::pos2;
 use emath::remap;
+use emath::Vec2b;
 
 #[expect(clippy::unused_trait_names, reason = "Clippy false positive")]
 use crate::axis_transform::AxisTransform;
@@ -338,9 +338,7 @@ impl<'a> AxisWidget<'a> {
         // Try progressively more permissive thresholds until we get enough labels
         let any_large_step = self.steps.iter().any(|s| s.step_size >= 5.0);
 
-        let step_size_threshold = if !any_large_step {
-            0.0 // Linear mode - don't filter by step_size
-        } else {
+        let step_size_threshold = if any_large_step {
             // Try threshold 1.0 first (only major marks)
             let count_with_1_0 = self.count_labels_with_threshold(ui, transform, axis, 1.0);
             if count_with_1_0 >= MIN_LABEL_COUNT {
@@ -354,6 +352,8 @@ impl<'a> AxisWidget<'a> {
                     0.0 // Show all marks, no step_size filtering
                 }
             }
+        } else {
+            0.0 // Linear mode - don't filter by step_size
         };
 
         // Track the last shown label position to calculate spacing correctly

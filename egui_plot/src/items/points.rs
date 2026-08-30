@@ -56,15 +56,15 @@ impl<'a> Points<'a> {
     /// Whether to add stems between the markers and a horizontal reference
     /// line.
     #[inline]
-    pub fn stems(mut self, y_reference: impl Into<f32>) -> Self {
-        self.stems = Some(y_reference.into());
+    pub fn stems(mut self, y_reference: f32) -> Self {
+        self.stems = Some(y_reference);
         self
     }
 
     /// Set the maximum extent of the marker around its position, in ui points.
     #[inline]
-    pub fn radius(mut self, radius: impl Into<f32>) -> Self {
-        self.radius = radius.into();
+    pub fn radius(mut self, radius: f32) -> Self {
+        self.radius = radius;
         self
     }
 

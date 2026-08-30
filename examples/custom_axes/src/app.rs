@@ -5,9 +5,9 @@ use eframe::egui::Response;
 use egui_plot::AxisHints;
 use egui_plot::GridInput;
 use egui_plot::GridMark;
+use egui_plot::HoverPosition;
 use egui_plot::Line;
 use egui_plot::Plot;
-use egui_plot::PlotPoint;
 use egui_plot::PlotPoints;
 
 #[derive(Default)]
@@ -101,14 +101,22 @@ impl CustomAxesExample {
             }
         };
 
-        let label_fmt = |_s: &str, val: &PlotPoint| {
-            format!(
+        let label_fmt = |pos: &HoverPosition<'_>| {
+            let val = match pos {
+                HoverPosition::NearDataPoint {
+                    plot_name: _,
+                    position,
+                    index: _,
+                }
+                | HoverPosition::Elsewhere { position } => position,
+            };
+            Some(format!(
                 "Day {d}, {h}:{m:02}\n{p:.2}%",
                 d = day(val.x),
                 h = hour(val.x),
                 m = minute(val.x),
                 p = percent(val.y)
-            )
+            ))
         };
 
         let x_axes = vec![

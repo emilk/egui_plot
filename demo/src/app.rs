@@ -70,7 +70,7 @@ impl DemoGallery {
     }
 
     fn top_bar(ui: &mut egui::Ui) {
-        egui::Panel::top("top_panel").show_inside(ui, |ui| {
+        egui::Panel::top("top_panel").show(ui, |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
                 egui::widgets::global_theme_preference_buttons(ui);
 
@@ -89,7 +89,7 @@ impl DemoGallery {
             // TODO(#193): get rid of "extra space" calc.
             .max_size(Self::COL_WIDTH * 3. + 30.)
             .resizable(true)
-            .show_inside(ui, |ui| {
+            .show(ui, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
                     let available_width = ui.available_width();
                     let num_columns = 1.max((available_width / Self::COL_WIDTH).floor() as usize);
@@ -115,7 +115,7 @@ impl DemoGallery {
         egui::Panel::right("info_panel")
             .resizable(true)
             .default_size(600.0)
-            .show_inside(ui, |ui| {
+            .show(ui, |ui| {
                 let example = &mut self.examples[index];
                 ui.label(RichText::new(example.title()).heading());
                 ui.separator();
@@ -150,7 +150,7 @@ impl DemoGallery {
     }
 
     fn demo_panel(&mut self, ui: &mut egui::Ui) {
-        egui::CentralPanel::default().show_inside(ui, |ui| {
+        egui::CentralPanel::default().show(ui, |ui| {
             if let Some(index) = self.current_example {
                 ui.vertical(|ui| {
                     self.examples[index].show_controls(ui);

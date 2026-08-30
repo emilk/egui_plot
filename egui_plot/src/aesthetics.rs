@@ -67,7 +67,7 @@ impl LineStyle {
                         if highlight {
                             stroke.width *= 2.0;
                         }
-                        let golden_ratio = (5.0_f32.sqrt() - 1.0) / 2.0; // 0.61803398875
+                        let golden_ratio = std::f32::consts::GOLDEN_RATIO - 1.0; // 0.61803398875
                         shapes.extend(Shape::dashed_line(
                             &line,
                             Stroke::new(stroke.width, path_stroke_color),
