@@ -141,7 +141,8 @@ impl DemoGallery {
                     );
                 });
                 let source_code = String::from_utf8_lossy(example.code_bytes());
-                ScrollArea::vertical().show(ui, |ui| {
+                ScrollArea::both().show(ui, |ui| {
+                    ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
                     let code_theme = egui_extras::syntax_highlighting::CodeTheme::from_style(ui.style());
                     egui_extras::syntax_highlighting::code_view_ui(ui, &code_theme, &source_code, "rs");
                 });
