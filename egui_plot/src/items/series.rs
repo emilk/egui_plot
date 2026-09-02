@@ -265,7 +265,7 @@ impl PlotItem for Line<'_> {
                 let mut width = point.y.span();
                 width += final_stroke.width;
                 if base.highlight {
-                    width += final_stroke.width;
+                    width *= 2.0;
                 }
                 point.y = Rangef::new(center - 0.5 * width, center + 0.5 * width);
             }
@@ -337,7 +337,7 @@ impl PlotItem for Line<'_> {
 
 fn band_points(values_tf: &[Pos2]) -> Vec<BandPoint> {
     let mut band_points: Vec<BandPoint> = Vec::with_capacity(values_tf.len());
-    let bucket_width = 0.5;
+    let bucket_width = 1.0;
 
     for &point in values_tf {
         if let Some(band_point) = band_points.last_mut()
