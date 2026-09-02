@@ -1,4 +1,4 @@
-# Performance Demo
+# Performance Markers Demo
 
 This example demonstrates plotting performance with a large number of markers. Use the controls to adjust the number of markers and observe rendering performance.
 
@@ -6,15 +6,13 @@ This example demonstrates plotting performance with a large number of markers. U
 
 Native
 ```sh
-cargo run -p performance
+cargo run -p performance_markers
 ```
 
 Web (WASM)
 ```sh
-cd examples/performance
+cd examples/performance_markers
 trunk serve
 ```
 
 ![](screenshot.png)
-
-

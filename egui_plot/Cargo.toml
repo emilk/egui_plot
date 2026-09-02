@@ -48,6 +48,13 @@ serde = { workspace = true, optional = true }
 
 [dev-dependencies]
 assertables.workspace = true
+criterion = { version = "0.8.2", default-features = false }
+egui = { workspace = true, features = ["default_fonts"] }
 egui_kittest.workspace = true
 env_logger.workspace = true
 log.workspace = true
+performance_lines.workspace = true
+
+[[bench]]
+name = "performance"
+harness = false
