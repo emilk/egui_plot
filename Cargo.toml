@@ -54,6 +54,7 @@ assertables = "9.8.2"
 document-features = "0.2.12"
 eframe = { version = "0.36.0", default-features = false }
 egui = { version = "0.36.0", default-features = false }
+egui_extras = { version = "=0.36.0", default-features = false }
 egui_kittest = { version = "0.36.0", default-features = false }
 emath = { version = "0.36.0", default-features = false }
 env_logger = { version = "0.11.8", default-features = false, features = [
