@@ -362,18 +362,18 @@ mod tests {
 
     #[test]
     fn bands_points_within_a_pixel_of_the_bucket_start() {
-        let band_points = band_points(&[pos2(0.0, 2.0), pos2(0.4, -1.0), pos2(0.5, 3.0)]);
+        let band_points = band_points(&[pos2(0.0, 2.0), pos2(0.4, -1.0), pos2(1.0, 3.0)]);
 
         assert_eq!(band_points, vec![BandPoint::new(0.0, -1.0..=3.0)]);
     }
 
     #[test]
     fn bands_points_more_than_a_pixel_from_the_bucket_start() {
-        let band_points = band_points(&[pos2(0.0, 2.0), pos2(0.4, -1.0), pos2(0.8, 3.0)]);
+        let band_points = band_points(&[pos2(0.0, 2.0), pos2(0.4, -1.0), pos2(1.01, 3.0)]);
 
         assert_eq!(
             band_points,
-            vec![BandPoint::new(0.0, -1.0..=2.0), BandPoint::new(0.8, 3.0..=3.0)]
+            vec![BandPoint::new(0.0, -1.0..=2.0), BandPoint::new(1.01, 3.0..=3.0)]
         );
     }
 
