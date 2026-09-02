@@ -1,14 +1,16 @@
 use std::ops::RangeInclusive;
 use std::sync::Arc;
 
-use egui::Color32;
-use egui::Id;
 use egui::Mesh;
 use egui::Rgba;
 use egui::Shape;
 use egui::Stroke;
 use egui::Ui;
+use egui::epaint::BandPoint;
+use egui::epaint::BandShape;
 use egui::epaint::PathStroke;
+use egui::{Color32, Rangef};
+use egui::{Id, epaint::ColorMode};
 use emath::Float as _;
 use emath::NumExt as _;
 use emath::Pos2;
@@ -37,6 +39,7 @@ pub struct Line<'a> {
     pub(crate) gradient_color: Option<Arc<dyn Fn(PlotPoint) -> Color32 + Send + Sync>>,
     pub(crate) gradient_fill: bool,
     pub(crate) style: LineStyle,
+    pub(crate) allow_band: bool,
 }
 
 impl<'a> Line<'a> {
@@ -51,6 +54,7 @@ impl<'a> Line<'a> {
             gradient_color: None,
             gradient_fill: false,
             style: LineStyle::Solid,
+            allow_band: true,
         }
     }
 
@@ -112,6 +116,13 @@ impl<'a> Line<'a> {
     #[inline]
     pub fn style(mut self, style: LineStyle) -> Self {
         self.style = style;
+        self
+    }
+
+    /// Allow aggregating high-resolution line points into band shapes.
+    #[inline]
+    pub fn allow_band(mut self, allow_band: bool) -> Self {
+        self.allow_band = allow_band;
         self
     }
 
@@ -239,7 +250,29 @@ impl PlotItem for Line<'_> {
             mesh.colored_vertex(pos2(last.x, y), fill_color);
             shapes.push(Shape::Mesh(std::sync::Arc::new(mesh)));
         }
-        style.style_line(values_tf, final_stroke, base.highlight, shapes);
+
+        if self.allow_band
+            && self.gradient_color.is_none()
+            && *style == LineStyle::Solid
+            && let ColorMode::Solid(stroke_color) = final_stroke.color
+            && let mut band_points = band_points(&values_tf)
+            && 1 < band_points.len()
+            && band_points.len() < values_tf.len()
+            && band_points.array_windows().all(|[previous, next]| previous.x < next.x)
+        {
+            for point in &mut band_points {
+                let center = point.y.center();
+                let mut width = point.y.span();
+                width += final_stroke.width;
+                if base.highlight {
+                    width += final_stroke.width;
+                }
+                point.y = Rangef::new(center - 0.5 * width, center + 0.5 * width);
+            }
+            shapes.push(BandShape::filled(band_points, stroke_color).into());
+        } else {
+            style.style_line(values_tf, final_stroke, base.highlight, shapes);
+        }
     }
 
     fn find_closest(&self, point: Pos2, transform: &PlotTransform) -> Option<ClosestElem> {
@@ -299,5 +332,58 @@ impl PlotItem for Line<'_> {
 
     fn bounds(&self) -> PlotBounds {
         self.series.bounds()
+    }
+}
+
+fn band_points(values_tf: &[Pos2]) -> Vec<BandPoint> {
+    let mut band_points: Vec<BandPoint> = Vec::with_capacity(values_tf.len());
+    let bucket_width = 0.5;
+
+    for &point in values_tf {
+        if let Some(band_point) = band_points.last_mut()
+            && band_point.is_finite()
+            && point.is_finite()
+            && band_point.x <= point.x
+            && point.x - band_point.x <= bucket_width
+        {
+            band_point.y.min = band_point.y.min.min(point.y);
+            band_point.y.max = band_point.y.max.max(point.y);
+        } else {
+            band_points.push(BandPoint::new(point.x, point.y..=point.y));
+        }
+    }
+
+    band_points
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bands_points_within_a_pixel_of_the_bucket_start() {
+        let band_points = band_points(&[pos2(0.0, 2.0), pos2(0.4, -1.0), pos2(0.5, 3.0)]);
+
+        assert_eq!(band_points, vec![BandPoint::new(0.0, -1.0..=3.0)]);
+    }
+
+    #[test]
+    fn bands_points_more_than_a_pixel_from_the_bucket_start() {
+        let band_points = band_points(&[pos2(0.0, 2.0), pos2(0.4, -1.0), pos2(0.8, 3.0)]);
+
+        assert_eq!(
+            band_points,
+            vec![BandPoint::new(0.0, -1.0..=2.0), BandPoint::new(0.8, 3.0..=3.0)]
+        );
+    }
+
+    #[test]
+    fn bands_keep_points_more_than_a_pixel_apart() {
+        let band_points = band_points(&[pos2(0.0, 2.0), pos2(1.01, -1.0)]);
+
+        assert_eq!(
+            band_points,
+            vec![BandPoint::new(0.0, 2.0..=2.0), BandPoint::new(1.01, -1.0..=-1.0)]
+        );
     }
 }
