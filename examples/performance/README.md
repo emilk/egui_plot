@@ -1,6 +1,6 @@
 # Performance Demo
 
-This example demonstrates plotting performance with a large number of markers. Use the controls to adjust the number of markers and observe rendering performance.
+This example demonstrates plotting performance with 10 random walks. Use the controls to adjust the number of values in each walk and observe rendering performance.
 
 ## Running
 
@@ -16,5 +16,4 @@ trunk serve
 ```
 
 ![](screenshot.png)
-
 

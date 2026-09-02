@@ -1,4 +1,30 @@
 use eframe::egui;
+use egui_plot::PlotPoint;
+
+/// Generates a deterministic random walk with `num_values` points.
+///
+/// This is useful for plot examples and benchmarks that need representative
+/// line data without relying on an external random-number generator.
+pub fn random_walk(seed: u64, num_values: usize) -> Vec<PlotPoint> {
+    let mut state = seed;
+    let mut y = 0.0;
+
+    (0..num_values)
+        .map(|x| {
+            y += random_unit(&mut state) - 0.5;
+            PlotPoint::new(x as f64, y)
+        })
+        .collect()
+}
+
+fn random_unit(state: &mut u64) -> f64 {
+    let mut value = (*state).max(1);
+    value ^= value << 13;
+    value ^= value >> 7;
+    value ^= value << 17;
+    *state = value;
+    value as f64 / u64::MAX as f64
+}
 
 /// Trait for examples that can be displayed in the demo gallery.
 pub trait PlotExample {
