@@ -11,6 +11,7 @@ const DEFAULT_VALUES_PER_WALK: usize = 20_000;
 pub struct PerformanceLinesDemo {
     values_per_walk: usize,
     walks: Vec<Vec<PlotPoint>>,
+    allow_band: bool,
 }
 
 impl Default for PerformanceLinesDemo {
@@ -18,6 +19,7 @@ impl Default for PerformanceLinesDemo {
         Self {
             values_per_walk: DEFAULT_VALUES_PER_WALK,
             walks: make_walks(DEFAULT_VALUES_PER_WALK),
+            allow_band: true,
         }
     }
 }
@@ -33,7 +35,7 @@ impl PerformanceLinesDemo {
         Plot::new("performance_lines_demo")
             .show(ui, |plot_ui| {
                 for (walk_index, walk) in self.walks.iter().enumerate() {
-                    plot_ui.line(Line::new(format!("Walk {walk_index}"), walk.as_slice()));
+                    plot_ui.line(Line::new(format!("Walk {walk_index}"), walk.as_slice()).allow_band(self.allow_band));
                 }
             })
             .response
@@ -57,6 +59,7 @@ impl PerformanceLinesDemo {
             }
 
             ui.label(format!("FPS: {fps}"));
+            ui.checkbox(&mut self.allow_band, "Use band shapes");
         });
 
         ui.label(format!("{NUM_WALKS} random walks are shown."));
