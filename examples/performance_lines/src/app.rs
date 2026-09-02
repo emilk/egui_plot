@@ -8,12 +8,12 @@ use examples_utils::random_walk;
 const NUM_WALKS: usize = 10;
 const DEFAULT_VALUES_PER_WALK: usize = 20_000;
 
-pub struct PerformanceDemo {
+pub struct PerformanceLinesDemo {
     values_per_walk: usize,
     walks: Vec<Vec<PlotPoint>>,
 }
 
-impl Default for PerformanceDemo {
+impl Default for PerformanceLinesDemo {
     fn default() -> Self {
         Self {
             values_per_walk: DEFAULT_VALUES_PER_WALK,
@@ -28,9 +28,9 @@ fn make_walks(values_per_walk: usize) -> Vec<Vec<PlotPoint>> {
         .collect()
 }
 
-impl PerformanceDemo {
+impl PerformanceLinesDemo {
     pub fn show_plot(&self, ui: &mut egui::Ui) -> Response {
-        Plot::new("performance_demo")
+        Plot::new("performance_lines_demo")
             .show(ui, |plot_ui| {
                 for (walk_index, walk) in self.walks.iter().enumerate() {
                     plot_ui.line(Line::new(format!("Walk {walk_index}"), walk.as_slice()));

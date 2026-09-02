@@ -4,15 +4,15 @@ use eframe::egui;
 use examples_utils::PlotExample;
 
 mod app;
-pub use app::PerformanceDemo;
+pub use app::PerformanceLinesDemo;
 
-impl PlotExample for PerformanceDemo {
+impl PlotExample for PerformanceLinesDemo {
     fn name(&self) -> &'static str {
-        "performance"
+        "performance_lines"
     }
 
     fn title(&self) -> &'static str {
-        "Performance Demo"
+        "Performance Lines Demo"
     }
 
     fn description(&self) -> &'static str {

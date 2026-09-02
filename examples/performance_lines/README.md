@@ -1,4 +1,4 @@
-# Performance Demo
+# Performance Lines Demo
 
 This example demonstrates plotting performance with 10 random walks. Use the controls to adjust the number of values in each walk and observe rendering performance.
 
@@ -6,14 +6,13 @@ This example demonstrates plotting performance with 10 random walks. Use the con
 
 Native
 ```sh
-cargo run -p performance
+cargo run -p performance_lines
 ```
 
 Web (WASM)
 ```sh
-cd examples/performance
+cd examples/performance_lines
 trunk serve
 ```
 
 ![](screenshot.png)
-

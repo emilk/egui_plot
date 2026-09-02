@@ -53,7 +53,7 @@ egui = { workspace = true, features = ["default_fonts"] }
 egui_kittest.workspace = true
 env_logger.workspace = true
 log.workspace = true
-performance.workspace = true
+performance_lines.workspace = true
 
 [[bench]]
 name = "performance"

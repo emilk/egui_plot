@@ -2,11 +2,11 @@ use criterion::Criterion;
 use criterion::criterion_group;
 use criterion::criterion_main;
 use egui::RawInput;
-use performance::PerformanceDemo;
+use performance_lines::PerformanceLinesDemo;
 
 fn performance_demo(c: &mut Criterion) {
     let ctx = egui::Context::default();
-    let demo = PerformanceDemo::default();
+    let demo = PerformanceLinesDemo::default();
 
     c.bench_function("random_walks_with_tessellate__realistic", |b| {
         b.iter(|| {
