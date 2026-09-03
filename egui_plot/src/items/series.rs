@@ -1,14 +1,16 @@
 use std::ops::RangeInclusive;
 use std::sync::Arc;
 
-use egui::Color32;
-use egui::Id;
 use egui::Mesh;
 use egui::Rgba;
 use egui::Shape;
 use egui::Stroke;
 use egui::Ui;
+use egui::epaint::BandPoint;
+use egui::epaint::BandShape;
 use egui::epaint::PathStroke;
+use egui::{Color32, Rangef};
+use egui::{Id, epaint::ColorMode};
 use emath::Float as _;
 use emath::NumExt as _;
 use emath::Pos2;
@@ -37,6 +39,7 @@ pub struct Line<'a> {
     pub(crate) gradient_color: Option<Arc<dyn Fn(PlotPoint) -> Color32 + Send + Sync>>,
     pub(crate) gradient_fill: bool,
     pub(crate) style: LineStyle,
+    pub(crate) allow_band: bool,
 }
 
 impl<'a> Line<'a> {
@@ -51,6 +54,7 @@ impl<'a> Line<'a> {
             gradient_color: None,
             gradient_fill: false,
             style: LineStyle::Solid,
+            allow_band: true,
         }
     }
 
@@ -115,6 +119,13 @@ impl<'a> Line<'a> {
         self
     }
 
+    /// Allow aggregating high-resolution line points into band shapes.
+    #[inline]
+    pub fn allow_band(mut self, allow_band: bool) -> Self {
+        self.allow_band = allow_band;
+        self
+    }
+
     /// Name of this plot item.
     ///
     /// This name will show up in the plot legend, if legends are turned on.
@@ -159,7 +170,7 @@ impl<'a> Line<'a> {
 }
 
 impl PlotItem for Line<'_> {
-    fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
+    fn shapes(&self, ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
             base,
             series,
@@ -184,12 +195,8 @@ impl PlotItem for Line<'_> {
             (*stroke).into()
         };
 
-        let values_tf: Vec<_> = series
-            .points()
-            .iter()
-            .map(|v| transform.position_from_point(v))
-            .collect();
-        let n_values = values_tf.len();
+        let line_runs = visible_line_runs(series.points(), transform, ui.clip_rect());
+        let n_values: usize = line_runs.iter().map(Vec::len).sum();
 
         // Fill the area between the line and a reference line, if required.
         if n_values < 2 {
@@ -216,30 +223,59 @@ impl PlotItem for Line<'_> {
 
             let mut mesh = Mesh::default();
             let expected_intersections = 20;
-            mesh.reserve_triangles((n_values - 1) * 2);
+            mesh.reserve_triangles(n_values.saturating_sub(1) * 2);
             mesh.reserve_vertices(n_values * 2 + expected_intersections);
-            for [prev, next] in values_tf.array_windows::<2>() {
-                let fill_color = fill_color_for_point(*prev);
-                let i = mesh.vertices.len() as u32;
-                mesh.colored_vertex(*prev, fill_color);
-                mesh.colored_vertex(pos2(prev.x, y), fill_color);
-                if let Some(x) = y_intersection(prev, next, y) {
-                    let point = pos2(x, y);
-                    mesh.colored_vertex(point, fill_color_for_point(point));
-                    mesh.add_triangle(i, i + 1, i + 2);
-                    mesh.add_triangle(i + 2, i + 3, i + 4);
-                } else {
-                    mesh.add_triangle(i, i + 1, i + 2);
-                    mesh.add_triangle(i + 1, i + 2, i + 3);
+            for values_tf in &line_runs {
+                for [prev, next] in values_tf.array_windows::<2>() {
+                    let fill_color = fill_color_for_point(*prev);
+                    let i = mesh.vertices.len() as u32;
+                    mesh.colored_vertex(*prev, fill_color);
+                    mesh.colored_vertex(pos2(prev.x, y), fill_color);
+                    if let Some(x) = y_intersection(prev, next, y) {
+                        let point = pos2(x, y);
+                        mesh.colored_vertex(point, fill_color_for_point(point));
+                        mesh.add_triangle(i, i + 1, i + 2);
+                        mesh.add_triangle(i + 2, i + 3, i + 4);
+                    } else {
+                        mesh.add_triangle(i, i + 1, i + 2);
+                        mesh.add_triangle(i + 1, i + 2, i + 3);
+                    }
+                }
+                if let Some(&last) = values_tf.last() {
+                    let fill_color = fill_color_for_point(last);
+                    mesh.colored_vertex(last, fill_color);
+                    mesh.colored_vertex(pos2(last.x, y), fill_color);
                 }
             }
-            let last = values_tf[n_values - 1];
-            let fill_color = fill_color_for_point(last);
-            mesh.colored_vertex(last, fill_color);
-            mesh.colored_vertex(pos2(last.x, y), fill_color);
-            shapes.push(Shape::Mesh(std::sync::Arc::new(mesh)));
+            if !mesh.vertices.is_empty() {
+                shapes.push(Shape::Mesh(std::sync::Arc::new(mesh)));
+            }
         }
-        style.style_line(values_tf, final_stroke, base.highlight, shapes);
+
+        for values_tf in line_runs {
+            if self.allow_band
+                && self.gradient_color.is_none()
+                && *style == LineStyle::Solid
+                && let ColorMode::Solid(stroke_color) = final_stroke.color
+                && values_tf.array_windows().all(|[previous, next]| previous.x <= next.x)
+                && let mut band_points = band_points(&values_tf)
+                && 1 < band_points.len()
+                && band_points.len() < values_tf.len()
+            {
+                for point in &mut band_points {
+                    let center = point.y.center();
+                    let mut width = point.y.span();
+                    width += final_stroke.width;
+                    if base.highlight {
+                        width *= 2.0;
+                    }
+                    point.y = Rangef::new(center - 0.5 * width, center + 0.5 * width);
+                }
+                shapes.push(BandShape::filled(band_points, stroke_color).into());
+            } else {
+                style.style_line(values_tf, final_stroke.clone(), base.highlight, shapes);
+            }
+        }
     }
 
     fn find_closest(&self, point: Pos2, transform: &PlotTransform) -> Option<ClosestElem> {
@@ -299,5 +335,117 @@ impl PlotItem for Line<'_> {
 
     fn bounds(&self) -> PlotBounds {
         self.series.bounds()
+    }
+}
+
+fn band_points(values_tf: &[Pos2]) -> Vec<BandPoint> {
+    let mut band_points: Vec<BandPoint> = Vec::with_capacity(values_tf.len());
+    let bucket_width = 1.0;
+
+    for &point in values_tf {
+        if let Some(band_point) = band_points.last_mut()
+            && band_point.is_finite()
+            && point.is_finite()
+            && band_point.x <= point.x
+            && point.x - band_point.x <= bucket_width
+        {
+            band_point.y.min = band_point.y.min.min(point.y);
+            band_point.y.max = band_point.y.max.max(point.y);
+        } else {
+            band_points.push(BandPoint::new(point.x, point.y..=point.y));
+        }
+    }
+
+    for bp in band_points.iter_mut().skip(1) {
+        bp.x += 0.5 * bucket_width;
+    }
+
+    if let (Some(last_bp), Some(last_pos)) = (band_points.last_mut(), values_tf.last()) {
+        last_bp.x = last_pos.x;
+    }
+
+    band_points
+}
+
+fn visible_line_runs(points: &[PlotPoint], transform: &PlotTransform, clip_rect: Rect) -> Vec<Vec<Pos2>> {
+    let clip_min_x = transform.value_from_position(clip_rect.min).x;
+    let clip_max_x = transform.value_from_position(clip_rect.max).x;
+    let clip_x_range = clip_min_x.min(clip_max_x)..=clip_min_x.max(clip_max_x);
+    let mut line_runs = Vec::new();
+    let mut line_run = Vec::new();
+
+    for [previous, next] in points.array_windows::<2>() {
+        if segment_intersects_x_range(*previous, *next, &clip_x_range) {
+            let previous_position = transform.position_from_point(previous);
+            let next_position = transform.position_from_point(next);
+            if !clip_rect.intersects(Rect::from_two_pos(previous_position, next_position)) {
+                if !line_run.is_empty() {
+                    line_runs.push(std::mem::take(&mut line_run));
+                }
+                continue;
+            }
+            if line_run.last().copied() != Some(previous_position) {
+                line_run.push(previous_position);
+            }
+            line_run.push(next_position);
+        } else if !line_run.is_empty() {
+            line_runs.push(std::mem::take(&mut line_run));
+        }
+    }
+
+    if points.len() == 1 {
+        let point = transform.position_from_point(&points[0]);
+        if clip_rect.contains(point) {
+            line_runs.push(vec![point]);
+        }
+    } else if !line_run.is_empty() {
+        line_runs.push(line_run);
+    }
+
+    line_runs
+}
+
+fn segment_intersects_x_range(previous: PlotPoint, next: PlotPoint, x_range: &RangeInclusive<f64>) -> bool {
+    previous.x.min(next.x) <= *x_range.end() && *x_range.start() <= previous.x.max(next.x)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn culls_segments_outside_the_clip_x_range() {
+        let x_range = 0.0..=1.0;
+
+        assert!(!segment_intersects_x_range(
+            PlotPoint::new(-2.0, 0.0),
+            PlotPoint::new(-1.0, 0.0),
+            &x_range
+        ));
+        assert!(segment_intersects_x_range(
+            PlotPoint::new(-1.0, 0.0),
+            PlotPoint::new(0.0, 0.0),
+            &x_range
+        ));
+    }
+
+    #[test]
+    fn bands_points_more_than_a_pixel_from_the_bucket_start() {
+        let band_points = band_points(&[pos2(0.0, 2.0), pos2(0.4, -1.0), pos2(1.01, 3.0)]);
+
+        assert_eq!(
+            band_points,
+            vec![BandPoint::new(0.0, -1.0..=2.0), BandPoint::new(1.01, 3.0..=3.0)]
+        );
+    }
+
+    #[test]
+    fn bands_keep_points_more_than_a_pixel_apart() {
+        let band_points = band_points(&[pos2(0.0, 2.0), pos2(1.01, -1.0)]);
+
+        assert_eq!(
+            band_points,
+            vec![BandPoint::new(0.0, 2.0..=2.0), BandPoint::new(1.01, -1.0..=-1.0)]
+        );
     }
 }
