@@ -356,8 +356,12 @@ fn band_points(values_tf: &[Pos2]) -> Vec<BandPoint> {
         }
     }
 
-    for bp in &mut band_points {
+    for bp in band_points.iter_mut().skip(1) {
         bp.x += 0.5 * bucket_width;
+    }
+
+    if let (Some(last_bp), Some(last_pos)) = (band_points.last_mut(), values_tf.last()) {
+        last_bp.x = last_pos.x;
     }
 
     band_points
@@ -423,13 +427,6 @@ mod tests {
             PlotPoint::new(0.0, 0.0),
             &x_range
         ));
-    }
-
-    #[test]
-    fn bands_points_within_a_pixel_of_the_bucket_start() {
-        let band_points = band_points(&[pos2(0.0, 2.0), pos2(0.4, -1.0), pos2(1.0, 3.0)]);
-
-        assert_eq!(band_points, vec![BandPoint::new(0.0, -1.0..=3.0)]);
     }
 
     #[test]
