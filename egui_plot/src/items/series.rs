@@ -170,7 +170,7 @@ impl<'a> Line<'a> {
 }
 
 impl PlotItem for Line<'_> {
-    fn shapes(&self, _ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
+    fn shapes(&self, ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>) {
         let Self {
             base,
             series,
@@ -195,12 +195,8 @@ impl PlotItem for Line<'_> {
             (*stroke).into()
         };
 
-        let values_tf: Vec<_> = series
-            .points()
-            .iter()
-            .map(|v| transform.position_from_point(v))
-            .collect();
-        let n_values = values_tf.len();
+        let line_runs = visible_line_runs(series.points(), transform, ui.clip_rect());
+        let n_values: usize = line_runs.iter().map(Vec::len).sum();
 
         // Fill the area between the line and a reference line, if required.
         if n_values < 2 {
@@ -227,51 +223,58 @@ impl PlotItem for Line<'_> {
 
             let mut mesh = Mesh::default();
             let expected_intersections = 20;
-            mesh.reserve_triangles((n_values - 1) * 2);
+            mesh.reserve_triangles(n_values.saturating_sub(1) * 2);
             mesh.reserve_vertices(n_values * 2 + expected_intersections);
-            for [prev, next] in values_tf.array_windows::<2>() {
-                let fill_color = fill_color_for_point(*prev);
-                let i = mesh.vertices.len() as u32;
-                mesh.colored_vertex(*prev, fill_color);
-                mesh.colored_vertex(pos2(prev.x, y), fill_color);
-                if let Some(x) = y_intersection(prev, next, y) {
-                    let point = pos2(x, y);
-                    mesh.colored_vertex(point, fill_color_for_point(point));
-                    mesh.add_triangle(i, i + 1, i + 2);
-                    mesh.add_triangle(i + 2, i + 3, i + 4);
-                } else {
-                    mesh.add_triangle(i, i + 1, i + 2);
-                    mesh.add_triangle(i + 1, i + 2, i + 3);
+            for values_tf in &line_runs {
+                for [prev, next] in values_tf.array_windows::<2>() {
+                    let fill_color = fill_color_for_point(*prev);
+                    let i = mesh.vertices.len() as u32;
+                    mesh.colored_vertex(*prev, fill_color);
+                    mesh.colored_vertex(pos2(prev.x, y), fill_color);
+                    if let Some(x) = y_intersection(prev, next, y) {
+                        let point = pos2(x, y);
+                        mesh.colored_vertex(point, fill_color_for_point(point));
+                        mesh.add_triangle(i, i + 1, i + 2);
+                        mesh.add_triangle(i + 2, i + 3, i + 4);
+                    } else {
+                        mesh.add_triangle(i, i + 1, i + 2);
+                        mesh.add_triangle(i + 1, i + 2, i + 3);
+                    }
+                }
+                if let Some(&last) = values_tf.last() {
+                    let fill_color = fill_color_for_point(last);
+                    mesh.colored_vertex(last, fill_color);
+                    mesh.colored_vertex(pos2(last.x, y), fill_color);
                 }
             }
-            let last = values_tf[n_values - 1];
-            let fill_color = fill_color_for_point(last);
-            mesh.colored_vertex(last, fill_color);
-            mesh.colored_vertex(pos2(last.x, y), fill_color);
-            shapes.push(Shape::Mesh(std::sync::Arc::new(mesh)));
+            if !mesh.vertices.is_empty() {
+                shapes.push(Shape::Mesh(std::sync::Arc::new(mesh)));
+            }
         }
 
-        if self.allow_band
-            && self.gradient_color.is_none()
-            && *style == LineStyle::Solid
-            && let ColorMode::Solid(stroke_color) = final_stroke.color
-            && let mut band_points = band_points(&values_tf)
-            && 1 < band_points.len()
-            && band_points.len() < values_tf.len()
-            && band_points.array_windows().all(|[previous, next]| previous.x < next.x)
-        {
-            for point in &mut band_points {
-                let center = point.y.center();
-                let mut width = point.y.span();
-                width += final_stroke.width;
-                if base.highlight {
-                    width *= 2.0;
+        for values_tf in line_runs {
+            if self.allow_band
+                && self.gradient_color.is_none()
+                && *style == LineStyle::Solid
+                && let ColorMode::Solid(stroke_color) = final_stroke.color
+                && values_tf.array_windows().all(|[previous, next]| previous.x <= next.x)
+                && let mut band_points = band_points(&values_tf)
+                && 1 < band_points.len()
+                && band_points.len() < values_tf.len()
+            {
+                for point in &mut band_points {
+                    let center = point.y.center();
+                    let mut width = point.y.span();
+                    width += final_stroke.width;
+                    if base.highlight {
+                        width *= 2.0;
+                    }
+                    point.y = Rangef::new(center - 0.5 * width, center + 0.5 * width);
                 }
-                point.y = Rangef::new(center - 0.5 * width, center + 0.5 * width);
+                shapes.push(BandShape::filled(band_points, stroke_color).into());
+            } else {
+                style.style_line(values_tf, final_stroke.clone(), base.highlight, shapes);
             }
-            shapes.push(BandShape::filled(band_points, stroke_color).into());
-        } else {
-            style.style_line(values_tf, final_stroke, base.highlight, shapes);
         }
     }
 
@@ -353,12 +356,74 @@ fn band_points(values_tf: &[Pos2]) -> Vec<BandPoint> {
         }
     }
 
+    for bp in &mut band_points {
+        bp.x += 0.5 * bucket_width;
+    }
+
     band_points
+}
+
+fn visible_line_runs(points: &[PlotPoint], transform: &PlotTransform, clip_rect: Rect) -> Vec<Vec<Pos2>> {
+    let clip_min_x = transform.value_from_position(clip_rect.min).x;
+    let clip_max_x = transform.value_from_position(clip_rect.max).x;
+    let clip_x_range = clip_min_x.min(clip_max_x)..=clip_min_x.max(clip_max_x);
+    let mut line_runs = Vec::new();
+    let mut line_run = Vec::new();
+
+    for [previous, next] in points.array_windows::<2>() {
+        if segment_intersects_x_range(*previous, *next, &clip_x_range) {
+            let previous_position = transform.position_from_point(previous);
+            let next_position = transform.position_from_point(next);
+            if !clip_rect.intersects(Rect::from_two_pos(previous_position, next_position)) {
+                if !line_run.is_empty() {
+                    line_runs.push(std::mem::take(&mut line_run));
+                }
+                continue;
+            }
+            if line_run.last().copied() != Some(previous_position) {
+                line_run.push(previous_position);
+            }
+            line_run.push(next_position);
+        } else if !line_run.is_empty() {
+            line_runs.push(std::mem::take(&mut line_run));
+        }
+    }
+
+    if points.len() == 1 {
+        let point = transform.position_from_point(&points[0]);
+        if clip_rect.contains(point) {
+            line_runs.push(vec![point]);
+        }
+    } else if !line_run.is_empty() {
+        line_runs.push(line_run);
+    }
+
+    line_runs
+}
+
+fn segment_intersects_x_range(previous: PlotPoint, next: PlotPoint, x_range: &RangeInclusive<f64>) -> bool {
+    previous.x.min(next.x) <= *x_range.end() && *x_range.start() <= previous.x.max(next.x)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn culls_segments_outside_the_clip_x_range() {
+        let x_range = 0.0..=1.0;
+
+        assert!(!segment_intersects_x_range(
+            PlotPoint::new(-2.0, 0.0),
+            PlotPoint::new(-1.0, 0.0),
+            &x_range
+        ));
+        assert!(segment_intersects_x_range(
+            PlotPoint::new(-1.0, 0.0),
+            PlotPoint::new(0.0, 0.0),
+            &x_range
+        ));
+    }
 
     #[test]
     fn bands_points_within_a_pixel_of_the_bucket_start() {

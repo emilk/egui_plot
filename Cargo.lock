@@ -1158,7 +1158,7 @@ checksum = "d8b14ccef22fc6f5a8f4d7d768562a182c04ce9a3b3157b91390b52ddfdf1a76"
 [[package]]
 name = "ecolor"
 version = "0.36.1"
-source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#e89046aa6f9742c291e87aa9bc2de1f37c324e90"
+source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#45df33a21619dcc3449deec7fb315dbe21bf27c3"
 dependencies = [
  "bytemuck",
  "emath",
@@ -1168,7 +1168,7 @@ dependencies = [
 [[package]]
 name = "eframe"
 version = "0.36.1"
-source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#e89046aa6f9742c291e87aa9bc2de1f37c324e90"
+source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#45df33a21619dcc3449deec7fb315dbe21bf27c3"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -1205,7 +1205,7 @@ dependencies = [
 [[package]]
 name = "egui"
 version = "0.36.1"
-source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#e89046aa6f9742c291e87aa9bc2de1f37c324e90"
+source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#45df33a21619dcc3449deec7fb315dbe21bf27c3"
 dependencies = [
  "accesskit",
  "ahash",
@@ -1226,7 +1226,7 @@ dependencies = [
 [[package]]
 name = "egui-wgpu"
 version = "0.36.1"
-source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#e89046aa6f9742c291e87aa9bc2de1f37c324e90"
+source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#45df33a21619dcc3449deec7fb315dbe21bf27c3"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -1245,7 +1245,7 @@ dependencies = [
 [[package]]
 name = "egui-winit"
 version = "0.36.1"
-source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#e89046aa6f9742c291e87aa9bc2de1f37c324e90"
+source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#45df33a21619dcc3449deec7fb315dbe21bf27c3"
 dependencies = [
  "accesskit_winit",
  "arboard",
@@ -1281,7 +1281,7 @@ dependencies = [
 [[package]]
 name = "egui_glow"
 version = "0.36.1"
-source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#e89046aa6f9742c291e87aa9bc2de1f37c324e90"
+source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#45df33a21619dcc3449deec7fb315dbe21bf27c3"
 dependencies = [
  "bytemuck",
  "egui",
@@ -1294,7 +1294,7 @@ dependencies = [
 [[package]]
 name = "egui_kittest"
 version = "0.36.1"
-source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#e89046aa6f9742c291e87aa9bc2de1f37c324e90"
+source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#45df33a21619dcc3449deec7fb315dbe21bf27c3"
 dependencies = [
  "dify",
  "eframe",
@@ -1337,7 +1337,7 @@ checksum = "9e5e8f6c15a24b9a3ee5efec809ccd006d3b30e8b3bb63c39af737c7f87daa1d"
 [[package]]
 name = "emath"
 version = "0.36.1"
-source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#e89046aa6f9742c291e87aa9bc2de1f37c324e90"
+source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#45df33a21619dcc3449deec7fb315dbe21bf27c3"
 dependencies = [
  "bytemuck",
  "serde",
@@ -1427,7 +1427,7 @@ dependencies = [
 [[package]]
 name = "epaint"
 version = "0.36.1"
-source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#e89046aa6f9742c291e87aa9bc2de1f37c324e90"
+source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#45df33a21619dcc3449deec7fb315dbe21bf27c3"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -1452,7 +1452,7 @@ dependencies = [
 [[package]]
 name = "epaint_default_fonts"
 version = "0.36.1"
-source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#e89046aa6f9742c291e87aa9bc2de1f37c324e90"
+source = "git+https://github.com/emilk/egui?branch=emilk%2Fband-shape#45df33a21619dcc3449deec7fb315dbe21bf27c3"
 
 [[package]]
 name = "equivalent"
