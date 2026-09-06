@@ -106,6 +106,7 @@ impl PlotItem for Arrows<'_> {
             .points()
             .iter()
             .zip(tips.points().iter())
+            .filter(|(origin, tip)| transform.is_point_valid(origin) && transform.is_point_valid(tip))
             .map(|(origin, tip)| {
                 (
                     transform.position_from_point(origin),

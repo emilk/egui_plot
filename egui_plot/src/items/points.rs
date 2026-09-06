@@ -171,6 +171,7 @@ impl PlotItem for Points<'_> {
         series
             .points()
             .iter()
+            .filter(|value| transform.is_point_valid(value))
             .map(|value| transform.position_from_point(value))
             .for_each(|center| {
                 let tf = |dx: f32, dy: f32| -> Pos2 { center + radius * vec2(dx, dy) };
