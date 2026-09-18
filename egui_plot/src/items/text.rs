@@ -1,7 +1,7 @@
+use core::hash::Hash;
 use std::ops::RangeInclusive;
 
 use egui::Color32;
-use egui::Id;
 use egui::Shape;
 use egui::Stroke;
 use egui::TextStyle;
@@ -13,6 +13,7 @@ use emath::Align2;
 use crate::axis::PlotTransform;
 use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
+use crate::item_id::ItemId;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
@@ -74,13 +75,15 @@ impl Text {
         self
     }
 
-    /// Sets the id of this plot item.
+    /// Sets the [`ItemId`] of this plot item.
     ///
-    /// By default the id is determined from the name passed to [`Self::new`],
+    /// The id only has to be unique within the plot.
+    ///
+    /// By default the id is derived from the name passed to [`Self::new`],
     /// but it can be explicitly set to a different value.
     #[inline]
-    pub fn id(mut self, id: impl Into<Id>) -> Self {
-        self.base_mut().id = id.into();
+    pub fn id(mut self, id: impl Hash) -> Self {
+        self.base_mut().id = ItemId::new(id);
         self
     }
 }

@@ -64,6 +64,7 @@ env_logger = { version = "0.11.8", default-features = false, features = [
 ] }
 image = { version = "0.25", default-features = false }
 log = "0.4"
+nohash-hasher = "0.2.0"
 serde = { version = "1", features = ["derive"] }
 wasm-bindgen-futures = "0.4"
 web-sys = "0.3.83"
