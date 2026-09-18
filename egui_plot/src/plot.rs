@@ -354,7 +354,7 @@ impl<'a> Plot<'a> {
     }
 
     /// Config the button pointer to use for drag-to-pan. Default:
-    /// [`Secondary`](PointerButton::Primary)
+    /// [`Primary`](PointerButton::Primary)
     #[inline]
     pub fn pan_pointer_button(mut self, pan_pointer_button: PointerButton) -> Self {
         self.pan_pointer_button = pan_pointer_button;
