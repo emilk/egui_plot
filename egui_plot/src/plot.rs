@@ -1,9 +1,11 @@
 use std::ops::RangeInclusive;
 use std::sync::Arc;
 
+use egui::AsIdSalt;
 use egui::Color32;
 use egui::CursorIcon;
 use egui::Id;
+use egui::IdSalt;
 use egui::Layout;
 use egui::Painter;
 use egui::PointerButton;
@@ -87,7 +89,7 @@ type AxisResponses = [Vec<Response>; 2];
 /// # });
 /// ```
 pub struct Plot<'a> {
-    id_source: Id,
+    id_salt: IdSalt,
     id: Option<Id>,
 
     center_axis: Vec2b,
@@ -139,9 +141,11 @@ pub struct Plot<'a> {
 
 impl<'a> Plot<'a> {
     /// Give a unique id for each plot within the same [`Ui`].
-    pub fn new(id_source: impl egui::AsId) -> Self {
+    ///
+    /// The salt only has to be unique within the [`Ui`] the plot is shown in.
+    pub fn new(id_salt: impl AsIdSalt) -> Self {
         Self {
-            id_source: Id::new(id_source),
+            id_salt: IdSalt::new(id_salt),
             id: None,
 
             center_axis: false.into(),
@@ -1616,7 +1620,7 @@ impl<'a> Plot<'a> {
     }
 
     fn show_dyn<R>(self, ui: &mut Ui, build_fn: Box<dyn FnOnce(&mut PlotUi<'a>) -> R + 'a>) -> PlotResponse<R> {
-        let plot_id = self.id.unwrap_or_else(|| ui.make_persistent_id(self.id_source));
+        let plot_id = self.id.unwrap_or_else(|| ui.make_persistent_id(self.id_salt));
 
         // Get complete rect for drawing.
         let complete_rect = self.calculate_widget_complete_rect(ui);
