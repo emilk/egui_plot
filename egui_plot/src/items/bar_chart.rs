@@ -1,8 +1,8 @@
+use core::hash::Hash;
 use std::ops::RangeInclusive;
 
 use egui::Color32;
 use egui::CornerRadius;
-use egui::Id;
 use egui::Shape;
 use egui::Stroke;
 use egui::Ui;
@@ -17,6 +17,7 @@ use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
 use crate::colors::highlighted_color;
 use crate::cursor::Cursor;
+use crate::item_id::ItemId;
 use crate::items::ClosestElem;
 use crate::items::PlotConfig;
 use crate::items::PlotGeometry;
@@ -161,13 +162,15 @@ impl BarChart {
         self
     }
 
-    /// Sets the id of this plot item.
+    /// Sets the [`ItemId`] of this plot item.
     ///
-    /// By default the id is determined from the name passed to [`Self::new`],
+    /// The id only has to be unique within the plot.
+    ///
+    /// By default the id is derived from the name passed to [`Self::new`],
     /// but it can be explicitly set to a different value.
     #[inline]
-    pub fn id(mut self, id: impl Into<Id>) -> Self {
-        self.base_mut().id = id.into();
+    pub fn id(mut self, id: impl Hash) -> Self {
+        self.base_mut().id = ItemId::new(id);
         self
     }
 }

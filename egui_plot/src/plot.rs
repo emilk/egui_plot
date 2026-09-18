@@ -42,6 +42,7 @@ use crate::cursor::PlotFrameCursors;
 use crate::grid::GridInput;
 use crate::grid::GridMark;
 use crate::grid::GridSpacer;
+use crate::item_id::ItemId;
 use crate::items;
 use crate::items::PlotItem;
 use crate::items::Span;
@@ -977,7 +978,7 @@ impl<'a> Plot<'a> {
         legend: Option<LegendWidget>,
         ui: &mut Ui,
         mem: &mut PlotMemory,
-        hovered_plot_item: &mut Option<Id>,
+        hovered_plot_item: &mut Option<ItemId>,
     ) {
         if let Some(mut legend) = legend {
             ui.add(&mut legend);
@@ -1323,7 +1324,7 @@ impl<'a> Plot<'a> {
         plot_id: Id,
         transform: &PlotTransform,
         show_xy: Vec2b,
-    ) -> (Vec<Shape>, Vec<Cursor>, Option<Id>) {
+    ) -> (Vec<Shape>, Vec<Cursor>, Option<ItemId>) {
         let mut child_ui = ui.new_child(
             egui::UiBuilder::new()
                 .max_rect(*transform.frame())
@@ -1555,7 +1556,7 @@ impl<'a> Plot<'a> {
         plot_ui: &PlotUi<'_>,
         transform: &PlotTransform,
         show_xy: Vec2b,
-    ) -> (Vec<Cursor>, Option<Id>) {
+    ) -> (Vec<Cursor>, Option<ItemId>) {
         if !show_xy.any() {
             return (Vec::new(), None);
         }
@@ -1877,7 +1878,7 @@ pub struct PlotResponse<R> {
     /// This is `None` if either no item was hovered.
     /// A plot item can be hovered either by hovering its representation in the
     /// plot (line, marker, etc.) or by hovering the item in the legend.
-    pub hovered_plot_item: Option<Id>,
+    pub hovered_plot_item: Option<ItemId>,
 }
 
 /// Provides methods to interact with a plot while building it. It is the single

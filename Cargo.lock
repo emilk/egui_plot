@@ -1278,7 +1278,7 @@ dependencies = [
  "ahash",
  "egui",
  "enum-map",
- "itertools",
+ "itertools 0.15.0",
  "log",
  "profiling",
 ]
@@ -1331,6 +1331,7 @@ dependencies = [
  "emath",
  "env_logger",
  "log",
+ "nohash-hasher",
  "performance_lines",
  "serde",
 ]
