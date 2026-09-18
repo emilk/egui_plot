@@ -196,6 +196,8 @@ impl<'a> Plot<'a> {
     ///
     /// This will override the id set by [`Self::new`].
     ///
+    /// This is the final widget id, so it must be globally unique.
+    ///
     /// This is the same `Id` that can be used for [`PlotMemory::load`].
     #[inline]
     pub fn id(mut self, id: Id) -> Self {
@@ -661,18 +663,28 @@ impl<'a> Plot<'a> {
     /// Add this plot to an axis link group so that this plot will share the
     /// bounds with other plots in the same group. A plot cannot belong to
     /// more than one axis group.
+    ///
+    /// The link groups are shared by the whole app, so `group_id` must be
+    /// globally unique, and the very same id must be passed to each plot you
+    /// want linked together. Create one with [`Id::new`], or derive one from
+    /// the surrounding [`Ui`] with [`Ui::make_persistent_id`].
     #[inline]
-    pub fn link_axis(mut self, group_id: impl Into<Id>, link: impl Into<Vec2b>) -> Self {
-        self.linked_axes = Some((group_id.into(), link.into()));
+    pub fn link_axis(mut self, group_id: Id, link: impl Into<Vec2b>) -> Self {
+        self.linked_axes = Some((group_id, link.into()));
         self
     }
 
     /// Add this plot to a cursor link group so that this plot will share the
     /// cursor position with other plots in the same group. A plot cannot
     /// belong to more than one cursor group.
+    ///
+    /// The link groups are shared by the whole app, so `group_id` must be
+    /// globally unique, and the very same id must be passed to each plot you
+    /// want linked together. Create one with [`Id::new`], or derive one from
+    /// the surrounding [`Ui`] with [`Ui::make_persistent_id`].
     #[inline]
-    pub fn link_cursor(mut self, group_id: impl Into<Id>, link: impl Into<Vec2b>) -> Self {
-        self.linked_cursors = Some((group_id.into(), link.into()));
+    pub fn link_cursor(mut self, group_id: Id, link: impl Into<Vec2b>) -> Self {
+        self.linked_cursors = Some((group_id, link.into()));
         self
     }
 
