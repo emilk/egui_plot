@@ -6,6 +6,7 @@ use egui::Pos2;
 use egui::Vec2b;
 
 use crate::axis::PlotTransform;
+use crate::axis_transform::AxisTransformType;
 use crate::bounds::PlotBounds;
 use crate::item_id::ItemId;
 use crate::item_id::ItemIdSet;
@@ -38,12 +39,19 @@ pub struct PlotMemory {
     /// in order to fit the labels, if necessary.
     pub(crate) x_axis_thickness: BTreeMap<usize, f32>,
     pub(crate) y_axis_thickness: BTreeMap<usize, f32>,
+
+    /// The axis transform kinds from last frame.
+    /// Used to detect when the transform type changes and reset auto-bounds.
+    #[cfg_attr(feature = "serde", serde(skip))]
+    pub(crate) last_x_transform: Option<AxisTransformType>,
+    #[cfg_attr(feature = "serde", serde(skip))]
+    pub(crate) last_y_transform: Option<AxisTransformType>,
 }
 
 impl PlotMemory {
     #[inline]
-    pub fn transform(&self) -> PlotTransform {
-        self.transform
+    pub fn transform(&self) -> &PlotTransform {
+        &self.transform
     }
 
     #[inline]
