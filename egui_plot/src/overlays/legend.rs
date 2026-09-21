@@ -8,6 +8,7 @@ use egui::Layout;
 use egui::PointerButton;
 use egui::Rect;
 use egui::Response;
+use egui::Role;
 use egui::Sense;
 use egui::Shadow;
 use egui::Shape;
@@ -15,7 +16,6 @@ use egui::TextStyle;
 use egui::Ui;
 use egui::Widget;
 use egui::WidgetInfo;
-use egui::WidgetType;
 use egui::epaint::CircleShape;
 use egui::pos2;
 use egui::vec2;
@@ -189,7 +189,7 @@ impl LegendEntry {
         let desired_size = total_extra + galley.size();
         let (rect, response) = ui.allocate_exact_size(desired_size, Sense::click());
 
-        response.widget_info(|| WidgetInfo::selected(WidgetType::Checkbox, ui.is_enabled(), *checked, galley.text()));
+        response.widget_info(|| WidgetInfo::selected(Role::CheckBox, ui.is_enabled(), *checked, galley.text()));
 
         let visuals = ui.style().interact(&response);
         let label_on_the_left = ui.layout().horizontal_placement() == Align::RIGHT;
