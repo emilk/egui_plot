@@ -39,6 +39,7 @@ egui = { workspace = true, default-features = false }
 emath = { workspace = true, default-features = false }
 
 ahash.workspace = true
+nohash-hasher.workspace = true
 
 #! ### Optional dependencies
 ## Enable this when generating docs.

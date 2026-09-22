@@ -55,7 +55,7 @@ assertables = "9.8.2"
 document-features = "0.2.12"
 eframe = { version = "0.36.0", default-features = false }
 egui = { version = "0.36.0", default-features = false }
-egui_extras = { version = "=0.36.0", default-features = false }
+egui_extras = { version = "0.36.0", default-features = false }
 egui_kittest = { version = "0.36.0", default-features = false }
 emath = { version = "0.36.0", default-features = false }
 env_logger = { version = "0.11.8", default-features = false, features = [
@@ -64,6 +64,7 @@ env_logger = { version = "0.11.8", default-features = false, features = [
 ] }
 image = { version = "0.25", default-features = false }
 log = "0.4"
+nohash-hasher = "0.2.0"
 serde = { version = "1", features = ["derive"] }
 wasm-bindgen-futures = "0.4"
 web-sys = "0.3.83"
@@ -71,15 +72,17 @@ web-sys = "0.3.83"
 
 [patch.crates-io]
 # When we want to use the bleeding edge version of egui and eframe:
-egui = { git = "https://github.com/emilk/egui", branch = "emilk/band-shape" }
-egui_kittest = { git = "https://github.com/emilk/egui", branch = "emilk/band-shape" }
-eframe = { git = "https://github.com/emilk/egui", branch = "emilk/band-shape" }
-emath = { git = "https://github.com/emilk/egui", branch = "emilk/band-shape" }
+eframe = { git = "https://github.com/emilk/egui", branch = "main" }
+egui = { git = "https://github.com/emilk/egui", branch = "main" }
+egui_extras = { git = "https://github.com/emilk/egui", branch = "main" }
+egui_kittest = { git = "https://github.com/emilk/egui", branch = "main" }
+emath = { git = "https://github.com/emilk/egui", branch = "main" }
 
 # If you fork https://github.com/emilk/egui you can test with:
-# egui = { path = "../egui/crates/egui" }
-# egui_kittest = { path = "../egui/crates/egui_kittest" }
 # eframe = { path = "../egui/crates/eframe" }
+# egui = { path = "../egui/crates/egui" }
+# egui_extras = { path = "../egui/crates/egui_extras" }
+# egui_kittest = { path = "../egui/crates/egui_kittest" }
 # emath = { path = "../egui/crates/emath" }
 
 # ----------------------------------------------------------------------------------------

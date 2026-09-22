@@ -1,9 +1,11 @@
 use std::ops::RangeInclusive;
 use std::sync::Arc;
 
+use egui::AsIdSalt;
 use egui::Color32;
 use egui::CursorIcon;
 use egui::Id;
+use egui::IdSalt;
 use egui::Layout;
 use egui::Painter;
 use egui::PointerButton;
@@ -42,6 +44,7 @@ use crate::cursor::PlotFrameCursors;
 use crate::grid::GridInput;
 use crate::grid::GridMark;
 use crate::grid::GridSpacer;
+use crate::item_id::ItemId;
 use crate::items;
 use crate::items::PlotItem;
 use crate::items::Span;
@@ -86,7 +89,7 @@ type AxisResponses = [Vec<Response>; 2];
 /// # });
 /// ```
 pub struct Plot<'a> {
-    id_source: Id,
+    id_salt: IdSalt,
     id: Option<Id>,
 
     center_axis: Vec2b,
@@ -138,9 +141,11 @@ pub struct Plot<'a> {
 
 impl<'a> Plot<'a> {
     /// Give a unique id for each plot within the same [`Ui`].
-    pub fn new(id_source: impl egui::AsId) -> Self {
+    ///
+    /// The salt only has to be unique within the [`Ui`] the plot is shown in.
+    pub fn new(id_salt: impl AsIdSalt) -> Self {
         Self {
-            id_source: Id::new(id_source),
+            id_salt: IdSalt::new(id_salt),
             id: None,
 
             center_axis: false.into(),
@@ -194,6 +199,8 @@ impl<'a> Plot<'a> {
     /// Set an explicit (global) id for the plot.
     ///
     /// This will override the id set by [`Self::new`].
+    ///
+    /// This is the final widget id, so it must be globally unique.
     ///
     /// This is the same `Id` that can be used for [`PlotMemory::load`].
     #[inline]
@@ -354,7 +361,7 @@ impl<'a> Plot<'a> {
     }
 
     /// Config the button pointer to use for drag-to-pan. Default:
-    /// [`Secondary`](PointerButton::Primary)
+    /// [`Primary`](PointerButton::Primary)
     #[inline]
     pub fn pan_pointer_button(mut self, pan_pointer_button: PointerButton) -> Self {
         self.pan_pointer_button = pan_pointer_button;
@@ -660,18 +667,28 @@ impl<'a> Plot<'a> {
     /// Add this plot to an axis link group so that this plot will share the
     /// bounds with other plots in the same group. A plot cannot belong to
     /// more than one axis group.
+    ///
+    /// The link groups are shared by the whole app, so `group_id` must be
+    /// globally unique, and the very same id must be passed to each plot you
+    /// want linked together. Create one with [`Id::new`], or derive one from
+    /// the surrounding [`Ui`] with [`Ui::make_persistent_id`].
     #[inline]
-    pub fn link_axis(mut self, group_id: impl Into<Id>, link: impl Into<Vec2b>) -> Self {
-        self.linked_axes = Some((group_id.into(), link.into()));
+    pub fn link_axis(mut self, group_id: Id, link: impl Into<Vec2b>) -> Self {
+        self.linked_axes = Some((group_id, link.into()));
         self
     }
 
     /// Add this plot to a cursor link group so that this plot will share the
     /// cursor position with other plots in the same group. A plot cannot
     /// belong to more than one cursor group.
+    ///
+    /// The link groups are shared by the whole app, so `group_id` must be
+    /// globally unique, and the very same id must be passed to each plot you
+    /// want linked together. Create one with [`Id::new`], or derive one from
+    /// the surrounding [`Ui`] with [`Ui::make_persistent_id`].
     #[inline]
-    pub fn link_cursor(mut self, group_id: impl Into<Id>, link: impl Into<Vec2b>) -> Self {
-        self.linked_cursors = Some((group_id.into(), link.into()));
+    pub fn link_cursor(mut self, group_id: Id, link: impl Into<Vec2b>) -> Self {
+        self.linked_cursors = Some((group_id, link.into()));
         self
     }
 
@@ -977,7 +994,7 @@ impl<'a> Plot<'a> {
         legend: Option<LegendWidget>,
         ui: &mut Ui,
         mem: &mut PlotMemory,
-        hovered_plot_item: &mut Option<Id>,
+        hovered_plot_item: &mut Option<ItemId>,
     ) {
         if let Some(mut legend) = legend {
             ui.add(&mut legend);
@@ -1323,7 +1340,7 @@ impl<'a> Plot<'a> {
         plot_id: Id,
         transform: &PlotTransform,
         show_xy: Vec2b,
-    ) -> (Vec<Shape>, Vec<Cursor>, Option<Id>) {
+    ) -> (Vec<Shape>, Vec<Cursor>, Option<ItemId>) {
         let mut child_ui = ui.new_child(
             egui::UiBuilder::new()
                 .max_rect(*transform.frame())
@@ -1555,7 +1572,7 @@ impl<'a> Plot<'a> {
         plot_ui: &PlotUi<'_>,
         transform: &PlotTransform,
         show_xy: Vec2b,
-    ) -> (Vec<Cursor>, Option<Id>) {
+    ) -> (Vec<Cursor>, Option<ItemId>) {
         if !show_xy.any() {
             return (Vec::new(), None);
         }
@@ -1615,7 +1632,7 @@ impl<'a> Plot<'a> {
     }
 
     fn show_dyn<R>(self, ui: &mut Ui, build_fn: Box<dyn FnOnce(&mut PlotUi<'a>) -> R + 'a>) -> PlotResponse<R> {
-        let plot_id = self.id.unwrap_or_else(|| ui.make_persistent_id(self.id_source));
+        let plot_id = self.id.unwrap_or_else(|| ui.make_persistent_id(self.id_salt));
 
         // Get complete rect for drawing.
         let complete_rect = self.calculate_widget_complete_rect(ui);
@@ -1877,7 +1894,7 @@ pub struct PlotResponse<R> {
     /// This is `None` if either no item was hovered.
     /// A plot item can be hovered either by hovering its representation in the
     /// plot (line, marker, etc.) or by hovering the item in the legend.
-    pub hovered_plot_item: Option<Id>,
+    pub hovered_plot_item: Option<ItemId>,
 }
 
 /// Provides methods to interact with a plot while building it. It is the single
