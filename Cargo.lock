@@ -1158,7 +1158,7 @@ checksum = "d8b14ccef22fc6f5a8f4d7d768562a182c04ce9a3b3157b91390b52ddfdf1a76"
 [[package]]
 name = "ecolor"
 version = "0.36.2"
-source = "git+https://github.com/emilk/egui?branch=main#b30d20bca7fdcdbed3bf2e43d09a054ac115ec10"
+source = "git+https://github.com/emilk/egui?branch=main#a55f23a1ec6e05b55a3398308009e53dabf22b90"
 dependencies = [
  "bytemuck",
  "emath",
@@ -1168,7 +1168,7 @@ dependencies = [
 [[package]]
 name = "eframe"
 version = "0.36.2"
-source = "git+https://github.com/emilk/egui?branch=main#b30d20bca7fdcdbed3bf2e43d09a054ac115ec10"
+source = "git+https://github.com/emilk/egui?branch=main#a55f23a1ec6e05b55a3398308009e53dabf22b90"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -1206,7 +1206,7 @@ dependencies = [
 [[package]]
 name = "egui"
 version = "0.36.2"
-source = "git+https://github.com/emilk/egui?branch=main#b30d20bca7fdcdbed3bf2e43d09a054ac115ec10"
+source = "git+https://github.com/emilk/egui?branch=main#a55f23a1ec6e05b55a3398308009e53dabf22b90"
 dependencies = [
  "accesskit",
  "ahash",
@@ -1227,7 +1227,7 @@ dependencies = [
 [[package]]
 name = "egui-wgpu"
 version = "0.36.2"
-source = "git+https://github.com/emilk/egui?branch=main#b30d20bca7fdcdbed3bf2e43d09a054ac115ec10"
+source = "git+https://github.com/emilk/egui?branch=main#a55f23a1ec6e05b55a3398308009e53dabf22b90"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -1246,7 +1246,7 @@ dependencies = [
 [[package]]
 name = "egui-winit"
 version = "0.36.2"
-source = "git+https://github.com/emilk/egui?branch=main#b30d20bca7fdcdbed3bf2e43d09a054ac115ec10"
+source = "git+https://github.com/emilk/egui?branch=main#a55f23a1ec6e05b55a3398308009e53dabf22b90"
 dependencies = [
  "accesskit_winit",
  "arboard",
@@ -1268,7 +1268,7 @@ dependencies = [
 [[package]]
 name = "egui_extras"
 version = "0.36.2"
-source = "git+https://github.com/emilk/egui?branch=main#b30d20bca7fdcdbed3bf2e43d09a054ac115ec10"
+source = "git+https://github.com/emilk/egui?branch=main#a55f23a1ec6e05b55a3398308009e53dabf22b90"
 dependencies = [
  "ahash",
  "egui",
@@ -1281,7 +1281,7 @@ dependencies = [
 [[package]]
 name = "egui_glow"
 version = "0.36.2"
-source = "git+https://github.com/emilk/egui?branch=main#b30d20bca7fdcdbed3bf2e43d09a054ac115ec10"
+source = "git+https://github.com/emilk/egui?branch=main#a55f23a1ec6e05b55a3398308009e53dabf22b90"
 dependencies = [
  "bytemuck",
  "egui",
@@ -1294,7 +1294,7 @@ dependencies = [
 [[package]]
 name = "egui_kittest"
 version = "0.36.2"
-source = "git+https://github.com/emilk/egui?branch=main#b30d20bca7fdcdbed3bf2e43d09a054ac115ec10"
+source = "git+https://github.com/emilk/egui?branch=main#a55f23a1ec6e05b55a3398308009e53dabf22b90"
 dependencies = [
  "dify",
  "eframe",
@@ -1332,7 +1332,7 @@ dependencies = [
 [[package]]
 name = "egui_system_fonts"
 version = "0.36.2"
-source = "git+https://github.com/emilk/egui?branch=main#b30d20bca7fdcdbed3bf2e43d09a054ac115ec10"
+source = "git+https://github.com/emilk/egui?branch=main#a55f23a1ec6e05b55a3398308009e53dabf22b90"
 dependencies = [
  "epaint",
  "fontique",
@@ -1352,7 +1352,7 @@ checksum = "9e5e8f6c15a24b9a3ee5efec809ccd006d3b30e8b3bb63c39af737c7f87daa1d"
 [[package]]
 name = "emath"
 version = "0.36.2"
-source = "git+https://github.com/emilk/egui?branch=main#b30d20bca7fdcdbed3bf2e43d09a054ac115ec10"
+source = "git+https://github.com/emilk/egui?branch=main#a55f23a1ec6e05b55a3398308009e53dabf22b90"
 dependencies = [
  "bytemuck",
  "serde",
@@ -1442,7 +1442,7 @@ dependencies = [
 [[package]]
 name = "epaint"
 version = "0.36.2"
-source = "git+https://github.com/emilk/egui?branch=main#b30d20bca7fdcdbed3bf2e43d09a054ac115ec10"
+source = "git+https://github.com/emilk/egui?branch=main#a55f23a1ec6e05b55a3398308009e53dabf22b90"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -1468,7 +1468,7 @@ dependencies = [
 [[package]]
 name = "epaint_default_fonts"
 version = "0.36.2"
-source = "git+https://github.com/emilk/egui?branch=main#b30d20bca7fdcdbed3bf2e43d09a054ac115ec10"
+source = "git+https://github.com/emilk/egui?branch=main#a55f23a1ec6e05b55a3398308009e53dabf22b90"
 
 [[package]]
 name = "equivalent"
