@@ -1,0 +1,16 @@
+[package]
+name = "latex_typst"
+version = "0.1.0"
+license.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+
+typst = "0.14.0"
+typst-svg = "0.14.0"
+typst-assets = { version = "0.14.0", features = ["fonts"] }
