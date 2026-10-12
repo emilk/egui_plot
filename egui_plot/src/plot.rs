@@ -391,6 +391,10 @@ impl<'a> Plot<'a> {
 
     /// Whether to allow dragging in the axis areas to zoom the plot. Default:
     /// `true`.
+    ///
+    /// An axis is only keyboard-focusable while it can be dragged to zoom, so
+    /// turning this off for an axis also removes its area from the focus order.
+    /// This keeps a display-only plot from adding inert Tab stops.
     #[inline]
     pub fn allow_axis_zoom_drag<T>(mut self, on: T) -> Self
     where
@@ -870,10 +874,21 @@ impl<'a> Plot<'a> {
     }
 
     fn allocate_axis_responses(&self, ui: &mut Ui, axis_widgets: &AxisWidgets<'_>) -> AxisResponses {
+        // `Sense::drag()` is focusable, so a disabled axis allocated with it becomes an
+        // inert, unnamed Tab stop. Only let an axis join the focus order when it can
+        // actually be dragged to zoom.
+        let axis_sense = |axis| {
+            if self.allow_axis_zoom_drag[axis] {
+                Sense::drag()
+            } else {
+                Sense::hover()
+            }
+        };
+
         let x_axis_responses = axis_widgets[0]
             .iter()
             .map(|widget| {
-                let axis_response = ui.allocate_rect(widget.rect, Sense::drag());
+                let axis_response = ui.allocate_rect(widget.rect, axis_sense(0));
                 if self.allow_axis_zoom_drag.x {
                     axis_response.on_hover_cursor(CursorIcon::ResizeHorizontal)
                 } else {
@@ -885,7 +900,7 @@ impl<'a> Plot<'a> {
         let y_axis_responses = axis_widgets[1]
             .iter()
             .map(|widget| {
-                let axis_response = ui.allocate_rect(widget.rect, Sense::drag());
+                let axis_response = ui.allocate_rect(widget.rect, axis_sense(1));
                 if self.allow_axis_zoom_drag.y {
                     axis_response.on_hover_cursor(CursorIcon::ResizeVertical)
                 } else {
@@ -2189,9 +2204,10 @@ impl<'a> PlotUi<'a> {
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod plot_tests {
     use super::*;
-    use crate::{Plot, Points};
+    use crate::{Bar, BarChart, Plot, Points};
 
     use egui_kittest::Harness;
+    use egui_kittest::kittest::NodeT as _;
 
     /// Test that `auto_bounds(true)` fits the data exactly when the margin fraction is zero.
     #[test]
@@ -2224,5 +2240,136 @@ mod plot_tests {
         assert!((final_bounds.min[1] - MIN[1]).abs() <= f64::EPSILON);
         assert!((final_bounds.max[0] - MAX[0]).abs() <= f64::EPSILON);
         assert!((final_bounds.max[1] - MAX[1]).abs() <= f64::EPSILON);
+    }
+
+    /// Build a display-only plot (every interaction except axis zoom-drag turned
+    /// off) followed by a focusable button.
+    fn display_only_plot(size: egui::Vec2, allow_axis_zoom_drag: [bool; 2]) -> Harness<'static> {
+        let mut harness = Harness::builder().with_size(size).build_ui(move |ui| {
+            Plot::new("static")
+                .allow_zoom(false)
+                .allow_drag(false)
+                .allow_scroll(false)
+                .allow_boxed_zoom(false)
+                .allow_double_click_reset(false)
+                .allow_axis_zoom_drag(allow_axis_zoom_drag)
+                .sense(egui::Sense::hover())
+                .show(ui, |plot_ui| {
+                    plot_ui.bar_chart(BarChart::new("bars", vec![Bar::new(0.0, 1.0)]));
+                });
+            let _after_button = ui.button("after");
+        });
+        harness.run();
+        harness
+    }
+
+    /// What a focusable node in the plot's UI turned out to be.
+    ///
+    /// The axis areas carry no accessible name, so they are told apart by their
+    /// shape instead. An x axis is the wide, short strip along the bottom and a y
+    /// axis the narrow, tall strip along the left; their aspect ratios differ by
+    /// orders of magnitude, so this does not depend on fonts or on exact sizes.
+    /// The button is identified by its label, before shape is consulted at all.
+    #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+    enum Focusable {
+        Button,
+        XAxis,
+        YAxis,
+    }
+
+    /// Everything that can take keyboard focus when the plot is laid out in a UI
+    /// of the harness default size.
+    fn focus_order(allow_axis_zoom_drag: [bool; 2]) -> Vec<Focusable> {
+        focus_order_in(egui::Vec2::new(800.0, 600.0), allow_axis_zoom_drag)
+    }
+
+    /// Everything that can take keyboard focus, in a stable order.
+    ///
+    /// Sorted by [`Focusable`], so the assertions below do not depend on the order
+    /// in which `AccessKit` happens to be traversed.
+    fn focus_order_in(size: egui::Vec2, allow_axis_zoom_drag: [bool; 2]) -> Vec<Focusable> {
+        let mut focusable = display_only_plot(size, allow_axis_zoom_drag)
+            .root()
+            .children_recursive()
+            .map(|node| node.accesskit_node())
+            .filter(|node| node.data().supports_action(egui::accesskit::Action::Focus))
+            .map(|node| {
+                if node.label().is_some() {
+                    Focusable::Button
+                } else if let Some(rect) = node.bounding_box() {
+                    if rect.x1 - rect.x0 > rect.y1 - rect.y0 {
+                        Focusable::XAxis
+                    } else {
+                        Focusable::YAxis
+                    }
+                } else {
+                    panic!("unlabelled focusable node without bounds: {node:?}");
+                }
+            })
+            .collect::<Vec<_>>();
+        focusable.sort_unstable();
+        focusable
+    }
+
+    /// The axis areas must not be Tab stops while they cannot be dragged to zoom.
+    ///
+    /// `Sense::drag()` is focusable, so allocating a disabled axis with it added one
+    /// unnamed, inert Tab stop per axis. See <https://github.com/emilk/egui_plot/issues/268>.
+    #[test]
+    fn disabled_axes_are_not_focusable() {
+        crate::utils::init_test_logger();
+
+        assert_eq!(focus_order([false, false]), vec![Focusable::Button]);
+    }
+
+    /// With axis zoom-drag on, both axis areas stay draggable and therefore focusable.
+    #[test]
+    fn enabled_axes_are_focusable() {
+        crate::utils::init_test_logger();
+
+        assert_eq!(
+            focus_order([true, true]),
+            vec![Focusable::Button, Focusable::XAxis, Focusable::YAxis]
+        );
+    }
+
+    /// Disabling zoom-drag on the y axis must not remove the x axis from the focus
+    /// order, and vice versa.
+    #[test]
+    fn mixed_axes_are_focusable_per_axis() {
+        crate::utils::init_test_logger();
+
+        // X enabled, Y disabled: only the x axis area stays focusable.
+        assert_eq!(focus_order([true, false]), vec![Focusable::Button, Focusable::XAxis]);
+
+        // X disabled, Y enabled: only the y axis area stays focusable.
+        assert_eq!(focus_order([false, true]), vec![Focusable::Button, Focusable::YAxis]);
+    }
+
+    /// The per-axis behavior must not depend on the plot's dimensions.
+    ///
+    /// The x and y axis areas are told apart by aspect ratio rather than by any
+    /// particular size, so the same expectations have to hold for a plot that is
+    /// much smaller, or far more extreme, than the harness default.
+    #[test]
+    fn mixed_axes_are_focusable_at_other_sizes() {
+        crate::utils::init_test_logger();
+
+        for size in [
+            egui::Vec2::new(300.0, 200.0), // Smaller overall.
+            egui::Vec2::new(400.0, 80.0),  // Wide and short.
+            egui::Vec2::new(120.0, 400.0), // Narrow and tall.
+        ] {
+            assert_eq!(
+                focus_order_in(size, [true, false]),
+                vec![Focusable::Button, Focusable::XAxis],
+                "x-only at {size:?}"
+            );
+            assert_eq!(
+                focus_order_in(size, [false, true]),
+                vec![Focusable::Button, Focusable::YAxis],
+                "y-only at {size:?}"
+            );
+        }
     }
 }
