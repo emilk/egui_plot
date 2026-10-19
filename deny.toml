@@ -43,6 +43,7 @@ ignore = [
 [bans]
 multiple-versions = "deny"
 wildcards = "deny"
+allow-wildcard-paths = true # Path-only dev-dependencies (e.g. the benches) are stripped on publish
 deny = [
   { name = "cmake", reason = "It has hurt me too much" },
   { name = "openssl-sys", reason = "Use rustls" },
