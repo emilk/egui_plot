@@ -34,8 +34,9 @@ ignore = [
   # All of these come in via `eframe`, which is only a dev-dependency of ours,
   # and only on Linux. We cannot upgrade them without upstream doing so first.
   "RUSTSEC-2026-0192", # https://rustsec.org/advisories/RUSTSEC-2026-0192 - ttf-parser is unmaintained, via ab_glyph -> sctk-adwaita -> winit. There is no fixed version.
-  "RUSTSEC-2026-0194", # https://rustsec.org/advisories/RUSTSEC-2026-0194 - quick-xml DoS, via zbus_xml -> accesskit_unix. Fixed in 0.41, but zbus_xml requires 0.39.
-  "RUSTSEC-2026-0195", # https://rustsec.org/advisories/RUSTSEC-2026-0195 - quick-xml DoS, via zbus_xml -> accesskit_unix. Fixed in 0.41, but zbus_xml requires 0.39.
+  "RUSTSEC-2026-0370", # https://rustsec.org/advisories/RUSTSEC-2026-0370 - zvariant is unmaintained (merged into zbus 6), via atspi -> accesskit_unix.
+  "RUSTSEC-2026-0371", # https://rustsec.org/advisories/RUSTSEC-2026-0371 - zbus_names is unmaintained (merged into zbus 6), via atspi -> accesskit_unix.
+  "RUSTSEC-2026-0372", # https://rustsec.org/advisories/RUSTSEC-2026-0372 - zvariant_derive is unmaintained (merged into zbus 6), via atspi -> accesskit_unix.
 ]
 
 
