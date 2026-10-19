@@ -1,7 +1,6 @@
 use eframe::egui;
 use egui::RichText;
 use egui::ScrollArea;
-use egui::TextEdit;
 use egui::Vec2;
 use egui::special_emojis::GITHUB;
 use examples_utils::PlotExample;
@@ -55,7 +54,8 @@ impl DemoGallery {
             Box::new(lines::LineExample::default()),
             Box::new(linked_axes::LinkedAxesExample::default()),
             Box::new(markers::MarkerDemo::default()),
-            Box::new(performance::PerformanceDemo::default()),
+            Box::new(performance_lines::PerformanceLinesDemo::default()),
+            Box::new(performance_markers::PerformanceMarkersDemo::default()),
             Box::new(plot_span::PlotSpanDemo::default()),
             Box::new(save_plot::SavePlotExample::default()),
             Box::new(stacked_bar::StackedBarExample::default()),
@@ -141,10 +141,11 @@ impl DemoGallery {
                         format!("{GITHUB_URL}/tree/main/examples/{}", example.name()),
                     );
                 });
-                let mut source_code = String::from_utf8_lossy(example.code_bytes()).to_string();
-                ScrollArea::vertical().show(ui, |ui| {
-                    let text_edit = TextEdit::multiline(&mut source_code).code_editor().desired_width(600.0);
-                    ui.add(text_edit);
+                let source_code = String::from_utf8_lossy(example.code_bytes());
+                ScrollArea::both().show(ui, |ui| {
+                    ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                    let code_theme = egui_extras::syntax_highlighting::CodeTheme::from_style(ui.style());
+                    egui_extras::syntax_highlighting::code_view_ui(ui, &code_theme, &source_code, "rs");
                 });
             });
     }

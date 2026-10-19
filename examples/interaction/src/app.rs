@@ -1,5 +1,6 @@
 use eframe::egui;
 use eframe::egui::Response;
+use egui_plot::ItemId;
 use egui_plot::Line;
 use egui_plot::Plot;
 use egui_plot::PlotPoint;
@@ -13,7 +14,7 @@ pub struct InteractionExample {
     last_pointer_coordinate: Option<PlotPoint>,
     last_pointer_drag_delta: egui::Vec2,
     last_hovered: bool,
-    last_hovered_item: Option<egui::Id>,
+    last_hovered_item: Option<ItemId>,
 }
 
 impl InteractionExample {
@@ -83,9 +84,9 @@ impl InteractionExample {
         );
         ui.label(format!("pointer coordinate drag delta: {coordinate_text}"));
 
-        let hovered_item = if self.last_hovered_item == Some(egui::Id::new("sin")) {
+        let hovered_item = if self.last_hovered_item == Some(ItemId::new("sin")) {
             "red sin"
-        } else if self.last_hovered_item == Some(egui::Id::new("cos")) {
+        } else if self.last_hovered_item == Some(ItemId::new("cos")) {
             "blue cos"
         } else {
             "none"

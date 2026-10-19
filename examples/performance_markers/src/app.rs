@@ -11,22 +11,22 @@ fn rng(state: &mut u64) -> f64 {
     x ^= x >> 7;
     x ^= x << 17;
     *state = x;
-    (x as f64) / (u64::MAX as f64)
+    x as f64 / u64::MAX as f64
 }
 
 fn make_markers(target_count: usize) -> Vec<[f64; 2]> {
-    let mut state = 42u64;
+    let mut state = 42_u64;
     (0..target_count).map(|_| [rng(&mut state), rng(&mut state)]).collect()
 }
 
-pub struct PerformanceDemo {
+pub struct PerformanceMarkersDemo {
     target_count: usize,
     marker_radius: f32,
     markers: Vec<[f64; 2]>,
     marker_shape: MarkerShape,
 }
 
-impl Default for PerformanceDemo {
+impl Default for PerformanceMarkersDemo {
     fn default() -> Self {
         Self {
             target_count: 100,
@@ -37,9 +37,9 @@ impl Default for PerformanceDemo {
     }
 }
 
-impl PerformanceDemo {
+impl PerformanceMarkersDemo {
     pub fn show_plot(&self, ui: &mut egui::Ui) -> Response {
-        Plot::new("performance_demo")
+        Plot::new("performance_markers_demo")
             .data_aspect(1.0)
             .show(ui, |plot_ui| {
                 plot_ui.points(

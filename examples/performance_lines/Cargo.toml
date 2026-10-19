@@ -1,5 +1,5 @@
 [package]
-name = "performance"
+name = "performance_lines"
 version = "0.1.0"
 authors = ["egui_plot contributors"]
 license.workspace = true

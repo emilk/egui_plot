@@ -1,8 +1,8 @@
+use core::hash::Hash;
 use std::ops::RangeInclusive;
 use std::sync::Arc;
 
 use egui::Color32;
-use egui::Id;
 use egui::Mesh;
 use egui::Pos2;
 use egui::Shape;
@@ -14,6 +14,7 @@ use crate::bounds::PlotBounds;
 use crate::bounds::PlotPoint;
 use crate::colors::DEFAULT_FILL_ALPHA;
 use crate::data::PlotPoints;
+use crate::item_id::ItemId;
 use crate::items::PlotGeometry;
 use crate::items::PlotItem;
 use crate::items::PlotItemBase;
@@ -115,10 +116,12 @@ impl FilledArea {
         self
     }
 
-    /// Sets the id of this plot item.
+    /// Sets the [`ItemId`] of this plot item.
+    ///
+    /// The id only has to be unique within the plot.
     #[inline]
-    pub fn id(mut self, id: impl Into<Id>) -> Self {
-        self.base_mut().id = id.into();
+    pub fn id(mut self, id: impl Hash) -> Self {
+        self.base_mut().id = ItemId::new(id);
         self
     }
 }

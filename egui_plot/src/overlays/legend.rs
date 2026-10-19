@@ -4,11 +4,11 @@ use egui::Align;
 use egui::Color32;
 use egui::Direction;
 use egui::Frame;
-use egui::Id;
 use egui::Layout;
 use egui::PointerButton;
 use egui::Rect;
 use egui::Response;
+use egui::Role;
 use egui::Sense;
 use egui::Shadow;
 use egui::Shape;
@@ -16,11 +16,13 @@ use egui::TextStyle;
 use egui::Ui;
 use egui::Widget;
 use egui::WidgetInfo;
-use egui::WidgetType;
 use egui::epaint::CircleShape;
 use egui::pos2;
 use egui::vec2;
 
+use crate::item_id::ItemId;
+use crate::item_id::ItemIdMap;
+use crate::item_id::ItemIdSet;
 use crate::items::PlotItem;
 use crate::placement::Corner;
 
@@ -41,7 +43,7 @@ pub enum LegendGrouping {
     #[default]
     ByName,
 
-    /// Each item gets its own legend entry, keyed by its unique [`Id`].
+    /// Each item gets its own legend entry, keyed by its [`ItemId`].
     ById,
 }
 
@@ -59,7 +61,7 @@ pub struct Legend {
     color_conflict_handling: ColorConflictHandling,
 
     /// Used for overriding the `hidden_items` set in [`LegendWidget`].
-    hidden_items: Option<ahash::HashSet<Id>>,
+    hidden_items: Option<ItemIdSet>,
 }
 
 impl Default for Legend {
@@ -112,7 +114,7 @@ impl Legend {
     #[inline]
     pub fn hidden_items<I>(mut self, hidden_items: I) -> Self
     where
-        I: IntoIterator<Item = Id>,
+        I: IntoIterator<Item = ItemId>,
     {
         self.hidden_items = Some(hidden_items.into_iter().collect());
         self
@@ -139,7 +141,7 @@ impl Legend {
     ///
     /// With [`LegendGrouping::ByName`], items sharing the same name are
     /// merged into a single legend entry. With [`LegendGrouping::ById`],
-    /// each item gets its own entry keyed by its unique [`Id`].
+    /// each item gets its own entry keyed by its [`ItemId`].
     #[inline]
     pub fn grouping(mut self, grouping: LegendGrouping) -> Self {
         self.grouping = grouping;
@@ -149,7 +151,7 @@ impl Legend {
 
 #[derive(Clone)]
 struct LegendEntry {
-    id: Id,
+    id: ItemId,
     name: String,
     color: Color32,
     checked: bool,
@@ -157,7 +159,7 @@ struct LegendEntry {
 }
 
 impl LegendEntry {
-    fn new(id: Id, name: String, color: Color32, checked: bool) -> Self {
+    fn new(id: ItemId, name: String, color: Color32, checked: bool) -> Self {
         Self {
             id,
             name,
@@ -187,7 +189,7 @@ impl LegendEntry {
         let desired_size = total_extra + galley.size();
         let (rect, response) = ui.allocate_exact_size(desired_size, Sense::click());
 
-        response.widget_info(|| WidgetInfo::selected(WidgetType::Checkbox, ui.is_enabled(), *checked, galley.text()));
+        response.widget_info(|| WidgetInfo::selected(Role::CheckBox, ui.is_enabled(), *checked, galley.text()));
 
         let visuals = ui.style().interact(&response);
         let label_on_the_left = ui.layout().horizontal_placement() == Align::RIGHT;
@@ -247,21 +249,21 @@ impl LegendWidget {
         rect: Rect,
         config: Legend,
         items: &[Box<dyn PlotItem + 'a>],
-        hidden_items: &ahash::HashSet<Id>, // Existing hidden items in the plot memory.
+        hidden_items: &ItemIdSet, // Existing hidden items in the plot memory.
     ) -> Option<Self> {
         // If `config.hidden_items` is not `None`, it is used.
         let hidden_items = config.hidden_items.as_ref().unwrap_or(hidden_items);
 
         // Collect the legend entries. With `ByName` grouping, items sharing the
         // same name are merged into a single checkbox. With `ById` grouping,
-        // items sharing the same `Id` are merged instead. When colors conflict
+        // items sharing the same `ItemId` are merged instead. When colors conflict
         // within a merged entry, `color_conflict_handling` decides which color
         // to show.
         let mut entries: Vec<LegendEntry> = Vec::new();
-        let mut seen: ahash::HashMap<Id, usize> = ahash::HashMap::default();
+        let mut seen: ItemIdMap<usize> = ItemIdMap::default();
         for item in items.iter().filter(|item| !item.name().is_empty()) {
             let dedup_key = match config.grouping {
-                LegendGrouping::ByName => Id::new(item.name()),
+                LegendGrouping::ByName => ItemId::new(item.name()),
                 LegendGrouping::ById => item.id(),
             };
 
@@ -292,7 +294,7 @@ impl LegendWidget {
     }
 
     // Get the names of the hidden items.
-    pub fn hidden_items(&self) -> ahash::HashSet<Id> {
+    pub fn hidden_items(&self) -> ItemIdSet {
         self.entries
             .iter()
             .filter_map(|entry| (!entry.checked).then_some(entry.id))
@@ -300,7 +302,7 @@ impl LegendWidget {
     }
 
     // Get the name of the hovered items.
-    pub fn hovered_item(&self) -> Option<Id> {
+    pub fn hovered_item(&self) -> Option<ItemId> {
         self.entries.iter().find_map(|entry| entry.hovered.then_some(entry.id))
     }
 }
@@ -388,7 +390,7 @@ fn handle_interaction_on_legend_item(response: &Response, entry: &mut LegendEntr
 }
 
 /// Handle alt-click interaction (which may affect all entries).
-fn handle_focus_on_legend_item(clicked_entry: &Id, entries: &mut [LegendEntry]) {
+fn handle_focus_on_legend_item(clicked_entry: &ItemId, entries: &mut [LegendEntry]) {
     // if all other items are already hidden, we show everything
     let is_focus_item_only_visible = entries
         .iter()

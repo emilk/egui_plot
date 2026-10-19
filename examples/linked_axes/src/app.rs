@@ -46,7 +46,7 @@ impl LinkedAxesExample {
 
     pub fn show_plot(&self, ui: &mut egui::Ui) -> Response {
         ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
-        let link_group_id = ui.id().with("linked_demo");
+        let link_group_id = ui.make_persistent_id("linked_demo");
         ui.horizontal(|ui| {
             Plot::new("left-top")
                 .data_aspect(1.0)

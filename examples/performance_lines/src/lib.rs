@@ -4,23 +4,23 @@ use eframe::egui;
 use examples_utils::PlotExample;
 
 mod app;
-pub use app::PerformanceDemo;
+pub use app::PerformanceLinesDemo;
 
-impl PlotExample for PerformanceDemo {
+impl PlotExample for PerformanceLinesDemo {
     fn name(&self) -> &'static str {
-        "performance"
+        "performance_lines"
     }
 
     fn title(&self) -> &'static str {
-        "Performance Demo"
+        "Performance Lines Demo"
     }
 
     fn description(&self) -> &'static str {
-        "This example demonstrates plotting performance with a large number of markers. Use the controls to adjust the number of markers and observe rendering performance."
+        "This example demonstrates plotting performance with 10 random walks. Use the controls to adjust the number of values in each walk and observe rendering performance."
     }
 
     fn tags(&self) -> &'static [&'static str] {
-        &["performance", "markers"]
+        &["lines", "performance"]
     }
 
     fn thumbnail_bytes(&self) -> &'static [u8] {

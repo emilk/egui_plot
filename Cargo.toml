@@ -41,7 +41,8 @@ legend_sort = { version = "0.1.0", path = "examples/legend_sort" }
 lines = { version = "0.1.0", path = "examples/lines" }
 linked_axes = { version = "0.1.0", path = "examples/linked_axes" }
 markers = { version = "0.1.0", path = "examples/markers" }
-performance = { version = "0.1.0", path = "examples/performance" }
+performance_lines = { version = "0.1.0", path = "examples/performance_lines" }
+performance_markers = { version = "0.1.0", path = "examples/performance_markers" }
 plot_span = { version = "0.1.0", path = "examples/plot_span" }
 save_plot = { version = "0.1.0", path = "examples/save_plot" }
 stacked_bar = { version = "0.1.0", path = "examples/stacked_bar" }
@@ -52,16 +53,18 @@ ahash = { version = "0.8.12", default-features = false, features = [
 ] }
 assertables = "9.8.2"
 document-features = "0.2.12"
-eframe = { version = "0.36.0", default-features = false }
-egui = { version = "0.36.0", default-features = false }
-egui_kittest = { version = "0.36.0", default-features = false }
-emath = { version = "0.36.0", default-features = false }
+eframe = { version = "0.37.0", default-features = false }
+egui = { version = "0.37.0", default-features = false }
+egui_extras = { version = "0.37.0", default-features = false }
+egui_kittest = { version = "0.37.0", default-features = false }
+emath = { version = "0.37.0", default-features = false }
 env_logger = { version = "0.11.8", default-features = false, features = [
     "auto-color",
     "humantime",
 ] }
 image = { version = "0.25", default-features = false }
 log = "0.4"
+nohash-hasher = "0.2.0"
 serde = { version = "1", features = ["derive"] }
 wasm-bindgen-futures = "0.4"
 web-sys = "0.3.83"
@@ -69,15 +72,17 @@ web-sys = "0.3.83"
 
 [patch.crates-io]
 # When we want to use the bleeding edge version of egui and eframe:
-# egui = { git = "https://github.com/emilk/egui", branch = "main" }
-# egui_kittest = { git = "https://github.com/emilk/egui", branch = "main" }
 # eframe = { git = "https://github.com/emilk/egui", branch = "main" }
+# egui = { git = "https://github.com/emilk/egui", branch = "main" }
+# egui_extras = { git = "https://github.com/emilk/egui", branch = "main" }
+# egui_kittest = { git = "https://github.com/emilk/egui", branch = "main" }
 # emath = { git = "https://github.com/emilk/egui", branch = "main" }
 
 # If you fork https://github.com/emilk/egui you can test with:
-# egui = { path = "../egui/crates/egui" }
-# egui_kittest = { path = "../egui/crates/egui_kittest" }
 # eframe = { path = "../egui/crates/eframe" }
+# egui = { path = "../egui/crates/egui" }
+# egui_extras = { path = "../egui/crates/egui_extras" }
+# egui_kittest = { path = "../egui/crates/egui_kittest" }
 # emath = { path = "../egui/crates/emath" }
 
 # ----------------------------------------------------------------------------------------

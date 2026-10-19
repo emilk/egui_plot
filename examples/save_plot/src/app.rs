@@ -1,5 +1,8 @@
+use std::sync::Arc;
+
 use eframe::egui;
 use eframe::egui::Response;
+use eframe::egui::mutex::Mutex;
 use egui_plot::Legend;
 use egui_plot::Line;
 use egui_plot::Plot;
@@ -8,6 +11,9 @@ use egui_plot::PlotPoints;
 #[derive(Default)]
 pub struct SavePlotExample {
     plot_rect: Option<egui::Rect>,
+
+    /// Filled in by the screenshot callback, which runs on the integration's thread.
+    screenshot: Arc<Mutex<Option<Arc<egui::ColorImage>>>>,
 }
 
 impl SavePlotExample {
@@ -26,14 +32,7 @@ impl SavePlotExample {
         {
             // Check for returned screenshot:
             let ctx = ui.ctx();
-            let screenshot = ctx.input(|i| {
-                for event in &i.raw.events {
-                    if let egui::Event::Screenshot { image, .. } = event {
-                        return Some(std::sync::Arc::clone(image));
-                    }
-                }
-                None
-            });
+            let screenshot = self.screenshot.lock().take();
             if let (Some(screenshot), Some(plot_location)) = (screenshot, self.plot_rect)
                 && let Some(mut path) = rfd::FileDialog::new().save_file()
             {
@@ -66,11 +65,15 @@ impl SavePlotExample {
         inner.response
     }
 
-    #[expect(clippy::unused_self, reason = "required by the example template")]
     pub fn show_controls(&self, ui: &mut egui::Ui) -> Response {
         let response = ui.button("Save Plot");
         if response.clicked() {
-            ui.send_viewport_cmd(egui::ViewportCommand::Screenshot(Default::default()));
+            let ctx = ui.ctx().clone();
+            let slot = Arc::clone(&self.screenshot);
+            ui.ctx().request_screenshot(move |image| {
+                *slot.lock() = Some(image);
+                ctx.request_repaint();
+            });
         }
         response
     }

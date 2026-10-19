@@ -7,6 +7,8 @@ use egui::Vec2b;
 
 use crate::axis::PlotTransform;
 use crate::bounds::PlotBounds;
+use crate::item_id::ItemId;
+use crate::item_id::ItemIdSet;
 
 /// Information about the plot that has to persist between frames.
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
@@ -19,10 +21,10 @@ pub struct PlotMemory {
     pub auto_bounds: Vec2b,
 
     /// Hovered legend item if any.
-    pub hovered_legend_item: Option<Id>,
+    pub hovered_legend_item: Option<ItemId>,
 
     /// Which items _not_ to show?
-    pub hidden_items: ahash::HashSet<Id>,
+    pub hidden_items: ItemIdSet,
 
     /// The transform from last frame.
     pub(crate) transform: PlotTransform,
