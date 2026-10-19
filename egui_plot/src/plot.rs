@@ -870,10 +870,19 @@ impl<'a> Plot<'a> {
     }
 
     fn allocate_axis_responses(&self, ui: &mut Ui, axis_widgets: &AxisWidgets<'_>) -> AxisResponses {
+        // An axis should not be focusable, even when draggable
+        let axis_sense = |axis| {
+            if self.allow_axis_zoom_drag[axis] {
+                Sense::DRAG
+            } else {
+                Sense::hover()
+            }
+        };
+
         let x_axis_responses = axis_widgets[0]
             .iter()
             .map(|widget| {
-                let axis_response = ui.allocate_rect(widget.rect, Sense::drag());
+                let axis_response = ui.allocate_rect(widget.rect, axis_sense(0));
                 if self.allow_axis_zoom_drag.x {
                     axis_response.on_hover_cursor(CursorIcon::ResizeHorizontal)
                 } else {
@@ -885,7 +894,7 @@ impl<'a> Plot<'a> {
         let y_axis_responses = axis_widgets[1]
             .iter()
             .map(|widget| {
-                let axis_response = ui.allocate_rect(widget.rect, Sense::drag());
+                let axis_response = ui.allocate_rect(widget.rect, axis_sense(1));
                 if self.allow_axis_zoom_drag.y {
                     axis_response.on_hover_cursor(CursorIcon::ResizeVertical)
                 } else {
