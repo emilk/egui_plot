@@ -810,8 +810,8 @@ impl<'a> Plot<'a> {
         self.show_dyn(ui, Box::new(build_fn))
     }
 
-    /// Calculate the rect inside which everything will be drawn.
-    fn calculate_widget_complete_rect(&self, ui: &Ui) -> Rect {
+    /// Allocate the rect inside which everything will be drawn.
+    fn allocate_widget_complete_rect(&self, ui: &mut Ui) -> Rect {
         // Minimum values for screen protection
         let mut min_size = self.min_size;
         min_size.x = min_size.x.at_least(1.0);
@@ -843,27 +843,8 @@ impl<'a> Plot<'a> {
             vec2(width, height)
         };
 
-        // Determine position of widget, anchored to whichever corner the
-        // current layout direction actually grows from. `available_rect_before_wrap`
-        // only reports the true cursor position on the edge matching `main_dir`
-        // (e.g. for `BottomUp` layouts that's `.max.y`, not `.min.y`), so blindly
-        // using `.min` as the origin places the widget in the wrong corner and
-        // makes successive widgets overlap (#237).
-        let avail = ui.available_rect_before_wrap();
-        let main_dir = ui.layout().main_dir();
-
-        let (min_x, max_x) = if main_dir == egui::Direction::RightToLeft {
-            (avail.max.x - size.x, avail.max.x)
-        } else {
-            (avail.min.x, avail.min.x + size.x)
-        };
-        let (min_y, max_y) = if main_dir == egui::Direction::BottomUp {
-            (avail.max.y - size.y, avail.max.y)
-        } else {
-            (avail.min.y, avail.min.y + size.y)
-        };
-
-        Rect::from_min_max(emath::pos2(min_x, min_y), emath::pos2(max_x, max_y))
+        // Let the layout place the widget, so we respect its direction, alignment and wrapping.
+        ui.allocate_space(size).1
     }
 
     fn allocate_axis_responses(&self, ui: &mut Ui, axis_widgets: &AxisWidgets<'_>) -> AxisResponses {
@@ -1632,7 +1613,7 @@ impl<'a> Plot<'a> {
         let plot_id = self.id.unwrap_or_else(|| ui.make_persistent_id(self.id_source));
 
         // Get complete rect for drawing.
-        let complete_rect = self.calculate_widget_complete_rect(ui);
+        let complete_rect = self.allocate_widget_complete_rect(ui);
 
         let (axis_widgets, plot_rect) = axis_widgets(
             PlotMemory::load(ui.ctx(), plot_id).as_ref(), // TODO(#164): avoid loading plot memory twice
