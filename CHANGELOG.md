@@ -4,6 +4,20 @@ All notable changes to the `egui_plot` integration will be noted in this file.
 This file is updated upon each release.
 Changes since the last release can be found at <https://github.com/emilk/egui_plot/compare/latest...HEAD> or by running the `scripts/generate_changelog.py` script.
 
+## 0.38.0 - 2026-10-19
+
+Full diff at https://github.com/emilk/egui_plot/compare/0.37.0..HEAD
+
+#### PRs
+* Performance: Render dense lines as bands [#260](https://github.com/emilk/egui_plot/pull/260) by [@emilk](https://github.com/emilk)
+* Update egui to 0.37 [#270](https://github.com/emilk/egui_plot/pull/270) by [@lucasmerlin](https://github.com/lucasmerlin)
+* Add an `ItemId` newtype to identify plot items [#264](https://github.com/emilk/egui_plot/pull/264) by [@emilk](https://github.com/emilk)
+* `Plot::new` now takes an `impl AsIdSalt` [#265](https://github.com/emilk/egui_plot/pull/265) by [@emilk](https://github.com/emilk)
+* `link_axis` and `link_cursor` take an `Id` [#266](https://github.com/emilk/egui_plot/pull/266) by [@emilk](https://github.com/emilk)
+* Fix: don't make disabled axis areas keyboard-focusable [#269](https://github.com/emilk/egui_plot/pull/269) by [@TssHack](https://github.com/TssHack)
+* Determine position of plot based on layout direction [#256](https://github.com/emilk/egui_plot/pull/256) by [@tarolling](https://github.com/tarolling)
+* Fix typo in pan_pointer_button description [#262](https://github.com/emilk/egui_plot/pull/262) by [@TPhoenixyz](https://github.com/TPhoenixyz)
+
 ## 0.37.0 - 2026-08-05
 
 Full diff at https://github.com/emilk/egui_plot/compare/0.36.0..HEAD

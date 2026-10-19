@@ -54,7 +54,7 @@ egui = { workspace = true, features = ["default_fonts"] }
 egui_kittest.workspace = true
 env_logger.workspace = true
 log.workspace = true
-performance_lines.workspace = true
+performance_lines = { path = "../examples/performance_lines" } # No version, so it doesn't block cargo publish
 
 [[bench]]
 name = "performance"
