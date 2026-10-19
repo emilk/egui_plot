@@ -176,7 +176,7 @@ impl Span {
     }
 
     fn draw_name(&self, ui: &Ui, transform: &PlotTransform, shapes: &mut Vec<Shape>, span_rect: &Rect) {
-        let frame = *transform.frame();
+        let frame = transform.frame();
         let visible_rect = span_rect.intersect(frame);
 
         let available_width = self.available_width_for_name(&visible_rect);
